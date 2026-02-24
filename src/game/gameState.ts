@@ -1,8 +1,12 @@
 import type { Village } from './village';
 import type { Monster } from './monster';
 import { tickMonsters } from './monster';
-import type { Totem } from './totem';
-import { tickTotems } from './totem';
+import type { BodyPart } from './bodyPart';
+import { createBodyPart } from './bodyPart';
+import type { BodyPartKind } from './bodyPart';
+import type { Direction } from './grid';
+import type { Guard } from './guard';
+import { computeGuards, tickGuards } from './guard';
 import type { Projectile } from './projectile';
 import { tickProjectiles } from './projectile';
 import type { SpawnEvent } from './spawnSchedule';
@@ -13,12 +17,8 @@ import {
   VILLAGE_HEALTH,
   VILLAGE_POSITION,
   VILLAGE_HIT_DISTANCE,
-  TOTEM_GRID_COLUMNS,
-  TOTEM_GRID_ROWS,
-  TOTEM_COOLDOWN,
-  TOTEM_DAMAGE,
-  TOTEM_RANGE,
-  TOTEM_PROJECTILE_SPEED,
+  GRID_COLUMNS,
+  GRID_ROWS,
   MONSTER_SPEED,
   MONSTER_HEALTH,
   SPAWN_INTERVAL,
@@ -32,7 +32,8 @@ export type GameState = {
   elapsedTime: number;
   village: Village;
   monsters: Monster[];
-  totems: Totem[];
+  bodyParts: BodyPart[];
+  guards: Guard[];
   projectiles: Projectile[];
   spawnEvents: SpawnEvent[];
   nextEntityId: number;
@@ -62,7 +63,8 @@ export const createGameState = (): GameState => ({
     position: [...VILLAGE_POSITION],
   },
   monsters: [],
-  totems: [],
+  bodyParts: [],
+  guards: [],
   projectiles: [],
   spawnEvents: createDefaultSpawnEvents(),
   nextEntityId: 1,
@@ -127,8 +129,8 @@ export const tickGameState = (gameState: GameState, deltaTime: number) => {
 
   spawnMonsters(gameState);
   tickMonsters(gameState.monsters, gameState.village.position, deltaTime);
-  gameState.nextEntityId = tickTotems(
-    gameState.totems,
+  gameState.nextEntityId = tickGuards(
+    gameState.guards,
     gameState.monsters,
     gameState.projectiles,
     gameState.nextEntityId,
@@ -140,27 +142,48 @@ export const tickGameState = (gameState: GameState, deltaTime: number) => {
   checkGamePhase(gameState);
 };
 
-export const placeTotem = (gameState: GameState, gridX: number, gridY: number): boolean => {
-  if (gridX < 0 || gridX >= TOTEM_GRID_COLUMNS || gridY < 0 || gridY >= TOTEM_GRID_ROWS) {
+export const placeBodyPart = (
+  gameState: GameState,
+  gridX: number,
+  gridY: number,
+  bodyPartKind: BodyPartKind,
+  connectionDirections: Direction[]
+): boolean => {
+  if (gridX < 0 || gridX >= GRID_COLUMNS || gridY < 0 || gridY >= GRID_ROWS) {
     return false;
   }
 
-  const isOccupied = gameState.totems.some(totem => totem.gridX === gridX && totem.gridY === gridY);
+  const isOccupied = gameState.bodyParts.some(
+    bodyPart => bodyPart.gridX === gridX && bodyPart.gridY === gridY
+  );
 
   if (isOccupied) {
     return false;
   }
 
-  gameState.totems.push({
-    totemId: gameState.nextEntityId++,
+  const bodyPart = createBodyPart(
+    gameState.nextEntityId++,
+    bodyPartKind,
     gridX,
     gridY,
-    cooldown: TOTEM_COOLDOWN,
-    cooldownTimer: 0,
-    range: TOTEM_RANGE,
-    damage: TOTEM_DAMAGE,
-    projectileSpeed: TOTEM_PROJECTILE_SPEED,
-  });
+    connectionDirections
+  );
+
+  gameState.bodyParts.push(bodyPart);
+  gameState.guards = computeGuards(gameState.bodyParts);
+
+  return true;
+};
+
+export const removeBodyPart = (gameState: GameState, bodyPartId: number): boolean => {
+  const index = gameState.bodyParts.findIndex(bodyPart => bodyPart.bodyPartId === bodyPartId);
+
+  if (index === -1) {
+    return false;
+  }
+
+  gameState.bodyParts.splice(index, 1);
+  gameState.guards = computeGuards(gameState.bodyParts);
 
   return true;
 };
