@@ -1,3 +1,4 @@
+export * from './constants';
 export * from './vector2';
 export * from './village';
 export * from './monster';

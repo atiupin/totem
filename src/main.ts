@@ -1,4 +1,14 @@
-import { createGameState, tickGameState, placeTotem } from './game';
+import {
+  createGameState,
+  tickGameState,
+  placeTotem,
+  getTotemGridPosition,
+  TOTEM_GRID_COLUMNS,
+  TOTEM_GRID_ROWS,
+  TOTEM_GRID_CELL_SIZE,
+  TOTEM_GRID_ORIGIN_X,
+  TOTEM_GRID_ORIGIN_Y,
+} from './game';
 import type { GameState } from './game';
 import spritesheetUrl from './sprites.png';
 
@@ -48,6 +58,25 @@ const renderGameState = (spritesheet: HTMLImageElement, gameState: GameState) =>
   context.fillStyle = '#1a1a2e';
   context.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
+  context.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+  context.lineWidth = 1;
+
+  for (let column = 0; column <= TOTEM_GRID_COLUMNS; column++) {
+    const lineX = TOTEM_GRID_ORIGIN_X + column * TOTEM_GRID_CELL_SIZE;
+    context.beginPath();
+    context.moveTo(lineX, TOTEM_GRID_ORIGIN_Y);
+    context.lineTo(lineX, TOTEM_GRID_ORIGIN_Y + TOTEM_GRID_ROWS * TOTEM_GRID_CELL_SIZE);
+    context.stroke();
+  }
+
+  for (let row = 0; row <= TOTEM_GRID_ROWS; row++) {
+    const lineY = TOTEM_GRID_ORIGIN_Y + row * TOTEM_GRID_CELL_SIZE;
+    context.beginPath();
+    context.moveTo(TOTEM_GRID_ORIGIN_X, lineY);
+    context.lineTo(TOTEM_GRID_ORIGIN_X + TOTEM_GRID_COLUMNS * TOTEM_GRID_CELL_SIZE, lineY);
+    context.stroke();
+  }
+
   drawSprite(
     spritesheet,
     SPRITE_VILLAGE,
@@ -56,7 +85,8 @@ const renderGameState = (spritesheet: HTMLImageElement, gameState: GameState) =>
   );
 
   for (const totem of gameState.totems) {
-    drawSprite(spritesheet, SPRITE_TOTEM, totem.position[0], totem.position[1]);
+    const totemPosition = getTotemGridPosition(totem.gridX, totem.gridY);
+    drawSprite(spritesheet, SPRITE_TOTEM, totemPosition[0], totemPosition[1]);
   }
 
   for (const projectile of gameState.projectiles) {
@@ -68,7 +98,7 @@ const renderGameState = (spritesheet: HTMLImageElement, gameState: GameState) =>
   }
 
   context.fillStyle = '#e0e0e0';
-  context.font = '8px monospace';
+  context.font = '16px monospace';
   context.fillText(`Phase: ${gameState.phase}`, 16, 32);
   context.fillText(`Time: ${gameState.elapsedTime.toFixed(1)}s`, 16, 52);
   context.fillText(

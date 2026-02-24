@@ -6,8 +6,24 @@ import { tickTotems } from './totem';
 import type { Projectile } from './projectile';
 import { tickProjectiles } from './projectile';
 import type { SpawnEvent } from './spawnSchedule';
-import type { Vector2 } from './vector2';
 import { getVector2Distance } from './vector2';
+import {
+  CANVAS_WIDTH,
+  CANVAS_HEIGHT,
+  VILLAGE_HEALTH,
+  VILLAGE_POSITION,
+  VILLAGE_HIT_DISTANCE,
+  TOTEM_GRID_COLUMNS,
+  TOTEM_GRID_ROWS,
+  TOTEM_COOLDOWN,
+  TOTEM_DAMAGE,
+  TOTEM_RANGE,
+  TOTEM_PROJECTILE_SPEED,
+  MONSTER_SPEED,
+  MONSTER_HEALTH,
+  SPAWN_INTERVAL,
+  SPAWN_DURATION,
+} from './constants';
 
 export type GamePhase = 'playing' | 'victory' | 'defeat';
 
@@ -21,30 +37,6 @@ export type GameState = {
   spawnEvents: SpawnEvent[];
   nextEntityId: number;
 };
-
-const CANVAS_WIDTH = 640;
-const CANVAS_HEIGHT = 360;
-
-const VILLAGE_HEALTH = 10;
-const VILLAGE_POSITION: Vector2 = [40, CANVAS_HEIGHT / 2];
-
-const VILLAGE_HIT_DISTANCE = 20;
-
-const TOTEM_GRID_COLUMNS = 5;
-const TOTEM_GRID_ROWS = 5;
-const TOTEM_GRID_CELL_SIZE = 48;
-const TOTEM_GRID_ORIGIN_X = (CANVAS_WIDTH - TOTEM_GRID_COLUMNS * TOTEM_GRID_CELL_SIZE) / 2;
-const TOTEM_GRID_ORIGIN_Y = (CANVAS_HEIGHT - TOTEM_GRID_ROWS * TOTEM_GRID_CELL_SIZE) / 2;
-
-const TOTEM_RANGE = 100;
-const TOTEM_COOLDOWN = 1;
-const TOTEM_DAMAGE = 1;
-const TOTEM_PROJECTILE_SPEED = 200;
-
-const MONSTER_SPEED = 40;
-const MONSTER_HEALTH = 3;
-const SPAWN_INTERVAL = 2;
-const SPAWN_DURATION = 30;
 
 const createDefaultSpawnEvents = (): SpawnEvent[] => {
   const spawnEvents: SpawnEvent[] = [];
@@ -82,7 +74,7 @@ const spawnMonsters = (gameState: GameState) => {
   );
 
   for (const spawnEvent of pendingEvents) {
-    const spawnY = Math.random() * CANVAS_HEIGHT;
+    const spawnY = CANVAS_HEIGHT * 0.25 + Math.random() * CANVAS_HEIGHT * 0.5;
 
     gameState.monsters.push({
       monsterId: gameState.nextEntityId++,
@@ -148,11 +140,6 @@ export const tickGameState = (gameState: GameState, deltaTime: number) => {
   checkGamePhase(gameState);
 };
 
-const getTotemGridPosition = (gridX: number, gridY: number): Vector2 => [
-  TOTEM_GRID_ORIGIN_X + gridX * TOTEM_GRID_CELL_SIZE + TOTEM_GRID_CELL_SIZE / 2,
-  TOTEM_GRID_ORIGIN_Y + gridY * TOTEM_GRID_CELL_SIZE + TOTEM_GRID_CELL_SIZE / 2,
-];
-
 export const placeTotem = (gameState: GameState, gridX: number, gridY: number): boolean => {
   if (gridX < 0 || gridX >= TOTEM_GRID_COLUMNS || gridY < 0 || gridY >= TOTEM_GRID_ROWS) {
     return false;
@@ -168,7 +155,6 @@ export const placeTotem = (gameState: GameState, gridX: number, gridY: number): 
     totemId: gameState.nextEntityId++,
     gridX,
     gridY,
-    position: getTotemGridPosition(gridX, gridY),
     cooldown: TOTEM_COOLDOWN,
     cooldownTimer: 0,
     range: TOTEM_RANGE,
