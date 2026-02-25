@@ -31,9 +31,9 @@ jobs:
       - run: yarn install --frozen-lockfile
       - run: yarn build
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v4
         with:
-          path: dist
+          path: dist/
 
       - id: deployment
         uses: actions/deploy-pages@v4
