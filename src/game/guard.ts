@@ -127,9 +127,10 @@ export const tickGuards = (
 
       const completedRangeMultiplier = guard.isCompleted ? 2 : 1;
       const effectiveRange = (HEAD_BASE_RANGE + guard.bonusRange) * completedRangeMultiplier;
-      const effectiveDamage = HEAD_BASE_DAMAGE * Math.pow(2, guard.limbCount);
+      const effectiveLimbCount = guard.isCompleted ? guard.limbCount : 0;
+      const effectiveDamage = HEAD_BASE_DAMAGE * Math.pow(2, effectiveLimbCount);
       const effectiveCooldown = Math.max(0.1, HEAD_BASE_COOLDOWN - guard.bonusCooldown);
-      const effectiveScale = Math.pow(LIMB_PROJECTILE_SCALE, guard.limbCount);
+      const effectiveScale = Math.pow(LIMB_PROJECTILE_SCALE, effectiveLimbCount);
       const headPosition = getGridCellPosition(headPart.gridX, headPart.gridY);
 
       let nearestMonster: Monster | undefined;

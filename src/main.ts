@@ -250,8 +250,10 @@ const getEffectiveRange = (guard: Guard): number => {
   return (HEAD_BASE_RANGE + guard.bonusRange) * completedRangeMultiplier;
 };
 
-const getEffectiveDamage = (guard: Guard): number =>
-  HEAD_BASE_DAMAGE * Math.pow(2, guard.limbCount);
+const getEffectiveDamage = (guard: Guard): number => {
+  const effectiveLimbCount = guard.isCompleted ? guard.limbCount : 0;
+  return HEAD_BASE_DAMAGE * Math.pow(2, effectiveLimbCount);
+};
 
 const benchSlotToBodyPart = (benchSlot: BenchSlot): BodyPart => ({
   bodyPartId: 0,
@@ -449,9 +451,11 @@ const renderGameState = (
     const effectiveRange = getEffectiveRange(hoveredGuard);
     const effectiveDamage = getEffectiveDamage(hoveredGuard);
 
+    const effectiveLimbCount = hoveredGuard.isCompleted ? hoveredGuard.limbCount : 0;
+
     const damageLabel =
-      hoveredGuard.limbCount > 0
-        ? `Damage: ${effectiveDamage} (x${Math.pow(2, hoveredGuard.limbCount)})`
+      effectiveLimbCount > 0
+        ? `Damage: ${effectiveDamage} (x${Math.pow(2, effectiveLimbCount)})`
         : `Damage: ${effectiveDamage}`;
 
     const lines = [
