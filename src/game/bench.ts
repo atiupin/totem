@@ -42,7 +42,7 @@ const generateRandomDirections = (bodyPartKind: BodyPartKind): Direction[] => {
   }
 
   const shuffled = shuffleArray(ALL_DIRECTIONS);
-  const count = 1 + Math.floor(Math.random() * 4);
+  const count = 2 + Math.floor(Math.random() * 3);
   return shuffled.slice(0, count);
 };
 
