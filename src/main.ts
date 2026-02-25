@@ -30,6 +30,7 @@ const SPRITE_PROJECTILE = 2;
 const MONSTER_SPRITE_COLUMN: Record<MonsterKind, number> = {
   eye: 3,
   yeti: 4,
+  demon: 5,
 };
 
 const BODY_PART_SPRITE_ROW = 1;
