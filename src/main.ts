@@ -18,7 +18,7 @@ import {
   BENCH_ORIGIN_Y,
   OPPOSITE_DIRECTION,
 } from './game';
-import type { GameState, BodyPart, BenchSlot, Direction, Vector2 } from './game';
+import type { GameState, BodyPart, BenchSlot, Direction, Vector2, MonsterKind } from './game';
 import spritesheetUrl from './sprites.png';
 
 const CANVAS_WIDTH = 640;
@@ -27,7 +27,10 @@ const SPRITE_SIZE = 24;
 
 const SPRITE_VILLAGE = 0;
 const SPRITE_PROJECTILE = 2;
-const SPRITE_MONSTER = 3;
+const MONSTER_SPRITE_COLUMN: Record<MonsterKind, number> = {
+  eye: 3,
+  yeti: 4,
+};
 
 const BODY_PART_SPRITE_ROW = 1;
 const BODY_PART_SPRITE_HEAD = 0;
@@ -281,7 +284,8 @@ const renderGameState = (
   }
 
   for (const monster of gameState.monsters) {
-    drawSprite(spritesheet, SPRITE_MONSTER, 0, monster.position[0], monster.position[1], 0);
+    const monsterSpriteColumn = MONSTER_SPRITE_COLUMN[monster.monsterKind];
+    drawSprite(spritesheet, monsterSpriteColumn, 0, monster.position[0], monster.position[1], 0);
   }
 
   context.fillStyle = '#e0e0e0';

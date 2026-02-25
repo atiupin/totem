@@ -22,10 +22,7 @@ import {
   VILLAGE_HIT_DISTANCE,
   GRID_COLUMNS,
   GRID_ROWS,
-  MONSTER_SPEED,
-  MONSTER_HEALTH,
-  SPAWN_INTERVAL,
-  SPAWN_DURATION,
+  WAVES,
 } from './constants';
 
 export type GamePhase = 'playing' | 'victory' | 'defeat';
@@ -45,15 +42,21 @@ export type GameState = {
 
 const createDefaultSpawnEvents = (): SpawnEvent[] => {
   const spawnEvents: SpawnEvent[] = [];
-  const spawnCount = Math.floor(SPAWN_DURATION / SPAWN_INTERVAL);
 
-  for (let i = 0; i < spawnCount; i++) {
-    spawnEvents.push({
-      time: (i + 1) * SPAWN_INTERVAL,
-      monsterHealth: MONSTER_HEALTH,
-      monsterSpeed: MONSTER_SPEED,
-    });
+  for (const wave of WAVES) {
+    const spawnCount = Math.floor(wave.duration / wave.spawnInterval);
+
+    for (let i = 0; i < spawnCount; i++) {
+      spawnEvents.push({
+        time: wave.startTime + (i + 1) * wave.spawnInterval,
+        monsterKind: wave.monsterKind,
+        monsterHealth: wave.monsterHealth,
+        monsterSpeed: wave.monsterSpeed,
+      });
+    }
   }
+
+  spawnEvents.sort((eventA, eventB) => eventA.time - eventB.time);
 
   return spawnEvents;
 };
@@ -85,6 +88,7 @@ const spawnMonsters = (gameState: GameState) => {
 
     gameState.monsters.push({
       monsterId: gameState.nextEntityId++,
+      monsterKind: spawnEvent.monsterKind,
       position: [CANVAS_WIDTH, spawnY],
       speed: spawnEvent.monsterSpeed,
       health: spawnEvent.monsterHealth,

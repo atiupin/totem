@@ -19,10 +19,35 @@ export const HEAD_BASE_DAMAGE = 1;
 export const HEAD_PROJECTILE_SPEED = 200;
 export const LIMB_PROJECTILE_SCALE = 1.3;
 
-export const MONSTER_SPEED = 30;
-export const MONSTER_HEALTH = 5;
-export const SPAWN_INTERVAL = 2;
-export const SPAWN_DURATION = 50;
+export type MonsterKind = 'eye' | 'yeti';
+
+export type WaveConfig = {
+  monsterKind: MonsterKind;
+  startTime: number;
+  duration: number;
+  spawnInterval: number;
+  monsterHealth: number;
+  monsterSpeed: number;
+};
+
+export const WAVES: WaveConfig[] = [
+  {
+    monsterKind: 'eye',
+    startTime: 0,
+    duration: 50,
+    spawnInterval: 2,
+    monsterHealth: 4,
+    monsterSpeed: 30,
+  },
+  {
+    monsterKind: 'yeti',
+    startTime: 20,
+    duration: 40,
+    spawnInterval: 3,
+    monsterHealth: 8,
+    monsterSpeed: 20,
+  },
+];
 
 export const BENCH_SLOTS = 6;
 export const BENCH_SPAWN_INTERVAL = 5;

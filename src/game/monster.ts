@@ -1,8 +1,10 @@
+import type { MonsterKind } from './constants';
 import type { Vector2 } from './vector2';
 import { subtractVector2, normalizeVector2, scaleVector2, addVector2 } from './vector2';
 
 export type Monster = {
   monsterId: number;
+  monsterKind: MonsterKind;
   position: Vector2;
   speed: number;
   health: number;
