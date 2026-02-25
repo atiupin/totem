@@ -1,11 +1,11 @@
 import { execSync } from 'child_process';
 import { defineConfig } from 'vite';
 
-const gitHash = execSync('git rev-parse --short HEAD').toString().trim();
+const gitCommitCount = execSync('git rev-list --count HEAD').toString().trim();
 
 export default defineConfig({
   base: './',
   define: {
-    __GIT_HASH__: JSON.stringify(gitHash),
+    __BUILD_VERSION__: JSON.stringify(`#${gitCommitCount}`),
   },
 });
