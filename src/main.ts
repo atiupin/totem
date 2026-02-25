@@ -304,18 +304,14 @@ const renderGameState = (
   }
 
   context.fillStyle = '#e0e0e0';
-  context.font = '16px monospace';
-  context.fillText(`Phase: ${gameState.phase}`, 16, 32);
-  context.fillText(`Time: ${gameState.elapsedTime.toFixed(1)}s`, 16, 52);
+  context.font = '14px monospace';
+  context.fillText(`Phase: ${gameState.phase}`, 16, 30);
+  context.fillText(`Time: ${gameState.elapsedTime.toFixed(1)}s`, 16, 48);
   context.fillText(
     `Village HP: ${gameState.village.health}/${gameState.village.maxHealth}`,
     16,
-    72
+    66
   );
-  context.fillText(`Monsters: ${gameState.monsters.length}`, 16, 92);
-  context.fillText(`Guards: ${gameState.guards.length}`, 16, 112);
-  context.fillText(`Projectiles: ${gameState.projectiles.length}`, 16, 132);
-  context.fillText(`Spawns left: ${gameState.spawnEvents.length}`, 16, 152);
 
   context.strokeStyle = 'rgba(255, 255, 255, 0.15)';
   context.lineWidth = 1;
