@@ -34,6 +34,7 @@ const MONSTER_SPRITE_COLUMN: Record<MonsterKind, number> = {
 };
 
 const BODY_PART_SPRITE_ROW = 1;
+const BODY_PART_GOLD_SPRITE_ROW = 2;
 const BODY_PART_SPRITE_HEAD = 0;
 const BODY_PART_SPRITE_PIPE = 1;
 const BODY_PART_SPRITE_L_SHAPE = 2;
@@ -252,18 +253,22 @@ const renderGameState = (
     0
   );
 
-  for (const bodyPart of gameState.bodyParts) {
-    const bodyPartPosition = getGridCellPosition(bodyPart.gridX, bodyPart.gridY);
-    const spriteColumn = getBodyPartSpriteColumn(bodyPart);
-    const rotation = getBodyPartRotation(bodyPart);
-    drawSprite(
-      spritesheet,
-      spriteColumn,
-      BODY_PART_SPRITE_ROW,
-      bodyPartPosition[0],
-      bodyPartPosition[1],
-      rotation
-    );
+  for (const guard of gameState.guards) {
+    const spriteRow = guard.isCompleted ? BODY_PART_GOLD_SPRITE_ROW : BODY_PART_SPRITE_ROW;
+
+    for (const bodyPart of guard.bodyParts) {
+      const bodyPartPosition = getGridCellPosition(bodyPart.gridX, bodyPart.gridY);
+      const spriteColumn = getBodyPartSpriteColumn(bodyPart);
+      const rotation = getBodyPartRotation(bodyPart);
+      drawSprite(
+        spritesheet,
+        spriteColumn,
+        spriteRow,
+        bodyPartPosition[0],
+        bodyPartPosition[1],
+        rotation
+      );
+    }
   }
 
   for (const projectile of gameState.projectiles) {

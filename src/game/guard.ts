@@ -19,9 +19,31 @@ export type Guard = {
   limbCount: number;
   bonusRange: number;
   bonusCooldown: number;
+  isCompleted: boolean;
 };
 
 const createGridKey = (gridX: number, gridY: number): string => `${gridX},${gridY}`;
+
+const checkGuardCompleted = (guardBodyParts: BodyPart[]): boolean => {
+  const positionSet = new Set(
+    guardBodyParts.map(bodyPart => createGridKey(bodyPart.gridX, bodyPart.gridY))
+  );
+
+  for (const bodyPart of guardBodyParts) {
+    for (const direction of bodyPart.connectionDirections) {
+      const neighborKey = createGridKey(
+        getNeighborGridX(bodyPart.gridX, direction),
+        getNeighborGridY(bodyPart.gridY, direction)
+      );
+
+      if (!positionSet.has(neighborKey)) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+};
 
 export const computeGuards = (bodyParts: BodyPart[]): Guard[] => {
   const partsByPosition = new Map<string, BodyPart>();
@@ -81,6 +103,7 @@ export const computeGuards = (bodyParts: BodyPart[]): Guard[] => {
       limbCount,
       bonusRange: 0,
       bonusCooldown: 0,
+      isCompleted: checkGuardCompleted(component),
     });
   }
 
@@ -102,7 +125,8 @@ export const tickGuards = (
         continue;
       }
 
-      const effectiveRange = HEAD_BASE_RANGE + guard.bonusRange;
+      const completedRangeMultiplier = guard.isCompleted ? 2 : 1;
+      const effectiveRange = (HEAD_BASE_RANGE + guard.bonusRange) * completedRangeMultiplier;
       const effectiveDamage = HEAD_BASE_DAMAGE * Math.pow(2, guard.limbCount);
       const effectiveCooldown = Math.max(0.1, HEAD_BASE_COOLDOWN - guard.bonusCooldown);
       const effectiveScale = Math.pow(LIMB_PROJECTILE_SCALE, guard.limbCount);

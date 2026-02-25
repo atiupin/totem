@@ -5,7 +5,7 @@ import type { BodyPart } from './bodyPart';
 import { createBodyPart } from './bodyPart';
 import type { BodyPartKind } from './bodyPart';
 import type { Direction } from './grid';
-import { getNeighborGridX, getNeighborGridY } from './grid';
+import { OPPOSITE_DIRECTION, getNeighborGridX, getNeighborGridY } from './grid';
 import type { Guard } from './guard';
 import { computeGuards, tickGuards } from './guard';
 import type { Projectile } from './projectile';
@@ -179,7 +179,11 @@ export const canPlaceBodyPart = (
       bodyPart => bodyPart.gridX === neighborGridX && bodyPart.gridY === neighborGridY
     );
 
-    if (neighborBodyPart === undefined || neighborBodyPart.bodyPartKind !== 'body') {
+    if (
+      neighborBodyPart === undefined ||
+      neighborBodyPart.bodyPartKind !== 'body' ||
+      !neighborBodyPart.connectionDirections.includes(OPPOSITE_DIRECTION[connectionDirection])
+    ) {
       return false;
     }
   }
