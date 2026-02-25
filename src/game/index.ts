@@ -8,4 +8,5 @@ export * from './guard';
 export * from './projectile';
 export * from './spawnSchedule';
 export * from './bench';
+export * from './monsterPath';
 export * from './gameState';

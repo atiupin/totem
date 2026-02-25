@@ -7,6 +7,7 @@ import {
   getBenchSlotPosition,
   removeBenchSlot,
   rotateBenchSlotClockwise,
+  MONSTER_PATH,
   GRID_COLUMNS,
   GRID_ROWS,
   GRID_CELL_SIZE,
@@ -242,6 +243,14 @@ const renderGameState = (
     context.moveTo(GRID_ORIGIN_X, lineY);
     context.lineTo(GRID_ORIGIN_X + GRID_COLUMNS * GRID_CELL_SIZE, lineY);
     context.stroke();
+  }
+
+  context.fillStyle = 'rgba(255, 255, 255, 0.06)';
+
+  for (const [gridX, gridY] of MONSTER_PATH) {
+    const cellX = GRID_ORIGIN_X + gridX * GRID_CELL_SIZE;
+    const cellY = GRID_ORIGIN_Y + gridY * GRID_CELL_SIZE;
+    context.fillRect(cellX, cellY, GRID_CELL_SIZE, GRID_CELL_SIZE);
   }
 
   drawSprite(

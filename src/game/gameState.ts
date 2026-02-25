@@ -2,7 +2,7 @@ import type { Village } from './village';
 import type { Monster } from './monster';
 import { tickMonsters } from './monster';
 import type { BodyPart } from './bodyPart';
-import { createBodyPart, getGridCellPosition } from './bodyPart';
+import { createBodyPart } from './bodyPart';
 import type { BodyPartKind } from './bodyPart';
 import type { Direction } from './grid';
 import { OPPOSITE_DIRECTION, getNeighborGridX, getNeighborGridY } from './grid';
@@ -14,6 +14,7 @@ import type { SpawnEvent } from './spawnSchedule';
 import type { Bench } from './bench';
 import { createBench, tickBench } from './bench';
 import { getVector2Distance } from './vector2';
+import { MONSTER_PATH, getMonsterPathPositions } from './monsterPath';
 import {
   CANVAS_WIDTH,
   VILLAGE_HEALTH,
@@ -36,6 +37,7 @@ export type GameState = {
   projectiles: Projectile[];
   spawnEvents: SpawnEvent[];
   bench: Bench;
+  monsterPathPositions: [number, number][];
   nextEntityId: number;
 };
 
@@ -74,6 +76,7 @@ export const createGameState = (): GameState => ({
   projectiles: [],
   spawnEvents: createDefaultSpawnEvents(),
   bench: createBench(),
+  monsterPathPositions: getMonsterPathPositions(MONSTER_PATH),
   nextEntityId: 1,
 });
 
@@ -83,15 +86,15 @@ const spawnMonsters = (gameState: GameState) => {
   );
 
   for (const spawnEvent of pendingEvents) {
-    const spawnGridY = Math.floor(Math.random() * GRID_ROWS);
-    const spawnPosition = getGridCellPosition(GRID_COLUMNS - 1, spawnGridY);
+    const firstPathPosition = gameState.monsterPathPositions[0];
 
     gameState.monsters.push({
       monsterId: gameState.nextEntityId++,
       monsterKind: spawnEvent.monsterKind,
-      position: [CANVAS_WIDTH, spawnPosition[1]],
+      position: [CANVAS_WIDTH, firstPathPosition[1]],
       speed: spawnEvent.monsterSpeed,
       health: spawnEvent.monsterHealth,
+      pathIndex: 0,
     });
   }
 
@@ -138,7 +141,12 @@ export const tickGameState = (gameState: GameState, deltaTime: number) => {
 
   tickBench(gameState.bench, deltaTime);
   spawnMonsters(gameState);
-  tickMonsters(gameState.monsters, gameState.village.position, deltaTime);
+  tickMonsters(
+    gameState.monsters,
+    gameState.monsterPathPositions,
+    gameState.village.position,
+    deltaTime
+  );
   gameState.nextEntityId = tickGuards(
     gameState.guards,
     gameState.monsters,
