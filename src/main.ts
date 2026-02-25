@@ -1,16 +1,20 @@
 import {
   createGameState,
   tickGameState,
-  placeBodyPart,
   getGridCellPosition,
+  getBenchSlotPosition,
   GRID_COLUMNS,
   GRID_ROWS,
   GRID_CELL_SIZE,
   GRID_ORIGIN_X,
   GRID_ORIGIN_Y,
+  BENCH_SLOTS,
+  BENCH_CELL_SIZE,
+  BENCH_ORIGIN_X,
+  BENCH_ORIGIN_Y,
   OPPOSITE_DIRECTION,
 } from './game';
-import type { GameState, BodyPart, Direction } from './game';
+import type { GameState, BodyPart, BenchSlot, Direction, Vector2 } from './game';
 import spritesheetUrl from './sprites.png';
 
 const CANVAS_WIDTH = 640;
@@ -192,7 +196,21 @@ const getBodyPartRotation = (bodyPart: BodyPart): number => {
   return 0;
 };
 
-const renderGameState = (spritesheet: HTMLImageElement, gameState: GameState) => {
+const benchSlotToBodyPart = (benchSlot: BenchSlot): BodyPart => ({
+  bodyPartId: 0,
+  bodyPartKind: benchSlot.bodyPartKind,
+  gridX: 0,
+  gridY: 0,
+  connectionDirections: benchSlot.connectionDirections,
+  cooldownTimer: 0,
+});
+
+const renderGameState = (
+  spritesheet: HTMLImageElement,
+  gameState: GameState,
+  selectedBenchSlotIndex: number | undefined,
+  mousePosition: Vector2
+) => {
   context.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
   context.fillStyle = '#1a1a2e';
@@ -268,32 +286,116 @@ const renderGameState = (spritesheet: HTMLImageElement, gameState: GameState) =>
   context.fillText(`Guards: ${gameState.guards.length}`, 16, 112);
   context.fillText(`Projectiles: ${gameState.projectiles.length}`, 16, 132);
   context.fillText(`Spawns left: ${gameState.spawnEvents.length}`, 16, 152);
+
+  context.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+  context.lineWidth = 1;
+
+  for (let column = 0; column <= BENCH_SLOTS; column++) {
+    const lineX = BENCH_ORIGIN_X + column * BENCH_CELL_SIZE;
+    context.beginPath();
+    context.moveTo(lineX, BENCH_ORIGIN_Y);
+    context.lineTo(lineX, BENCH_ORIGIN_Y + BENCH_CELL_SIZE);
+    context.stroke();
+  }
+
+  for (let row = 0; row <= 1; row++) {
+    const lineY = BENCH_ORIGIN_Y + row * BENCH_CELL_SIZE;
+    context.beginPath();
+    context.moveTo(BENCH_ORIGIN_X, lineY);
+    context.lineTo(BENCH_ORIGIN_X + BENCH_SLOTS * BENCH_CELL_SIZE, lineY);
+    context.stroke();
+  }
+
+  for (let slotIndex = 0; slotIndex < BENCH_SLOTS; slotIndex++) {
+    const benchSlot = gameState.bench.slots[slotIndex];
+
+    if (benchSlot === undefined) {
+      continue;
+    }
+
+    const slotPosition = getBenchSlotPosition(slotIndex);
+    const bodyPart = benchSlotToBodyPart(benchSlot);
+    const spriteColumn = getBodyPartSpriteColumn(bodyPart);
+    const rotation = getBodyPartRotation(bodyPart);
+    drawSprite(
+      spritesheet,
+      spriteColumn,
+      BODY_PART_SPRITE_ROW,
+      slotPosition[0],
+      slotPosition[1],
+      rotation
+    );
+  }
+
+  if (selectedBenchSlotIndex !== undefined) {
+    const selectedSlotX = BENCH_ORIGIN_X + selectedBenchSlotIndex * BENCH_CELL_SIZE;
+    context.strokeStyle = '#88ccff';
+    context.lineWidth = 2;
+    context.strokeRect(selectedSlotX, BENCH_ORIGIN_Y, BENCH_CELL_SIZE, BENCH_CELL_SIZE);
+
+    const benchSlot = gameState.bench.slots[selectedBenchSlotIndex];
+
+    if (benchSlot !== undefined) {
+      const bodyPart = benchSlotToBodyPart(benchSlot);
+      const spriteColumn = getBodyPartSpriteColumn(bodyPart);
+      const rotation = getBodyPartRotation(bodyPart);
+      drawSprite(
+        spritesheet,
+        spriteColumn,
+        BODY_PART_SPRITE_ROW,
+        mousePosition[0],
+        mousePosition[1],
+        rotation
+      );
+    }
+  }
 };
 
 const start = async () => {
   const spritesheet = await loadImage(spritesheetUrl);
   const gameState = createGameState();
 
-  // Demo guard layout (one connected guard using all body part types):
-  //
-  //   col: 0     1     2     3     4
-  // row 0: .     HEAD  .     HEAD  .
-  // row 1: .     PIPE  .     PIPE  .
-  // row 2: HEAD  X     PIPE  T     LIMB
-  // row 3: .     L     LIMB  .     .
-  // row 4: .     .     .     .     .
+  let selectedBenchSlotIndex: number | undefined;
+  let mousePosition: Vector2 = [0, 0];
 
-  placeBodyPart(gameState, 1, 0, 'head', ['down']);
-  placeBodyPart(gameState, 3, 0, 'head', ['down']);
-  placeBodyPart(gameState, 1, 1, 'body', ['up', 'down']);
-  placeBodyPart(gameState, 3, 1, 'body', ['up', 'down']);
-  placeBodyPart(gameState, 0, 2, 'head', ['right']);
-  placeBodyPart(gameState, 1, 2, 'body', ['up', 'down', 'left', 'right']);
-  placeBodyPart(gameState, 2, 2, 'body', ['left', 'right']);
-  placeBodyPart(gameState, 3, 2, 'body', ['up', 'left', 'right']);
-  placeBodyPart(gameState, 4, 2, 'limb', ['left']);
-  placeBodyPart(gameState, 1, 3, 'body', ['up', 'right']);
-  placeBodyPart(gameState, 2, 3, 'limb', ['left']);
+  const getCanvasMousePosition = (event: MouseEvent): Vector2 => {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = CANVAS_WIDTH / rect.width;
+    const scaleY = CANVAS_HEIGHT / rect.height;
+    return [(event.clientX - rect.left) * scaleX, (event.clientY - rect.top) * scaleY];
+  };
+
+  const getBenchSlotAtPosition = (positionX: number, positionY: number): number | undefined => {
+    if (positionY < BENCH_ORIGIN_Y || positionY >= BENCH_ORIGIN_Y + BENCH_CELL_SIZE) {
+      return undefined;
+    }
+
+    const slotIndex = Math.floor((positionX - BENCH_ORIGIN_X) / BENCH_CELL_SIZE);
+
+    if (slotIndex < 0 || slotIndex >= BENCH_SLOTS) {
+      return undefined;
+    }
+
+    return slotIndex;
+  };
+
+  canvas.addEventListener('mousemove', event => {
+    mousePosition = getCanvasMousePosition(event);
+  });
+
+  canvas.addEventListener('click', event => {
+    const [clickX, clickY] = getCanvasMousePosition(event);
+    const slotIndex = getBenchSlotAtPosition(clickX, clickY);
+
+    if (slotIndex !== undefined && gameState.bench.slots[slotIndex] !== undefined) {
+      selectedBenchSlotIndex = slotIndex;
+    }
+  });
+
+  canvas.addEventListener('contextmenu', event => {
+    event.preventDefault();
+    selectedBenchSlotIndex = undefined;
+  });
 
   let previousTime = 0;
 
@@ -302,7 +404,7 @@ const start = async () => {
     previousTime = currentTime;
 
     tickGameState(gameState, deltaTime);
-    renderGameState(spritesheet, gameState);
+    renderGameState(spritesheet, gameState, selectedBenchSlotIndex, mousePosition);
 
     requestAnimationFrame(loop);
   };

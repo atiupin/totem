@@ -10,6 +10,8 @@ import { computeGuards, tickGuards } from './guard';
 import type { Projectile } from './projectile';
 import { tickProjectiles } from './projectile';
 import type { SpawnEvent } from './spawnSchedule';
+import type { Bench } from './bench';
+import { createBench, tickBench } from './bench';
 import { getVector2Distance } from './vector2';
 import {
   CANVAS_WIDTH,
@@ -36,6 +38,7 @@ export type GameState = {
   guards: Guard[];
   projectiles: Projectile[];
   spawnEvents: SpawnEvent[];
+  bench: Bench;
   nextEntityId: number;
 };
 
@@ -67,6 +70,7 @@ export const createGameState = (): GameState => ({
   guards: [],
   projectiles: [],
   spawnEvents: createDefaultSpawnEvents(),
+  bench: createBench(),
   nextEntityId: 1,
 });
 
@@ -127,6 +131,7 @@ export const tickGameState = (gameState: GameState, deltaTime: number) => {
 
   gameState.elapsedTime += deltaTime;
 
+  tickBench(gameState.bench, deltaTime);
   spawnMonsters(gameState);
   tickMonsters(gameState.monsters, gameState.village.position, deltaTime);
   gameState.nextEntityId = tickGuards(

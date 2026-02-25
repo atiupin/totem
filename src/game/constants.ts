@@ -22,3 +22,9 @@ export const MONSTER_SPEED = 40;
 export const MONSTER_HEALTH = 3;
 export const SPAWN_INTERVAL = 2;
 export const SPAWN_DURATION = 30;
+
+export const BENCH_SLOTS = 6;
+export const BENCH_SPAWN_INTERVAL = 5;
+export const BENCH_CELL_SIZE = GRID_CELL_SIZE;
+export const BENCH_ORIGIN_X = (CANVAS_WIDTH - BENCH_SLOTS * BENCH_CELL_SIZE) / 2;
+export const BENCH_ORIGIN_Y = CANVAS_HEIGHT - BENCH_CELL_SIZE - 16;
