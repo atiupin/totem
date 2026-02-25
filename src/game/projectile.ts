@@ -16,6 +16,7 @@ export type Projectile = {
   targetMonsterId: number;
   speed: number;
   damage: number;
+  scale: number;
 };
 
 export const tickProjectiles = (

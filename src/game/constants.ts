@@ -17,11 +17,12 @@ export const HEAD_BASE_RANGE = 100;
 export const HEAD_BASE_COOLDOWN = 1;
 export const HEAD_BASE_DAMAGE = 1;
 export const HEAD_PROJECTILE_SPEED = 200;
+export const LIMB_PROJECTILE_SCALE = 1.3;
 
-export const MONSTER_SPEED = 40;
-export const MONSTER_HEALTH = 3;
+export const MONSTER_SPEED = 30;
+export const MONSTER_HEALTH = 5;
 export const SPAWN_INTERVAL = 2;
-export const SPAWN_DURATION = 30;
+export const SPAWN_DURATION = 50;
 
 export const BENCH_SLOTS = 6;
 export const BENCH_SPAWN_INTERVAL = 5;

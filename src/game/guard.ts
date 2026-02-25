@@ -9,13 +9,14 @@ import {
   HEAD_BASE_RANGE,
   HEAD_BASE_COOLDOWN,
   HEAD_PROJECTILE_SPEED,
+  LIMB_PROJECTILE_SCALE,
 } from './constants';
 
 export type Guard = {
   guardId: number;
   bodyParts: BodyPart[];
   headParts: BodyPart[];
-  bonusDamage: number;
+  limbCount: number;
   bonusRange: number;
   bonusCooldown: number;
 };
@@ -70,13 +71,14 @@ export const computeGuards = (bodyParts: BodyPart[]): Guard[] => {
     }
 
     const headParts = component.filter(part => part.bodyPartKind === 'head');
+    const limbCount = component.filter(part => part.bodyPartKind === 'limb').length;
     const minBodyPartId = Math.min(...component.map(part => part.bodyPartId));
 
     guards.push({
       guardId: minBodyPartId,
       bodyParts: component,
       headParts,
-      bonusDamage: 0,
+      limbCount,
       bonusRange: 0,
       bonusCooldown: 0,
     });
@@ -101,8 +103,9 @@ export const tickGuards = (
       }
 
       const effectiveRange = HEAD_BASE_RANGE + guard.bonusRange;
-      const effectiveDamage = HEAD_BASE_DAMAGE + guard.bonusDamage;
+      const effectiveDamage = HEAD_BASE_DAMAGE * Math.pow(2, guard.limbCount);
       const effectiveCooldown = Math.max(0.1, HEAD_BASE_COOLDOWN - guard.bonusCooldown);
+      const effectiveScale = Math.pow(LIMB_PROJECTILE_SCALE, guard.limbCount);
       const headPosition = getGridCellPosition(headPart.gridX, headPart.gridY);
 
       let nearestMonster: Monster | undefined;
@@ -124,6 +127,7 @@ export const tickGuards = (
           targetMonsterId: nearestMonster.monsterId,
           speed: HEAD_PROJECTILE_SPEED,
           damage: effectiveDamage,
+          scale: effectiveScale,
         });
         headPart.cooldownTimer = effectiveCooldown;
       }

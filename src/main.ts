@@ -263,13 +263,20 @@ const renderGameState = (
   }
 
   for (const projectile of gameState.projectiles) {
-    drawSprite(
+    const drawX = Math.round(projectile.position[0]);
+    const drawY = Math.round(projectile.position[1]);
+    const scaledSize = SPRITE_SIZE * projectile.scale;
+
+    context.drawImage(
       spritesheet,
-      SPRITE_PROJECTILE,
+      SPRITE_PROJECTILE * SPRITE_SIZE,
       0,
-      projectile.position[0],
-      projectile.position[1],
-      0
+      SPRITE_SIZE,
+      SPRITE_SIZE,
+      drawX - scaledSize / 2,
+      drawY - scaledSize / 2,
+      scaledSize,
+      scaledSize
     );
   }
 
