@@ -20,6 +20,7 @@ import {
   OPPOSITE_DIRECTION,
   HEAD_BASE_RANGE,
   HEAD_BASE_DAMAGE,
+  BODY_PART_HEALTH,
 } from './game';
 import type {
   GameState,
@@ -259,6 +260,7 @@ const benchSlotToBodyPart = (benchSlot: BenchSlot): BodyPart => ({
   gridY: 0,
   connectionDirections: benchSlot.connectionDirections,
   cooldownTimer: 0,
+  health: 0,
 });
 
 const renderGameState = (
@@ -323,6 +325,21 @@ const renderGameState = (
         bodyPartPosition[1],
         rotation
       );
+
+      const maxHealth = BODY_PART_HEALTH[bodyPart.bodyPartKind];
+
+      if (bodyPart.health < maxHealth) {
+        const barWidth = GRID_CELL_SIZE - 4;
+        const barHeight = 3;
+        const barX = bodyPartPosition[0] - barWidth / 2;
+        const barY = bodyPartPosition[1] - GRID_CELL_SIZE / 2 - 4;
+        const healthRatio = bodyPart.health / maxHealth;
+
+        context.fillStyle = '#333';
+        context.fillRect(barX, barY, barWidth, barHeight);
+        context.fillStyle = '#e04040';
+        context.fillRect(barX, barY, barWidth * healthRatio, barHeight);
+      }
     }
   }
 

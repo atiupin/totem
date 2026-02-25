@@ -21,13 +21,24 @@ export const LIMB_PROJECTILE_SCALE = 1.3;
 
 export type MonsterKind = 'eye' | 'yeti' | 'demon';
 
+export type MonsterStats = {
+  health: number;
+  speed: number;
+  attackDamage: number;
+  attackCooldown: number;
+};
+
+export const MONSTER_STATS: Record<MonsterKind, MonsterStats> = {
+  eye: { health: 4, speed: 30, attackDamage: 4, attackCooldown: 0.5 },
+  yeti: { health: 8, speed: 25, attackDamage: 8, attackCooldown: 0.8 },
+  demon: { health: 16, speed: 20, attackDamage: 24, attackCooldown: 1.0 },
+};
+
 export type WaveConfig = {
   monsterKind: MonsterKind;
   startTime: number;
   duration: number;
   spawnInterval: number;
-  monsterHealth: number;
-  monsterSpeed: number;
 };
 
 export const WAVES: WaveConfig[] = [
@@ -35,25 +46,31 @@ export const WAVES: WaveConfig[] = [
     monsterKind: 'eye',
     startTime: 0,
     duration: 60,
-    spawnInterval: 2,
-    monsterHealth: 4,
-    monsterSpeed: 30,
+    spawnInterval: 1,
   },
   {
     monsterKind: 'yeti',
     startTime: 20,
     duration: 40,
-    spawnInterval: 3,
-    monsterHealth: 8,
-    monsterSpeed: 25,
+    spawnInterval: 2,
   },
   {
     monsterKind: 'demon',
     startTime: 40,
     duration: 20,
-    spawnInterval: 3,
-    monsterHealth: 16,
-    monsterSpeed: 20,
+    spawnInterval: 2,
+  },
+  {
+    monsterKind: 'eye',
+    startTime: 60,
+    duration: 20,
+    spawnInterval: 0.5,
+  },
+  {
+    monsterKind: 'demon',
+    startTime: 60,
+    duration: 20,
+    spawnInterval: 1,
   },
 ];
 

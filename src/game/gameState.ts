@@ -23,6 +23,7 @@ import {
   GRID_COLUMNS,
   GRID_ROWS,
   WAVES,
+  MONSTER_STATS,
 } from './constants';
 
 export type GamePhase = 'playing' | 'victory' | 'defeat';
@@ -51,8 +52,6 @@ const createDefaultSpawnEvents = (): SpawnEvent[] => {
       spawnEvents.push({
         time: wave.startTime + (i + 1) * wave.spawnInterval,
         monsterKind: wave.monsterKind,
-        monsterHealth: wave.monsterHealth,
-        monsterSpeed: wave.monsterSpeed,
       });
     }
   }
@@ -87,14 +86,17 @@ const spawnMonsters = (gameState: GameState) => {
 
   for (const spawnEvent of pendingEvents) {
     const firstPathPosition = gameState.monsterPathPositions[0];
+    const monsterStats = MONSTER_STATS[spawnEvent.monsterKind];
 
     gameState.monsters.push({
       monsterId: gameState.nextEntityId++,
       monsterKind: spawnEvent.monsterKind,
       position: [CANVAS_WIDTH, firstPathPosition[1]],
-      speed: spawnEvent.monsterSpeed,
-      health: spawnEvent.monsterHealth,
+      speed: monsterStats.speed,
+      health: monsterStats.health,
       pathIndex: 0,
+      attackTargetId: undefined,
+      attackCooldownTimer: 0,
     });
   }
 
@@ -141,12 +143,18 @@ export const tickGameState = (gameState: GameState, deltaTime: number) => {
 
   tickBench(gameState.bench, deltaTime);
   spawnMonsters(gameState);
-  tickMonsters(
+  const destroyedBodyPartIds = tickMonsters(
     gameState.monsters,
     gameState.monsterPathPositions,
+    MONSTER_PATH,
+    gameState.bodyParts,
     gameState.village.position,
     deltaTime
   );
+
+  for (const bodyPartId of destroyedBodyPartIds) {
+    removeBodyPart(gameState, bodyPartId);
+  }
   gameState.nextEntityId = tickGuards(
     gameState.guards,
     gameState.monsters,
