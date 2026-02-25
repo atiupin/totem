@@ -379,11 +379,26 @@ const start = async () => {
   let selectedBenchSlotIndex: number | undefined;
   let mousePosition: Vector2 = [0, 0];
 
+  // Account for object-fit: contain letterboxing when calculating mouse position
   const getCanvasMousePosition = (event: MouseEvent): Vector2 => {
     const rect = canvas.getBoundingClientRect();
-    const scaleX = CANVAS_WIDTH / rect.width;
-    const scaleY = CANVAS_HEIGHT / rect.height;
-    return [(event.clientX - rect.left) * scaleX, (event.clientY - rect.top) * scaleY];
+    const canvasAspect = CANVAS_WIDTH / CANVAS_HEIGHT;
+    const elementAspect = rect.width / rect.height;
+
+    let offsetX = 0;
+    let offsetY = 0;
+
+    if (elementAspect > canvasAspect) {
+      offsetX = (rect.width - rect.height * canvasAspect) / 2;
+    } else {
+      offsetY = (rect.height - rect.width / canvasAspect) / 2;
+    }
+
+    const scale = CANVAS_WIDTH / (rect.width - offsetX * 2);
+    return [
+      (event.clientX - rect.left - offsetX) * scale,
+      (event.clientY - rect.top - offsetY) * scale,
+    ];
   };
 
   const getGridCellAtPosition = (
