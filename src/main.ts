@@ -378,6 +378,12 @@ const renderGameState = (
     66
   );
 
+  context.fillStyle = 'rgba(255, 255, 255, 0.3)';
+  context.font = '10px monospace';
+  context.textAlign = 'right';
+  context.fillText(__GIT_HASH__, CANVAS_WIDTH - 8, CANVAS_HEIGHT - 8);
+  context.textAlign = 'left';
+
   context.strokeStyle = 'rgba(255, 255, 255, 0.15)';
   context.lineWidth = 1;
 
