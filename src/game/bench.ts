@@ -59,6 +59,26 @@ export const createBench = (): Bench => {
   return { slots, spawnTimer: BENCH_SPAWN_INTERVAL };
 };
 
+const pickWeightedBodyPartKind = (bench: Bench): BodyPartKind => {
+  const presentKinds = new Set(
+    bench.slots
+      .filter((slot): slot is BenchSlot => slot !== undefined)
+      .map(slot => slot.bodyPartKind)
+  );
+
+  const weightedKinds: BodyPartKind[] = [];
+
+  for (const bodyPartKind of BODY_PART_KINDS) {
+    const weight = presentKinds.has(bodyPartKind) ? 1 : 2;
+
+    for (let i = 0; i < weight; i++) {
+      weightedKinds.push(bodyPartKind);
+    }
+  }
+
+  return pickRandom(weightedKinds);
+};
+
 export const tickBench = (bench: Bench, deltaTime: number) => {
   bench.spawnTimer -= deltaTime;
 
@@ -74,7 +94,7 @@ export const tickBench = (bench: Bench, deltaTime: number) => {
     return;
   }
 
-  bench.slots[emptySlotIndex] = createRandomBenchSlot(pickRandom(BODY_PART_KINDS));
+  bench.slots[emptySlotIndex] = createRandomBenchSlot(pickWeightedBodyPartKind(bench));
 };
 
 export const removeBenchSlot = (bench: Bench, slotIndex: number) => {
