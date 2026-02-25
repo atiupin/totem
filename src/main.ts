@@ -1,8 +1,12 @@
 import {
   createGameState,
   tickGameState,
+  placeBodyPart,
+  canPlaceBodyPart,
   getGridCellPosition,
   getBenchSlotPosition,
+  removeBenchSlot,
+  rotateBenchSlotClockwise,
   GRID_COLUMNS,
   GRID_ROWS,
   GRID_CELL_SIZE,
@@ -365,6 +369,25 @@ const start = async () => {
     return [(event.clientX - rect.left) * scaleX, (event.clientY - rect.top) * scaleY];
   };
 
+  const getGridCellAtPosition = (
+    positionX: number,
+    positionY: number
+  ): { gridX: number; gridY: number } | undefined => {
+    if (
+      positionX < GRID_ORIGIN_X ||
+      positionX >= GRID_ORIGIN_X + GRID_COLUMNS * GRID_CELL_SIZE ||
+      positionY < GRID_ORIGIN_Y ||
+      positionY >= GRID_ORIGIN_Y + GRID_ROWS * GRID_CELL_SIZE
+    ) {
+      return undefined;
+    }
+
+    return {
+      gridX: Math.floor((positionX - GRID_ORIGIN_X) / GRID_CELL_SIZE),
+      gridY: Math.floor((positionY - GRID_ORIGIN_Y) / GRID_CELL_SIZE),
+    };
+  };
+
   const getBenchSlotAtPosition = (positionX: number, positionY: number): number | undefined => {
     if (positionY < BENCH_ORIGIN_Y || positionY >= BENCH_ORIGIN_Y + BENCH_CELL_SIZE) {
       return undefined;
@@ -385,6 +408,36 @@ const start = async () => {
 
   canvas.addEventListener('click', event => {
     const [clickX, clickY] = getCanvasMousePosition(event);
+
+    if (selectedBenchSlotIndex !== undefined) {
+      const gridCell = getGridCellAtPosition(clickX, clickY);
+      const benchSlot = gameState.bench.slots[selectedBenchSlotIndex];
+
+      if (gridCell !== undefined && benchSlot !== undefined) {
+        const placed = canPlaceBodyPart(
+          gameState,
+          gridCell.gridX,
+          gridCell.gridY,
+          benchSlot.bodyPartKind,
+          benchSlot.connectionDirections
+        );
+
+        if (placed) {
+          placeBodyPart(
+            gameState,
+            gridCell.gridX,
+            gridCell.gridY,
+            benchSlot.bodyPartKind,
+            benchSlot.connectionDirections
+          );
+          removeBenchSlot(gameState.bench, selectedBenchSlotIndex);
+          selectedBenchSlotIndex = undefined;
+        }
+      }
+
+      return;
+    }
+
     const slotIndex = getBenchSlotAtPosition(clickX, clickY);
 
     if (slotIndex !== undefined && gameState.bench.slots[slotIndex] !== undefined) {
@@ -394,7 +447,16 @@ const start = async () => {
 
   canvas.addEventListener('contextmenu', event => {
     event.preventDefault();
-    selectedBenchSlotIndex = undefined;
+
+    if (selectedBenchSlotIndex !== undefined) {
+      rotateBenchSlotClockwise(gameState.bench, selectedBenchSlotIndex);
+    }
+  });
+
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') {
+      selectedBenchSlotIndex = undefined;
+    }
   });
 
   let previousTime = 0;

@@ -79,6 +79,25 @@ export const removeBenchSlot = (bench: Bench, slotIndex: number) => {
   bench.slots[slotIndex] = undefined;
 };
 
+const CLOCKWISE_ROTATION: Record<Direction, Direction> = {
+  up: 'right',
+  right: 'down',
+  down: 'left',
+  left: 'up',
+};
+
+export const rotateBenchSlotClockwise = (bench: Bench, slotIndex: number) => {
+  const benchSlot = bench.slots[slotIndex];
+
+  if (benchSlot === undefined) {
+    return;
+  }
+
+  benchSlot.connectionDirections = benchSlot.connectionDirections.map(
+    direction => CLOCKWISE_ROTATION[direction]
+  );
+};
+
 export const getBenchSlotPosition = (slotIndex: number): Vector2 => [
   BENCH_ORIGIN_X + slotIndex * BENCH_CELL_SIZE + BENCH_CELL_SIZE / 2,
   BENCH_ORIGIN_Y + BENCH_CELL_SIZE / 2,

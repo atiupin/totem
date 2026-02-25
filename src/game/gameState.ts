@@ -5,6 +5,7 @@ import type { BodyPart } from './bodyPart';
 import { createBodyPart } from './bodyPart';
 import type { BodyPartKind } from './bodyPart';
 import type { Direction } from './grid';
+import { getNeighborGridX, getNeighborGridY } from './grid';
 import type { Guard } from './guard';
 import { computeGuards, tickGuards } from './guard';
 import type { Projectile } from './projectile';
@@ -145,6 +146,41 @@ export const tickGameState = (gameState: GameState, deltaTime: number) => {
   removeDeadMonsters(gameState);
   checkMonsterVillageCollisions(gameState);
   checkGamePhase(gameState);
+};
+
+export const canPlaceBodyPart = (
+  gameState: GameState,
+  gridX: number,
+  gridY: number,
+  bodyPartKind: BodyPartKind,
+  connectionDirections: Direction[]
+): boolean => {
+  if (gridX < 0 || gridX >= GRID_COLUMNS || gridY < 0 || gridY >= GRID_ROWS) {
+    return false;
+  }
+
+  const isOccupied = gameState.bodyParts.some(
+    bodyPart => bodyPart.gridX === gridX && bodyPart.gridY === gridY
+  );
+
+  if (isOccupied) {
+    return false;
+  }
+
+  if (bodyPartKind === 'limb') {
+    const connectionDirection = connectionDirections[0];
+    const neighborGridX = getNeighborGridX(gridX, connectionDirection);
+    const neighborGridY = getNeighborGridY(gridY, connectionDirection);
+    const neighborBodyPart = gameState.bodyParts.find(
+      bodyPart => bodyPart.gridX === neighborGridX && bodyPart.gridY === neighborGridY
+    );
+
+    if (neighborBodyPart === undefined || neighborBodyPart.bodyPartKind !== 'body') {
+      return false;
+    }
+  }
+
+  return true;
 };
 
 export const placeBodyPart = (
