@@ -54,6 +54,8 @@ const createRandomBenchSlot = (bodyPartKind: BodyPartKind): BenchSlot => ({
 export const createBench = (): Bench => {
   const slots: (BenchSlot | undefined)[] = new Array(BENCH_SLOTS).fill(undefined);
   slots[0] = createRandomBenchSlot('head');
+  slots[1] = createRandomBenchSlot('body');
+  slots[2] = createRandomBenchSlot('limb');
   return { slots, spawnTimer: BENCH_SPAWN_INTERVAL };
 };
 
