@@ -416,6 +416,13 @@ const start = async () => {
   canvas.addEventListener('click', event => {
     const [clickX, clickY] = getCanvasMousePosition(event);
 
+    const slotIndex = getBenchSlotAtPosition(clickX, clickY);
+
+    if (slotIndex !== undefined && gameState.bench.slots[slotIndex] !== undefined) {
+      selectedBenchSlotIndex = slotIndex;
+      return;
+    }
+
     if (selectedBenchSlotIndex !== undefined) {
       const gridCell = getGridCellAtPosition(clickX, clickY);
       const benchSlot = gameState.bench.slots[selectedBenchSlotIndex];
@@ -441,14 +448,6 @@ const start = async () => {
           selectedBenchSlotIndex = undefined;
         }
       }
-
-      return;
-    }
-
-    const slotIndex = getBenchSlotAtPosition(clickX, clickY);
-
-    if (slotIndex !== undefined && gameState.bench.slots[slotIndex] !== undefined) {
-      selectedBenchSlotIndex = slotIndex;
     }
   });
 
