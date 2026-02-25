@@ -2,7 +2,7 @@ import type { Village } from './village';
 import type { Monster } from './monster';
 import { tickMonsters } from './monster';
 import type { BodyPart } from './bodyPart';
-import { createBodyPart } from './bodyPart';
+import { createBodyPart, getGridCellPosition } from './bodyPart';
 import type { BodyPartKind } from './bodyPart';
 import type { Direction } from './grid';
 import { OPPOSITE_DIRECTION, getNeighborGridX, getNeighborGridY } from './grid';
@@ -16,7 +16,6 @@ import { createBench, tickBench } from './bench';
 import { getVector2Distance } from './vector2';
 import {
   CANVAS_WIDTH,
-  CANVAS_HEIGHT,
   VILLAGE_HEALTH,
   VILLAGE_POSITION,
   VILLAGE_HIT_DISTANCE,
@@ -84,12 +83,13 @@ const spawnMonsters = (gameState: GameState) => {
   );
 
   for (const spawnEvent of pendingEvents) {
-    const spawnY = CANVAS_HEIGHT * 0.25 + Math.random() * CANVAS_HEIGHT * 0.5;
+    const spawnGridY = Math.floor(Math.random() * GRID_ROWS);
+    const spawnPosition = getGridCellPosition(GRID_COLUMNS - 1, spawnGridY);
 
     gameState.monsters.push({
       monsterId: gameState.nextEntityId++,
       monsterKind: spawnEvent.monsterKind,
-      position: [CANVAS_WIDTH, spawnY],
+      position: [CANVAS_WIDTH, spawnPosition[1]],
       speed: spawnEvent.monsterSpeed,
       health: spawnEvent.monsterHealth,
     });

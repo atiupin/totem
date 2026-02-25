@@ -7,10 +7,10 @@ export const VILLAGE_HEALTH = 10;
 export const VILLAGE_POSITION: Vector2 = [40, CANVAS_HEIGHT / 2];
 export const VILLAGE_HIT_DISTANCE = 20;
 
-export const GRID_COLUMNS = 5;
-export const GRID_ROWS = 5;
+export const GRID_COLUMNS = 21;
+export const GRID_ROWS = 11;
 export const GRID_CELL_SIZE = 24;
-export const GRID_ORIGIN_X = 200;
+export const GRID_ORIGIN_X = CANVAS_WIDTH - GRID_COLUMNS * GRID_CELL_SIZE;
 export const GRID_ORIGIN_Y = (CANVAS_HEIGHT - GRID_ROWS * GRID_CELL_SIZE) / 2;
 
 export const HEAD_BASE_RANGE = 100;
