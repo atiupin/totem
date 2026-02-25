@@ -18,8 +18,18 @@ import {
   BENCH_ORIGIN_X,
   BENCH_ORIGIN_Y,
   OPPOSITE_DIRECTION,
+  HEAD_BASE_RANGE,
+  HEAD_BASE_DAMAGE,
 } from './game';
-import type { GameState, BodyPart, BenchSlot, Direction, Vector2, MonsterKind } from './game';
+import type {
+  GameState,
+  BodyPart,
+  Guard,
+  BenchSlot,
+  Direction,
+  Vector2,
+  MonsterKind,
+} from './game';
 import spritesheetUrl from './sprites.png';
 
 const CANVAS_WIDTH = 640;
@@ -206,6 +216,42 @@ const getBodyPartRotation = (bodyPart: BodyPart): number => {
   return 0;
 };
 
+const findGuardAtPosition = (
+  guards: Guard[],
+  positionX: number,
+  positionY: number
+): Guard | undefined => {
+  if (
+    positionX < GRID_ORIGIN_X ||
+    positionX >= GRID_ORIGIN_X + GRID_COLUMNS * GRID_CELL_SIZE ||
+    positionY < GRID_ORIGIN_Y ||
+    positionY >= GRID_ORIGIN_Y + GRID_ROWS * GRID_CELL_SIZE
+  ) {
+    return undefined;
+  }
+
+  const gridX = Math.floor((positionX - GRID_ORIGIN_X) / GRID_CELL_SIZE);
+  const gridY = Math.floor((positionY - GRID_ORIGIN_Y) / GRID_CELL_SIZE);
+
+  for (const guard of guards) {
+    for (const bodyPart of guard.bodyParts) {
+      if (bodyPart.gridX === gridX && bodyPart.gridY === gridY) {
+        return guard;
+      }
+    }
+  }
+
+  return undefined;
+};
+
+const getEffectiveRange = (guard: Guard): number => {
+  const completedRangeMultiplier = guard.isCompleted ? 2 : 1;
+  return (HEAD_BASE_RANGE + guard.bonusRange) * completedRangeMultiplier;
+};
+
+const getEffectiveDamage = (guard: Guard): number =>
+  HEAD_BASE_DAMAGE * Math.pow(2, guard.limbCount);
+
 const benchSlotToBodyPart = (benchSlot: BenchSlot): BodyPart => ({
   bodyPartId: 0,
   bodyPartKind: benchSlot.bodyPartKind,
@@ -373,6 +419,35 @@ const renderGameState = (
         mousePosition[1],
         rotation
       );
+    }
+  }
+
+  const hoveredGuard = findGuardAtPosition(gameState.guards, mousePosition[0], mousePosition[1]);
+
+  if (hoveredGuard) {
+    const tooltipX = 16;
+    const tooltipY = CANVAS_HEIGHT - 16;
+    const lineHeight = 16;
+
+    const effectiveRange = getEffectiveRange(hoveredGuard);
+    const effectiveDamage = getEffectiveDamage(hoveredGuard);
+
+    const damageLabel =
+      hoveredGuard.limbCount > 0
+        ? `Damage: ${effectiveDamage} (x${Math.pow(2, hoveredGuard.limbCount)})`
+        : `Damage: ${effectiveDamage}`;
+
+    const lines = [
+      damageLabel,
+      `Range: ${effectiveRange}${hoveredGuard.isCompleted ? ' (x2)' : ''}`,
+      hoveredGuard.isCompleted ? 'Completed' : 'Incomplete',
+    ];
+
+    context.font = '12px monospace';
+    context.fillStyle = '#e0e0e0';
+
+    for (let i = 0; i < lines.length; i++) {
+      context.fillText(lines[i], tooltipX, tooltipY - (lines.length - 1 - i) * lineHeight);
     }
   }
 };
