@@ -1,8 +1,8 @@
-import type { Village } from './village';
+import type { Barrier } from './barrier';
 import type { Monster } from './monster';
 import { tickMonsters } from './monster';
 import type { BodyPart } from './bodyPart';
-import { createBodyPart } from './bodyPart';
+import { createBodyPart, getGridCellPosition } from './bodyPart';
 import type { BodyPartKind } from './bodyPart';
 import type { Direction } from './grid';
 import { OPPOSITE_DIRECTION, getNeighborGridX, getNeighborGridY } from './grid';
@@ -13,13 +13,10 @@ import { tickProjectiles } from './projectile';
 import type { SpawnEvent } from './spawnSchedule';
 import type { Bench } from './bench';
 import { createBench, tickBench } from './bench';
-import { getVector2Distance } from './vector2';
-import { MONSTER_PATH, getMonsterPathPositions } from './monsterPath';
 import {
   CANVAS_WIDTH,
-  VILLAGE_HEALTH,
-  VILLAGE_POSITION,
-  VILLAGE_HIT_DISTANCE,
+  BARRIER_COLUMN,
+  BARRIER_HEALTH,
   GRID_COLUMNS,
   GRID_ROWS,
   WAVES,
@@ -31,14 +28,13 @@ export type GamePhase = 'playing' | 'victory' | 'defeat';
 export type GameState = {
   phase: GamePhase;
   elapsedTime: number;
-  village: Village;
+  barrier: Barrier;
   monsters: Monster[];
   bodyParts: BodyPart[];
   guards: Guard[];
   projectiles: Projectile[];
   spawnEvents: SpawnEvent[];
   bench: Bench;
-  monsterPathPositions: [number, number][];
   nextEntityId: number;
 };
 
@@ -64,10 +60,10 @@ const createDefaultSpawnEvents = (): SpawnEvent[] => {
 export const createGameState = (): GameState => ({
   phase: 'playing',
   elapsedTime: 0,
-  village: {
-    health: VILLAGE_HEALTH,
-    maxHealth: VILLAGE_HEALTH,
-    position: [...VILLAGE_POSITION],
+  barrier: {
+    health: BARRIER_HEALTH,
+    maxHealth: BARRIER_HEALTH,
+    gridColumn: BARRIER_COLUMN,
   },
   monsters: [],
   bodyParts: [],
@@ -75,7 +71,6 @@ export const createGameState = (): GameState => ({
   projectiles: [],
   spawnEvents: createDefaultSpawnEvents(),
   bench: createBench(),
-  monsterPathPositions: getMonsterPathPositions(MONSTER_PATH),
   nextEntityId: 1,
 });
 
@@ -85,17 +80,18 @@ const spawnMonsters = (gameState: GameState) => {
   );
 
   for (const spawnEvent of pendingEvents) {
-    const firstPathPosition = gameState.monsterPathPositions[0];
+    const targetRow = Math.floor(Math.random() * GRID_ROWS);
     const monsterStats = MONSTER_STATS[spawnEvent.monsterKind];
+    const spawnY = getGridCellPosition(0, targetRow)[1];
 
     gameState.monsters.push({
       monsterId: gameState.nextEntityId++,
       monsterKind: spawnEvent.monsterKind,
-      position: [CANVAS_WIDTH, firstPathPosition[1]],
+      position: [CANVAS_WIDTH, spawnY],
       speed: monsterStats.speed,
       health: monsterStats.health,
-      pathIndex: 0,
-      attackTargetId: undefined,
+      targetRow,
+      isAttackingBarrier: false,
       attackCooldownTimer: 0,
     });
   }
@@ -109,22 +105,8 @@ const removeDeadMonsters = (gameState: GameState) => {
   gameState.monsters = gameState.monsters.filter(monster => monster.health > 0);
 };
 
-const checkMonsterVillageCollisions = (gameState: GameState) => {
-  const remainingMonsters: Monster[] = [];
-
-  for (const monster of gameState.monsters) {
-    if (getVector2Distance(monster.position, gameState.village.position) <= VILLAGE_HIT_DISTANCE) {
-      gameState.village.health -= 1;
-    } else {
-      remainingMonsters.push(monster);
-    }
-  }
-
-  gameState.monsters = remainingMonsters;
-};
-
 const checkGamePhase = (gameState: GameState) => {
-  if (gameState.village.health <= 0) {
+  if (gameState.barrier.health <= 0) {
     gameState.phase = 'defeat';
     return;
   }
@@ -143,18 +125,8 @@ export const tickGameState = (gameState: GameState, deltaTime: number) => {
 
   tickBench(gameState.bench, deltaTime);
   spawnMonsters(gameState);
-  const destroyedBodyPartIds = tickMonsters(
-    gameState.monsters,
-    gameState.monsterPathPositions,
-    MONSTER_PATH,
-    gameState.bodyParts,
-    gameState.village.position,
-    deltaTime
-  );
+  tickMonsters(gameState.monsters, gameState.barrier, deltaTime);
 
-  for (const bodyPartId of destroyedBodyPartIds) {
-    removeBodyPart(gameState, bodyPartId);
-  }
   gameState.nextEntityId = tickGuards(
     gameState.guards,
     gameState.monsters,
@@ -164,7 +136,6 @@ export const tickGameState = (gameState: GameState, deltaTime: number) => {
   );
   gameState.projectiles = tickProjectiles(gameState.projectiles, gameState.monsters, deltaTime);
   removeDeadMonsters(gameState);
-  checkMonsterVillageCollisions(gameState);
   checkGamePhase(gameState);
 };
 
@@ -176,6 +147,10 @@ export const canPlaceBodyPart = (
   connectionDirections: Direction[]
 ): boolean => {
   if (gridX < 0 || gridX >= GRID_COLUMNS || gridY < 0 || gridY >= GRID_ROWS) {
+    return false;
+  }
+
+  if (gridX >= BARRIER_COLUMN) {
     return false;
   }
 

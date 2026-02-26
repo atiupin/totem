@@ -1,11 +1,8 @@
-import type { Vector2 } from './vector2';
-
 export const CANVAS_WIDTH = 640;
 export const CANVAS_HEIGHT = 360;
 
-export const VILLAGE_HEALTH = 10;
-export const VILLAGE_POSITION: Vector2 = [40, CANVAS_HEIGHT / 2];
-export const VILLAGE_HIT_DISTANCE = 20;
+export const BARRIER_COLUMN = 8;
+export const BARRIER_HEALTH = 100;
 
 export const GRID_COLUMNS = 21;
 export const GRID_ROWS = 11;
@@ -46,31 +43,19 @@ export const WAVES: WaveConfig[] = [
     monsterKind: 'eye',
     startTime: 0,
     duration: 60,
-    spawnInterval: 1,
+    spawnInterval: 3,
   },
   {
     monsterKind: 'yeti',
     startTime: 20,
     duration: 40,
-    spawnInterval: 2,
+    spawnInterval: 3,
   },
   {
     monsterKind: 'demon',
     startTime: 40,
     duration: 20,
-    spawnInterval: 2,
-  },
-  {
-    monsterKind: 'eye',
-    startTime: 60,
-    duration: 20,
-    spawnInterval: 0.5,
-  },
-  {
-    monsterKind: 'demon',
-    startTime: 60,
-    duration: 20,
-    spawnInterval: 1,
+    spawnInterval: 3,
   },
 ];
 

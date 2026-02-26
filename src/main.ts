@@ -7,12 +7,12 @@ import {
   getBenchSlotPosition,
   removeBenchSlot,
   rotateBenchSlotClockwise,
-  MONSTER_PATH,
   GRID_COLUMNS,
   GRID_ROWS,
   GRID_CELL_SIZE,
   GRID_ORIGIN_X,
   GRID_ORIGIN_Y,
+  BARRIER_COLUMN,
   BENCH_SLOTS,
   BENCH_CELL_SIZE,
   BENCH_ORIGIN_X,
@@ -20,7 +20,6 @@ import {
   OPPOSITE_DIRECTION,
   HEAD_BASE_RANGE,
   HEAD_BASE_DAMAGE,
-  BODY_PART_HEALTH,
 } from './game';
 import type {
   GameState,
@@ -37,7 +36,6 @@ const CANVAS_WIDTH = 640;
 const CANVAS_HEIGHT = 360;
 const SPRITE_SIZE = 24;
 
-const SPRITE_VILLAGE = 0;
 const SPRITE_PROJECTILE = 2;
 const MONSTER_SPRITE_COLUMN: Record<MonsterKind, number> = {
   eye: 3,
@@ -262,7 +260,6 @@ const benchSlotToBodyPart = (benchSlot: BenchSlot): BodyPart => ({
   gridY: 0,
   connectionDirections: benchSlot.connectionDirections,
   cooldownTimer: 0,
-  health: 0,
 });
 
 const renderGameState = (
@@ -276,10 +273,12 @@ const renderGameState = (
   context.fillStyle = '#1a1a2e';
   context.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
+  const gridPixelWidth = BARRIER_COLUMN * GRID_CELL_SIZE;
+
   context.strokeStyle = 'rgba(255, 255, 255, 0.15)';
   context.lineWidth = 1;
 
-  for (let column = 0; column <= GRID_COLUMNS; column++) {
+  for (let column = 0; column <= BARRIER_COLUMN; column++) {
     const lineX = GRID_ORIGIN_X + column * GRID_CELL_SIZE;
     context.beginPath();
     context.moveTo(lineX, GRID_ORIGIN_Y);
@@ -291,26 +290,15 @@ const renderGameState = (
     const lineY = GRID_ORIGIN_Y + row * GRID_CELL_SIZE;
     context.beginPath();
     context.moveTo(GRID_ORIGIN_X, lineY);
-    context.lineTo(GRID_ORIGIN_X + GRID_COLUMNS * GRID_CELL_SIZE, lineY);
+    context.lineTo(GRID_ORIGIN_X + gridPixelWidth, lineY);
     context.stroke();
   }
 
-  context.fillStyle = 'rgba(255, 255, 255, 0.06)';
-
-  for (const [gridX, gridY] of MONSTER_PATH) {
-    const cellX = GRID_ORIGIN_X + gridX * GRID_CELL_SIZE;
-    const cellY = GRID_ORIGIN_Y + gridY * GRID_CELL_SIZE;
-    context.fillRect(cellX, cellY, GRID_CELL_SIZE, GRID_CELL_SIZE);
+  if (gameState.barrier.health > 0) {
+    const barrierPixelX = GRID_ORIGIN_X + BARRIER_COLUMN * GRID_CELL_SIZE;
+    context.fillStyle = 'rgba(100, 180, 255, 0.3)';
+    context.fillRect(barrierPixelX, GRID_ORIGIN_Y, GRID_CELL_SIZE, GRID_ROWS * GRID_CELL_SIZE);
   }
-
-  drawSprite(
-    spritesheet,
-    SPRITE_VILLAGE,
-    0,
-    gameState.village.position[0],
-    gameState.village.position[1],
-    0
-  );
 
   for (const guard of gameState.guards) {
     const spriteRow = guard.isCompleted ? BODY_PART_GOLD_SPRITE_ROW : BODY_PART_SPRITE_ROW;
@@ -327,21 +315,6 @@ const renderGameState = (
         bodyPartPosition[1],
         rotation
       );
-
-      const maxHealth = BODY_PART_HEALTH[bodyPart.bodyPartKind];
-
-      if (bodyPart.health < maxHealth) {
-        const barWidth = GRID_CELL_SIZE - 4;
-        const barHeight = 3;
-        const barX = bodyPartPosition[0] - barWidth / 2;
-        const barY = bodyPartPosition[1] - GRID_CELL_SIZE / 2 - 4;
-        const healthRatio = bodyPart.health / maxHealth;
-
-        context.fillStyle = '#333';
-        context.fillRect(barX, barY, barWidth, barHeight);
-        context.fillStyle = '#e04040';
-        context.fillRect(barX, barY, barWidth * healthRatio, barHeight);
-      }
     }
   }
 
@@ -373,7 +346,7 @@ const renderGameState = (
   context.fillText(`Phase: ${gameState.phase}`, 16, 30);
   context.fillText(`Time: ${gameState.elapsedTime.toFixed(1)}s`, 16, 48);
   context.fillText(
-    `Village HP: ${gameState.village.health}/${gameState.village.maxHealth}`,
+    `Barrier HP: ${gameState.barrier.health}/${gameState.barrier.maxHealth}`,
     16,
     66
   );
