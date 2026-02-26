@@ -23,6 +23,7 @@ import {
   GRID_ROWS,
   WAVES,
   MONSTER_STATS,
+  STARTING_GOLD,
 } from './constants';
 
 export type GamePhase = 'playing' | 'victory' | 'defeat';
@@ -38,6 +39,7 @@ export type GameState = {
   spawnEvents: SpawnEvent[];
   bench: Bench;
   workshops: Workshop[];
+  gold: number;
   nextEntityId: number;
 };
 
@@ -75,6 +77,7 @@ export const createGameState = (): GameState => ({
   spawnEvents: createDefaultSpawnEvents(),
   bench: createBench(),
   workshops: createWorkshops(),
+  gold: STARTING_GOLD,
   nextEntityId: 1,
 });
 
@@ -106,6 +109,12 @@ const spawnMonsters = (gameState: GameState) => {
 };
 
 const removeDeadMonsters = (gameState: GameState) => {
+  for (const monster of gameState.monsters) {
+    if (monster.health <= 0) {
+      gameState.gold += MONSTER_STATS[monster.monsterKind].goldReward;
+    }
+  }
+
   gameState.monsters = gameState.monsters.filter(monster => monster.health > 0);
 };
 

@@ -30,6 +30,7 @@ import {
   OPPOSITE_DIRECTION,
   HEAD_BASE_RANGE,
   HEAD_BASE_DAMAGE,
+  BODY_PART_COST,
 } from './game';
 import type { GameState, BodyPart, Guard, BenchSlot, Direction, Vector2 } from './game';
 import spritesheetUrl from './sprites.png';
@@ -353,6 +354,7 @@ const renderGameState = (
     16,
     66
   );
+  context.fillText(`Gold: ${gameState.gold}`, 16, 84);
 
   for (let workshopIndex = 0; workshopIndex < WORKSHOP_COUNT; workshopIndex++) {
     const workshopPosition = getWorkshopPosition(workshopIndex);
@@ -364,6 +366,16 @@ const renderGameState = (
       workshopPosition[0],
       workshopPosition[1],
       0
+    );
+
+    const workshop = gameState.workshops[workshopIndex];
+    const cost = BODY_PART_COST[workshop.bodyPartKind];
+    context.fillStyle = '#e0e0e0';
+    context.font = '10px monospace';
+    context.fillText(
+      `${cost}g`,
+      workshopPosition[0] + WORKSHOP_SIZE / 2 + 4,
+      workshopPosition[1] + 4
     );
   }
 
@@ -552,11 +564,17 @@ const start = async () => {
     const workshopIndex = getWorkshopAtPosition(clickX, clickY);
 
     if (workshopIndex !== undefined) {
-      const emptySlotIndex = gameState.bench.slots.findIndex(slot => slot === undefined);
-      const produced = produceFromWorkshop(gameState.workshops[workshopIndex], gameState.bench);
+      const workshop = gameState.workshops[workshopIndex];
+      const cost = BODY_PART_COST[workshop.bodyPartKind];
 
-      if (produced) {
-        selectedBenchSlotIndex = emptySlotIndex;
+      if (gameState.gold >= cost) {
+        const emptySlotIndex = gameState.bench.slots.findIndex(slot => slot === undefined);
+        const produced = produceFromWorkshop(workshop, gameState.bench);
+
+        if (produced) {
+          gameState.gold -= cost;
+          selectedBenchSlotIndex = emptySlotIndex;
+        }
       }
 
       return;
