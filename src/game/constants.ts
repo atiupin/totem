@@ -60,7 +60,12 @@ export const WAVES: WaveConfig[] = [
 ];
 
 export const BENCH_SLOTS = 6;
-export const BENCH_SPAWN_INTERVAL = 3.5;
 export const BENCH_CELL_SIZE = GRID_CELL_SIZE;
 export const BENCH_ORIGIN_X = (CANVAS_WIDTH - BENCH_SLOTS * BENCH_CELL_SIZE) / 2;
 export const BENCH_ORIGIN_Y = CANVAS_HEIGHT - BENCH_CELL_SIZE - 16;
+
+export const WORKSHOP_COUNT = 3;
+export const WORKSHOP_SIZE = 24;
+export const WORKSHOP_ORIGIN_X = (GRID_ORIGIN_X - WORKSHOP_SIZE) / 2;
+export const WORKSHOP_ORIGIN_Y = 120;
+export const WORKSHOP_GAP = 8;

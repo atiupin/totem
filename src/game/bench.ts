@@ -2,13 +2,7 @@ import type { BodyPartKind } from './bodyPart';
 import type { Direction } from './grid';
 import type { Vector2 } from './vector2';
 import { ALL_DIRECTIONS } from './grid';
-import {
-  BENCH_SLOTS,
-  BENCH_SPAWN_INTERVAL,
-  BENCH_CELL_SIZE,
-  BENCH_ORIGIN_X,
-  BENCH_ORIGIN_Y,
-} from './constants';
+import { BENCH_SLOTS, BENCH_CELL_SIZE, BENCH_ORIGIN_X, BENCH_ORIGIN_Y } from './constants';
 
 export type BenchSlot = {
   bodyPartKind: BodyPartKind;
@@ -17,10 +11,7 @@ export type BenchSlot = {
 
 export type Bench = {
   slots: (BenchSlot | undefined)[];
-  spawnTimer: number;
 };
-
-const BODY_PART_KINDS: BodyPartKind[] = ['head', 'body', 'limb'];
 
 const pickRandom = <TItem>(items: TItem[]): TItem =>
   items[Math.floor(Math.random() * items.length)];
@@ -46,55 +37,14 @@ const generateRandomDirections = (bodyPartKind: BodyPartKind): Direction[] => {
   return shuffled.slice(0, count);
 };
 
-const createRandomBenchSlot = (bodyPartKind: BodyPartKind): BenchSlot => ({
+export const createRandomBenchSlot = (bodyPartKind: BodyPartKind): BenchSlot => ({
   bodyPartKind,
   connectionDirections: generateRandomDirections(bodyPartKind),
 });
 
 export const createBench = (): Bench => {
   const slots: (BenchSlot | undefined)[] = new Array(BENCH_SLOTS).fill(undefined);
-  slots[0] = createRandomBenchSlot('head');
-  slots[1] = createRandomBenchSlot('body');
-  slots[2] = createRandomBenchSlot('limb');
-  return { slots, spawnTimer: BENCH_SPAWN_INTERVAL };
-};
-
-const pickWeightedBodyPartKind = (bench: Bench): BodyPartKind => {
-  const presentKinds = new Set(
-    bench.slots
-      .filter((slot): slot is BenchSlot => slot !== undefined)
-      .map(slot => slot.bodyPartKind)
-  );
-
-  const weightedKinds: BodyPartKind[] = [];
-
-  for (const bodyPartKind of BODY_PART_KINDS) {
-    const weight = presentKinds.has(bodyPartKind) ? 1 : 2;
-
-    for (let i = 0; i < weight; i++) {
-      weightedKinds.push(bodyPartKind);
-    }
-  }
-
-  return pickRandom(weightedKinds);
-};
-
-export const tickBench = (bench: Bench, deltaTime: number) => {
-  bench.spawnTimer -= deltaTime;
-
-  if (bench.spawnTimer > 0) {
-    return;
-  }
-
-  bench.spawnTimer = BENCH_SPAWN_INTERVAL;
-
-  const emptySlotIndex = bench.slots.findIndex(slot => slot === undefined);
-
-  if (emptySlotIndex === -1) {
-    return;
-  }
-
-  bench.slots[emptySlotIndex] = createRandomBenchSlot(pickWeightedBodyPartKind(bench));
+  return { slots };
 };
 
 export const removeBenchSlot = (bench: Bench, slotIndex: number) => {

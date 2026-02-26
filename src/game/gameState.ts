@@ -12,7 +12,9 @@ import type { Projectile } from './projectile';
 import { tickProjectiles } from './projectile';
 import type { SpawnEvent } from './spawnSchedule';
 import type { Bench } from './bench';
-import { createBench, tickBench } from './bench';
+import { createBench } from './bench';
+import type { Workshop } from './workshop';
+import { createWorkshops } from './workshop';
 import {
   CANVAS_WIDTH,
   BARRIER_COLUMN,
@@ -35,6 +37,7 @@ export type GameState = {
   projectiles: Projectile[];
   spawnEvents: SpawnEvent[];
   bench: Bench;
+  workshops: Workshop[];
   nextEntityId: number;
 };
 
@@ -71,6 +74,7 @@ export const createGameState = (): GameState => ({
   projectiles: [],
   spawnEvents: createDefaultSpawnEvents(),
   bench: createBench(),
+  workshops: createWorkshops(),
   nextEntityId: 1,
 });
 
@@ -123,7 +127,6 @@ export const tickGameState = (gameState: GameState, deltaTime: number) => {
 
   gameState.elapsedTime += deltaTime;
 
-  tickBench(gameState.bench, deltaTime);
   spawnMonsters(gameState);
   tickMonsters(gameState.monsters, gameState.barrier, deltaTime);
 

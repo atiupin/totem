@@ -7,6 +7,8 @@ import {
   getBenchSlotPosition,
   removeBenchSlot,
   rotateBenchSlotClockwise,
+  produceFromWorkshop,
+  getWorkshopPosition,
   GRID_COLUMNS,
   GRID_ROWS,
   GRID_CELL_SIZE,
@@ -17,6 +19,11 @@ import {
   BENCH_CELL_SIZE,
   BENCH_ORIGIN_X,
   BENCH_ORIGIN_Y,
+  WORKSHOP_COUNT,
+  WORKSHOP_SIZE,
+  WORKSHOP_ORIGIN_X,
+  WORKSHOP_ORIGIN_Y,
+  WORKSHOP_GAP,
   OPPOSITE_DIRECTION,
   HEAD_BASE_RANGE,
   HEAD_BASE_DAMAGE,
@@ -351,6 +358,11 @@ const renderGameState = (
     66
   );
 
+  for (let workshopIndex = 0; workshopIndex < WORKSHOP_COUNT; workshopIndex++) {
+    const workshopPosition = getWorkshopPosition(workshopIndex);
+    drawSprite(spritesheet, workshopIndex, 0, workshopPosition[0], workshopPosition[1], 0);
+  }
+
   context.fillStyle = 'rgba(255, 255, 255, 0.3)';
   context.font = '10px monospace';
   context.textAlign = 'right';
@@ -500,6 +512,22 @@ const start = async () => {
     };
   };
 
+  const getWorkshopAtPosition = (positionX: number, positionY: number): number | undefined => {
+    if (positionX < WORKSHOP_ORIGIN_X || positionX >= WORKSHOP_ORIGIN_X + WORKSHOP_SIZE) {
+      return undefined;
+    }
+
+    for (let workshopIndex = 0; workshopIndex < WORKSHOP_COUNT; workshopIndex++) {
+      const workshopY = WORKSHOP_ORIGIN_Y + workshopIndex * (WORKSHOP_SIZE + WORKSHOP_GAP);
+
+      if (positionY >= workshopY && positionY < workshopY + WORKSHOP_SIZE) {
+        return workshopIndex;
+      }
+    }
+
+    return undefined;
+  };
+
   const getBenchSlotAtPosition = (positionX: number, positionY: number): number | undefined => {
     if (positionY < BENCH_ORIGIN_Y || positionY >= BENCH_ORIGIN_Y + BENCH_CELL_SIZE) {
       return undefined;
@@ -520,6 +548,13 @@ const start = async () => {
 
   canvas.addEventListener('click', event => {
     const [clickX, clickY] = getCanvasMousePosition(event);
+
+    const workshopIndex = getWorkshopAtPosition(clickX, clickY);
+
+    if (workshopIndex !== undefined) {
+      produceFromWorkshop(gameState.workshops[workshopIndex], gameState.bench);
+      return;
+    }
 
     const slotIndex = getBenchSlotAtPosition(clickX, clickY);
 
