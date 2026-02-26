@@ -1,6 +1,7 @@
 import {
   createGameState,
   tickGameState,
+  togglePause,
   placeBodyPart,
   canPlaceBodyPart,
   getGridCellPosition,
@@ -19,6 +20,10 @@ import {
   BENCH_CELL_SIZE,
   BENCH_ORIGIN_X,
   BENCH_ORIGIN_Y,
+  PAUSE_BUTTON_WIDTH,
+  PAUSE_BUTTON_HEIGHT,
+  PAUSE_BUTTON_ORIGIN_X,
+  PAUSE_BUTTON_ORIGIN_Y,
   WORKSHOP_COUNT,
   WORKSHOP_SIZE,
   WORKSHOP_ORIGIN_X,
@@ -408,6 +413,25 @@ const renderGameState = (
   const trashCenterY = TRASH_ORIGIN_Y + TRASH_SIZE / 2;
   drawSprite(spritesheet, TRASH_SPRITE[0], TRASH_SPRITE[1], trashCenterX, trashCenterY, 0);
 
+  const pauseLabel = gameState.paused ? 'Play' : 'Pause';
+  context.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+  context.lineWidth = 1;
+  context.strokeRect(
+    PAUSE_BUTTON_ORIGIN_X,
+    PAUSE_BUTTON_ORIGIN_Y,
+    PAUSE_BUTTON_WIDTH,
+    PAUSE_BUTTON_HEIGHT
+  );
+  context.fillStyle = '#e0e0e0';
+  context.font = '10px monospace';
+  context.textAlign = 'center';
+  context.fillText(
+    pauseLabel,
+    PAUSE_BUTTON_ORIGIN_X + PAUSE_BUTTON_WIDTH / 2,
+    PAUSE_BUTTON_ORIGIN_Y + PAUSE_BUTTON_HEIGHT / 2 + 4
+  );
+  context.textAlign = 'left';
+
   for (let slotIndex = 0; slotIndex < BENCH_SLOTS; slotIndex++) {
     const benchSlot = gameState.bench.slots[slotIndex];
 
@@ -540,6 +564,12 @@ const start = async () => {
     positionY >= TRASH_ORIGIN_Y &&
     positionY < TRASH_ORIGIN_Y + TRASH_SIZE;
 
+  const isPauseButtonAtPosition = (positionX: number, positionY: number): boolean =>
+    positionX >= PAUSE_BUTTON_ORIGIN_X &&
+    positionX < PAUSE_BUTTON_ORIGIN_X + PAUSE_BUTTON_WIDTH &&
+    positionY >= PAUSE_BUTTON_ORIGIN_Y &&
+    positionY < PAUSE_BUTTON_ORIGIN_Y + PAUSE_BUTTON_HEIGHT;
+
   const getBenchSlotAtPosition = (positionX: number, positionY: number): number | undefined => {
     if (positionY < BENCH_ORIGIN_Y || positionY >= BENCH_ORIGIN_Y + BENCH_CELL_SIZE) {
       return undefined;
@@ -560,6 +590,11 @@ const start = async () => {
 
   canvas.addEventListener('click', event => {
     const [clickX, clickY] = getCanvasMousePosition(event);
+
+    if (isPauseButtonAtPosition(clickX, clickY)) {
+      togglePause(gameState);
+      return;
+    }
 
     const workshopIndex = getWorkshopAtPosition(clickX, clickY);
 

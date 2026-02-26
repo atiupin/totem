@@ -30,6 +30,7 @@ export type GamePhase = 'playing' | 'victory' | 'defeat';
 
 export type GameState = {
   phase: GamePhase;
+  paused: boolean;
   elapsedTime: number;
   barrier: Barrier;
   monsters: Monster[];
@@ -64,6 +65,7 @@ const createDefaultSpawnEvents = (): SpawnEvent[] => {
 
 export const createGameState = (): GameState => ({
   phase: 'playing',
+  paused: true,
   elapsedTime: 0,
   barrier: {
     health: BARRIER_HEALTH,
@@ -129,8 +131,14 @@ const checkGamePhase = (gameState: GameState) => {
   }
 };
 
+export const togglePause = (gameState: GameState) => {
+  if (gameState.phase === 'playing') {
+    gameState.paused = !gameState.paused;
+  }
+};
+
 export const tickGameState = (gameState: GameState, deltaTime: number) => {
-  if (gameState.phase !== 'playing') {
+  if (gameState.phase !== 'playing' || gameState.paused) {
     return;
   }
 

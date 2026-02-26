@@ -8,7 +8,7 @@ export const WORKSHOP_SPRITES: Record<number, Vector2> = {
   2: [2, 0],
 };
 
-export const PROJECTILE_SPRITE: Vector2 = [2, 0];
+export const PROJECTILE_SPRITE: Vector2 = [0, 3];
 
 export const MONSTER_SPRITES: Record<MonsterKind, Vector2> = {
   eye: [4, 0],

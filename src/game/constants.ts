@@ -20,7 +20,7 @@ export const BODY_PART_COST: Record<BodyPartKind, number> = {
   limb: 3,
 };
 
-export const HEAD_BASE_RANGE = 100;
+export const HEAD_BASE_RANGE = 500;
 export const HEAD_BASE_COOLDOWN = 1;
 export const HEAD_BASE_DAMAGE = 1;
 export const HEAD_PROJECTILE_SPEED = 200;
@@ -78,6 +78,11 @@ export const BENCH_ORIGIN_Y = CANVAS_HEIGHT - BENCH_CELL_SIZE - 16;
 export const TRASH_SIZE = 24;
 export const TRASH_ORIGIN_X = BENCH_ORIGIN_X - TRASH_SIZE - 4;
 export const TRASH_ORIGIN_Y = BENCH_ORIGIN_Y;
+
+export const PAUSE_BUTTON_WIDTH = 40;
+export const PAUSE_BUTTON_HEIGHT = BENCH_CELL_SIZE;
+export const PAUSE_BUTTON_ORIGIN_X = BENCH_ORIGIN_X + BENCH_SLOTS * BENCH_CELL_SIZE + 4;
+export const PAUSE_BUTTON_ORIGIN_Y = BENCH_ORIGIN_Y;
 
 export const WORKSHOP_COUNT = 3;
 export const WORKSHOP_SIZE = 24;
