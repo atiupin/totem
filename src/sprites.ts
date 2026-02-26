@@ -11,9 +11,9 @@ export const WORKSHOP_SPRITES: Record<number, Vector2> = {
 export const PROJECTILE_SPRITE: Vector2 = [2, 0];
 
 export const MONSTER_SPRITES: Record<MonsterKind, Vector2> = {
-  eye: [3, 0],
-  yeti: [4, 0],
-  demon: [5, 0],
+  eye: [4, 0],
+  yeti: [5, 0],
+  demon: [6, 0],
 };
 
 export type BodyPartSpriteKind = 'head' | 'pipe' | 'lShape' | 'tShape' | 'xShape' | 'limb';
@@ -26,6 +26,8 @@ export const BODY_PART_SPRITES: Record<BodyPartSpriteKind, Vector2> = {
   xShape: [4, 1],
   limb: [5, 1],
 };
+
+export const TRASH_SPRITE: Vector2 = [3, 0];
 
 export const BODY_PART_GOLD_SPRITES: Record<BodyPartSpriteKind, Vector2> = {
   head: [0, 2],

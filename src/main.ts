@@ -24,6 +24,9 @@ import {
   WORKSHOP_ORIGIN_X,
   WORKSHOP_ORIGIN_Y,
   WORKSHOP_GAP,
+  TRASH_SIZE,
+  TRASH_ORIGIN_X,
+  TRASH_ORIGIN_Y,
   OPPOSITE_DIRECTION,
   HEAD_BASE_RANGE,
   HEAD_BASE_DAMAGE,
@@ -38,6 +41,7 @@ import {
   BODY_PART_SPRITES,
   BODY_PART_GOLD_SPRITES,
   WORKSHOP_SPRITES,
+  TRASH_SPRITE,
 } from './sprites';
 
 const CANVAS_WIDTH = 640;
@@ -388,6 +392,10 @@ const renderGameState = (
     context.stroke();
   }
 
+  const trashCenterX = TRASH_ORIGIN_X + TRASH_SIZE / 2;
+  const trashCenterY = TRASH_ORIGIN_Y + TRASH_SIZE / 2;
+  drawSprite(spritesheet, TRASH_SPRITE[0], TRASH_SPRITE[1], trashCenterX, trashCenterY, 0);
+
   for (let slotIndex = 0; slotIndex < BENCH_SLOTS; slotIndex++) {
     const benchSlot = gameState.bench.slots[slotIndex];
 
@@ -514,6 +522,12 @@ const start = async () => {
     return undefined;
   };
 
+  const isTrashAtPosition = (positionX: number, positionY: number): boolean =>
+    positionX >= TRASH_ORIGIN_X &&
+    positionX < TRASH_ORIGIN_X + TRASH_SIZE &&
+    positionY >= TRASH_ORIGIN_Y &&
+    positionY < TRASH_ORIGIN_Y + TRASH_SIZE;
+
   const getBenchSlotAtPosition = (positionX: number, positionY: number): number | undefined => {
     if (positionY < BENCH_ORIGIN_Y || positionY >= BENCH_ORIGIN_Y + BENCH_CELL_SIZE) {
       return undefined;
@@ -538,7 +552,13 @@ const start = async () => {
     const workshopIndex = getWorkshopAtPosition(clickX, clickY);
 
     if (workshopIndex !== undefined) {
-      produceFromWorkshop(gameState.workshops[workshopIndex], gameState.bench);
+      const emptySlotIndex = gameState.bench.slots.findIndex(slot => slot === undefined);
+      const produced = produceFromWorkshop(gameState.workshops[workshopIndex], gameState.bench);
+
+      if (produced) {
+        selectedBenchSlotIndex = emptySlotIndex;
+      }
+
       return;
     }
 
@@ -550,6 +570,12 @@ const start = async () => {
     }
 
     if (selectedBenchSlotIndex !== undefined) {
+      if (isTrashAtPosition(clickX, clickY)) {
+        removeBenchSlot(gameState.bench, selectedBenchSlotIndex);
+        selectedBenchSlotIndex = undefined;
+        return;
+      }
+
       const gridCell = getGridCellAtPosition(clickX, clickY);
       const benchSlot = gameState.bench.slots[selectedBenchSlotIndex];
 
