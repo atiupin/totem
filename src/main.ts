@@ -28,36 +28,20 @@ import {
   HEAD_BASE_RANGE,
   HEAD_BASE_DAMAGE,
 } from './game';
-import type {
-  GameState,
-  BodyPart,
-  Guard,
-  BenchSlot,
-  Direction,
-  Vector2,
-  MonsterKind,
-} from './game';
+import type { GameState, BodyPart, Guard, BenchSlot, Direction, Vector2 } from './game';
 import spritesheetUrl from './sprites.png';
+import {
+  SPRITE_SIZE,
+  MONSTER_SPRITES,
+  PROJECTILE_SPRITE,
+  type BodyPartSpriteKind,
+  BODY_PART_SPRITES,
+  BODY_PART_GOLD_SPRITES,
+  WORKSHOP_SPRITES,
+} from './sprites';
 
 const CANVAS_WIDTH = 640;
 const CANVAS_HEIGHT = 360;
-const SPRITE_SIZE = 24;
-
-const SPRITE_PROJECTILE = 2;
-const MONSTER_SPRITE_COLUMN: Record<MonsterKind, number> = {
-  eye: 3,
-  yeti: 4,
-  demon: 5,
-};
-
-const BODY_PART_SPRITE_ROW = 1;
-const BODY_PART_GOLD_SPRITE_ROW = 2;
-const BODY_PART_SPRITE_HEAD = 0;
-const BODY_PART_SPRITE_PIPE = 1;
-const BODY_PART_SPRITE_L_SHAPE = 2;
-const BODY_PART_SPRITE_T_SHAPE = 3;
-const BODY_PART_SPRITE_X_SHAPE = 4;
-const BODY_PART_SPRITE_LIMB = 5;
 
 const DIRECTION_ROTATION: Record<Direction, number> = {
   right: 0,
@@ -134,36 +118,36 @@ const areOppositeDirections = (directionA: Direction, directionB: Direction): bo
 // - T-shape: connects up, right, down (missing left)
 // - X-shape: all four directions
 // - Limb: faces right
-const getBodyPartSpriteColumn = (bodyPart: BodyPart): number => {
+const getBodyPartSpriteKind = (bodyPart: BodyPart): BodyPartSpriteKind => {
   if (bodyPart.bodyPartKind === 'head') {
-    return BODY_PART_SPRITE_HEAD;
+    return 'head';
   }
 
   if (bodyPart.bodyPartKind === 'limb') {
-    return BODY_PART_SPRITE_LIMB;
+    return 'limb';
   }
 
   const connectionCount = bodyPart.connectionDirections.length;
 
   if (connectionCount === 4) {
-    return BODY_PART_SPRITE_X_SHAPE;
+    return 'xShape';
   }
 
   if (connectionCount === 3) {
-    return BODY_PART_SPRITE_T_SHAPE;
+    return 'tShape';
   }
 
   if (connectionCount === 2) {
     const [first, second] = bodyPart.connectionDirections;
 
     if (areOppositeDirections(first, second)) {
-      return BODY_PART_SPRITE_PIPE;
+      return 'pipe';
     }
 
-    return BODY_PART_SPRITE_L_SHAPE;
+    return 'lShape';
   }
 
-  return BODY_PART_SPRITE_PIPE;
+  return 'pipe';
 };
 
 const getBodyPartRotation = (bodyPart: BodyPart): number => {
@@ -308,16 +292,17 @@ const renderGameState = (
   }
 
   for (const guard of gameState.guards) {
-    const spriteRow = guard.isCompleted ? BODY_PART_GOLD_SPRITE_ROW : BODY_PART_SPRITE_ROW;
+    const spriteSet = guard.isCompleted ? BODY_PART_GOLD_SPRITES : BODY_PART_SPRITES;
 
     for (const bodyPart of guard.bodyParts) {
       const bodyPartPosition = getGridCellPosition(bodyPart.gridX, bodyPart.gridY);
-      const spriteColumn = getBodyPartSpriteColumn(bodyPart);
+      const spriteKind = getBodyPartSpriteKind(bodyPart);
+      const sprite = spriteSet[spriteKind];
       const rotation = getBodyPartRotation(bodyPart);
       drawSprite(
         spritesheet,
-        spriteColumn,
-        spriteRow,
+        sprite[0],
+        sprite[1],
         bodyPartPosition[0],
         bodyPartPosition[1],
         rotation
@@ -332,8 +317,8 @@ const renderGameState = (
 
     context.drawImage(
       spritesheet,
-      SPRITE_PROJECTILE * SPRITE_SIZE,
-      0,
+      PROJECTILE_SPRITE[0] * SPRITE_SIZE,
+      PROJECTILE_SPRITE[1] * SPRITE_SIZE,
       SPRITE_SIZE,
       SPRITE_SIZE,
       drawX - scaledSize / 2,
@@ -344,8 +329,15 @@ const renderGameState = (
   }
 
   for (const monster of gameState.monsters) {
-    const monsterSpriteColumn = MONSTER_SPRITE_COLUMN[monster.monsterKind];
-    drawSprite(spritesheet, monsterSpriteColumn, 0, monster.position[0], monster.position[1], 0);
+    const monsterSprite = MONSTER_SPRITES[monster.monsterKind];
+    drawSprite(
+      spritesheet,
+      monsterSprite[0],
+      monsterSprite[1],
+      monster.position[0],
+      monster.position[1],
+      0
+    );
   }
 
   context.fillStyle = '#e0e0e0';
@@ -360,7 +352,15 @@ const renderGameState = (
 
   for (let workshopIndex = 0; workshopIndex < WORKSHOP_COUNT; workshopIndex++) {
     const workshopPosition = getWorkshopPosition(workshopIndex);
-    drawSprite(spritesheet, workshopIndex, 0, workshopPosition[0], workshopPosition[1], 0);
+    const workshopSprite = WORKSHOP_SPRITES[workshopIndex];
+    drawSprite(
+      spritesheet,
+      workshopSprite[0],
+      workshopSprite[1],
+      workshopPosition[0],
+      workshopPosition[1],
+      0
+    );
   }
 
   context.fillStyle = 'rgba(255, 255, 255, 0.3)';
@@ -397,16 +397,9 @@ const renderGameState = (
 
     const slotPosition = getBenchSlotPosition(slotIndex);
     const bodyPart = benchSlotToBodyPart(benchSlot);
-    const spriteColumn = getBodyPartSpriteColumn(bodyPart);
+    const sprite = BODY_PART_SPRITES[getBodyPartSpriteKind(bodyPart)];
     const rotation = getBodyPartRotation(bodyPart);
-    drawSprite(
-      spritesheet,
-      spriteColumn,
-      BODY_PART_SPRITE_ROW,
-      slotPosition[0],
-      slotPosition[1],
-      rotation
-    );
+    drawSprite(spritesheet, sprite[0], sprite[1], slotPosition[0], slotPosition[1], rotation);
   }
 
   if (selectedBenchSlotIndex !== undefined) {
@@ -419,16 +412,9 @@ const renderGameState = (
 
     if (benchSlot !== undefined) {
       const bodyPart = benchSlotToBodyPart(benchSlot);
-      const spriteColumn = getBodyPartSpriteColumn(bodyPart);
+      const sprite = BODY_PART_SPRITES[getBodyPartSpriteKind(bodyPart)];
       const rotation = getBodyPartRotation(bodyPart);
-      drawSprite(
-        spritesheet,
-        spriteColumn,
-        BODY_PART_SPRITE_ROW,
-        mousePosition[0],
-        mousePosition[1],
-        rotation
-      );
+      drawSprite(spritesheet, sprite[0], sprite[1], mousePosition[0], mousePosition[1], rotation);
     }
   }
 
