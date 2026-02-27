@@ -2,6 +2,8 @@ export type Direction = 'up' | 'down' | 'left' | 'right';
 
 export const ALL_DIRECTIONS: Direction[] = ['up', 'down', 'left', 'right'];
 
+export const CONNECTION_PRIORITY_DIRECTIONS: Direction[] = ['up', 'right', 'down', 'left'];
+
 export const OPPOSITE_DIRECTION: Record<Direction, Direction> = {
   up: 'down',
   down: 'up',

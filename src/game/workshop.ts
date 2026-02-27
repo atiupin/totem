@@ -1,7 +1,7 @@
 import type { BodyPartKind } from './bodyPart';
 import type { Bench } from './bench';
 import type { Vector2 } from './vector2';
-import { createRandomBenchSlot } from './bench';
+import { createBenchSlot } from './bench';
 import { WORKSHOP_SIZE, WORKSHOP_ORIGIN_X, WORKSHOP_ORIGIN_Y, WORKSHOP_GAP } from './constants';
 
 export type Workshop = {
@@ -20,7 +20,7 @@ export const produceFromWorkshop = (workshop: Workshop, bench: Bench): boolean =
     return false;
   }
 
-  bench.slots[emptySlotIndex] = createRandomBenchSlot(workshop.bodyPartKind);
+  bench.slots[emptySlotIndex] = createBenchSlot(workshop.bodyPartKind);
   return true;
 };
 

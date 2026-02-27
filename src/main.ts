@@ -7,7 +7,6 @@ import {
   getGridCellPosition,
   getBenchSlotPosition,
   removeBenchSlot,
-  rotateBenchSlotClockwise,
   produceFromWorkshop,
   getWorkshopPosition,
   GRID_COLUMNS,
@@ -36,8 +35,9 @@ import {
   HEAD_BASE_RANGE,
   HEAD_BASE_DAMAGE,
   BODY_PART_COST,
+  LIMB_PROJECTILE_SCALE,
 } from './game';
-import type { GameState, BodyPart, Guard, BenchSlot, Direction, Vector2 } from './game';
+import type { GameState, BodyPart, Guard, Direction, Vector2 } from './game';
 import spritesheetUrl from './sprites.png';
 import {
   SPRITE_SIZE,
@@ -123,6 +123,8 @@ const areOppositeDirections = (directionA: Direction, directionB: Direction): bo
 
 // Base sprite orientations:
 // - Head: faces right
+// - Disconnected body: no orientation
+// - Endcap: connects right
 // - Pipe: horizontal (left-right)
 // - L-shape: connects right and down
 // - T-shape: connects up, right, down (missing left)
@@ -139,6 +141,14 @@ const getBodyPartSpriteKind = (bodyPart: BodyPart): BodyPartSpriteKind => {
 
   const connectionCount = bodyPart.connectionDirections.length;
 
+  if (connectionCount === 0) {
+    return 'disconnectedBody';
+  }
+
+  if (connectionCount === 1) {
+    return 'endcap';
+  }
+
   if (connectionCount === 4) {
     return 'xShape';
   }
@@ -147,35 +157,41 @@ const getBodyPartSpriteKind = (bodyPart: BodyPart): BodyPartSpriteKind => {
     return 'tShape';
   }
 
-  if (connectionCount === 2) {
-    const [first, second] = bodyPart.connectionDirections;
+  const [first, second] = bodyPart.connectionDirections;
 
-    if (areOppositeDirections(first, second)) {
-      return 'pipe';
-    }
-
-    return 'lShape';
+  if (areOppositeDirections(first, second)) {
+    return 'pipe';
   }
 
-  return 'pipe';
+  return 'lShape';
 };
 
 const getBodyPartRotation = (bodyPart: BodyPart): number => {
   const directions = bodyPart.connectionDirections;
 
   if (bodyPart.bodyPartKind === 'head' || bodyPart.bodyPartKind === 'limb') {
-    // Connection points toward the body, but the sprite faces outward
+    if (directions.length === 0) {
+      return 0;
+    }
+
     return DIRECTION_ROTATION[OPPOSITE_DIRECTION[directions[0]]];
   }
 
   const connectionCount = directions.length;
+
+  if (connectionCount <= 1) {
+    if (connectionCount === 1) {
+      return DIRECTION_ROTATION[directions[0]];
+    }
+
+    return 0;
+  }
 
   if (connectionCount === 4) {
     return 0;
   }
 
   if (connectionCount === 3) {
-    // T-shape: base sprite opens left+right+down (missing up)
     const T_SHAPE_ROTATION: Record<Direction, number> = {
       up: 0,
       right: Math.PI / 2,
@@ -188,32 +204,29 @@ const getBodyPartRotation = (bodyPart: BodyPart): number => {
     return T_SHAPE_ROTATION[missingDirection];
   }
 
-  if (connectionCount === 2) {
-    const [first, second] = directions;
+  const [first, second] = directions;
 
-    if (areOppositeDirections(first, second)) {
-      // Pipe: base is horizontal (left-right), rotate 90° for vertical
-      if (hasDirection(directions, 'up')) {
-        return Math.PI / 2;
-      }
-      return 0;
-    }
-
-    // L-shape: base sprite opens up+right (rotation 0)
-    // up+right → 0, right+down → 90°, down+left → 180°, left+up → 270°
-    if (hasDirection(directions, 'up') && hasDirection(directions, 'right')) {
-      return 0;
-    }
-    if (hasDirection(directions, 'right') && hasDirection(directions, 'down')) {
+  if (areOppositeDirections(first, second)) {
+    if (hasDirection(directions, 'up')) {
       return Math.PI / 2;
     }
-    if (hasDirection(directions, 'down') && hasDirection(directions, 'left')) {
-      return Math.PI;
-    }
-    return (3 * Math.PI) / 2;
+
+    return 0;
   }
 
-  return 0;
+  if (hasDirection(directions, 'up') && hasDirection(directions, 'right')) {
+    return 0;
+  }
+
+  if (hasDirection(directions, 'right') && hasDirection(directions, 'down')) {
+    return Math.PI / 2;
+  }
+
+  if (hasDirection(directions, 'down') && hasDirection(directions, 'left')) {
+    return Math.PI;
+  }
+
+  return (3 * Math.PI) / 2;
 };
 
 const findGuardAtPosition = (
@@ -244,24 +257,10 @@ const findGuardAtPosition = (
   return undefined;
 };
 
-const getEffectiveRange = (guard: Guard): number => {
-  const completedRangeMultiplier = guard.isCompleted ? 2 : 1;
-  return (HEAD_BASE_RANGE + guard.bonusRange) * completedRangeMultiplier;
-};
+const getEffectiveRange = (guard: Guard): number => HEAD_BASE_RANGE + guard.bonusRange;
 
-const getEffectiveDamage = (guard: Guard): number => {
-  const effectiveLimbCount = guard.isCompleted ? guard.limbCount : 0;
-  return HEAD_BASE_DAMAGE * Math.pow(2, effectiveLimbCount);
-};
-
-const benchSlotToBodyPart = (benchSlot: BenchSlot): BodyPart => ({
-  bodyPartId: 0,
-  bodyPartKind: benchSlot.bodyPartKind,
-  gridX: 0,
-  gridY: 0,
-  connectionDirections: benchSlot.connectionDirections,
-  cooldownTimer: 0,
-});
+const getEffectiveDamage = (guard: Guard): number =>
+  HEAD_BASE_DAMAGE * Math.pow(2, guard.limbCount);
 
 const renderGameState = (
   spritesheet: HTMLImageElement,
@@ -301,23 +300,20 @@ const renderGameState = (
     context.fillRect(barrierPixelX, GRID_ORIGIN_Y, GRID_CELL_SIZE, GRID_ROWS * GRID_CELL_SIZE);
   }
 
-  for (const guard of gameState.guards) {
-    const spriteSet = guard.isCompleted ? BODY_PART_GOLD_SPRITES : BODY_PART_SPRITES;
-
-    for (const bodyPart of guard.bodyParts) {
-      const bodyPartPosition = getGridCellPosition(bodyPart.gridX, bodyPart.gridY);
-      const spriteKind = getBodyPartSpriteKind(bodyPart);
-      const sprite = spriteSet[spriteKind];
-      const rotation = getBodyPartRotation(bodyPart);
-      drawSprite(
-        spritesheet,
-        sprite[0],
-        sprite[1],
-        bodyPartPosition[0],
-        bodyPartPosition[1],
-        rotation
-      );
-    }
+  for (const bodyPart of gameState.bodyParts) {
+    const spriteSet = bodyPart.locked ? BODY_PART_GOLD_SPRITES : BODY_PART_SPRITES;
+    const bodyPartPosition = getGridCellPosition(bodyPart.gridX, bodyPart.gridY);
+    const spriteKind = getBodyPartSpriteKind(bodyPart);
+    const sprite = spriteSet[spriteKind];
+    const rotation = getBodyPartRotation(bodyPart);
+    drawSprite(
+      spritesheet,
+      sprite[0],
+      sprite[1],
+      bodyPartPosition[0],
+      bodyPartPosition[1],
+      rotation
+    );
   }
 
   for (const projectile of gameState.projectiles) {
@@ -440,10 +436,10 @@ const renderGameState = (
     }
 
     const slotPosition = getBenchSlotPosition(slotIndex);
-    const bodyPart = benchSlotToBodyPart(benchSlot);
-    const sprite = BODY_PART_SPRITES[getBodyPartSpriteKind(bodyPart)];
-    const rotation = getBodyPartRotation(bodyPart);
-    drawSprite(spritesheet, sprite[0], sprite[1], slotPosition[0], slotPosition[1], rotation);
+    const benchSpriteKind: BodyPartSpriteKind =
+      benchSlot.bodyPartKind === 'body' ? 'disconnectedBody' : benchSlot.bodyPartKind;
+    const sprite = BODY_PART_SPRITES[benchSpriteKind];
+    drawSprite(spritesheet, sprite[0], sprite[1], slotPosition[0], slotPosition[1], 0);
   }
 
   if (selectedBenchSlotIndex !== undefined) {
@@ -455,10 +451,10 @@ const renderGameState = (
     const benchSlot = gameState.bench.slots[selectedBenchSlotIndex];
 
     if (benchSlot !== undefined) {
-      const bodyPart = benchSlotToBodyPart(benchSlot);
-      const sprite = BODY_PART_SPRITES[getBodyPartSpriteKind(bodyPart)];
-      const rotation = getBodyPartRotation(bodyPart);
-      drawSprite(spritesheet, sprite[0], sprite[1], mousePosition[0], mousePosition[1], rotation);
+      const benchSpriteKind: BodyPartSpriteKind =
+        benchSlot.bodyPartKind === 'body' ? 'disconnectedBody' : benchSlot.bodyPartKind;
+      const sprite = BODY_PART_SPRITES[benchSpriteKind];
+      drawSprite(spritesheet, sprite[0], sprite[1], mousePosition[0], mousePosition[1], 0);
     }
   }
 
@@ -471,19 +467,14 @@ const renderGameState = (
 
     const effectiveRange = getEffectiveRange(hoveredGuard);
     const effectiveDamage = getEffectiveDamage(hoveredGuard);
-
-    const effectiveLimbCount = hoveredGuard.isCompleted ? hoveredGuard.limbCount : 0;
+    const effectiveScale = Math.pow(LIMB_PROJECTILE_SCALE, hoveredGuard.limbCount);
 
     const damageLabel =
-      effectiveLimbCount > 0
-        ? `Damage: ${effectiveDamage} (x${Math.pow(2, effectiveLimbCount)})`
+      hoveredGuard.limbCount > 0
+        ? `Damage: ${effectiveDamage} (x${Math.pow(2, hoveredGuard.limbCount)})`
         : `Damage: ${effectiveDamage}`;
 
-    const lines = [
-      damageLabel,
-      `Range: ${effectiveRange}${hoveredGuard.isCompleted ? ' (x2)' : ''}`,
-      hoveredGuard.isCompleted ? 'Completed' : 'Incomplete',
-    ];
+    const lines = [damageLabel, `Range: ${effectiveRange}`, `Scale: ${effectiveScale.toFixed(1)}`];
 
     context.font = '12px monospace';
     context.fillStyle = '#e0e0e0';
@@ -633,22 +624,15 @@ const start = async () => {
       const benchSlot = gameState.bench.slots[selectedBenchSlotIndex];
 
       if (gridCell !== undefined && benchSlot !== undefined) {
-        const placed = canPlaceBodyPart(
+        const canPlace = canPlaceBodyPart(
           gameState,
           gridCell.gridX,
           gridCell.gridY,
-          benchSlot.bodyPartKind,
-          benchSlot.connectionDirections
+          benchSlot.bodyPartKind
         );
 
-        if (placed) {
-          placeBodyPart(
-            gameState,
-            gridCell.gridX,
-            gridCell.gridY,
-            benchSlot.bodyPartKind,
-            benchSlot.connectionDirections
-          );
+        if (canPlace) {
+          placeBodyPart(gameState, gridCell.gridX, gridCell.gridY, benchSlot.bodyPartKind);
           removeBenchSlot(gameState.bench, selectedBenchSlotIndex);
           selectedBenchSlotIndex = undefined;
         }
@@ -658,10 +642,6 @@ const start = async () => {
 
   canvas.addEventListener('contextmenu', event => {
     event.preventDefault();
-
-    if (selectedBenchSlotIndex !== undefined) {
-      rotateBenchSlotClockwise(gameState.bench, selectedBenchSlotIndex);
-    }
   });
 
   document.addEventListener('keydown', event => {

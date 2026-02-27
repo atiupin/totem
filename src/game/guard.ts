@@ -2,6 +2,7 @@ import type { BodyPart } from './bodyPart';
 import { getGridCellPosition } from './bodyPart';
 import type { Monster } from './monster';
 import type { Projectile } from './projectile';
+import type { Vector2 } from './vector2';
 import { getVector2Distance } from './vector2';
 import { OPPOSITE_DIRECTION, getNeighborGridX, getNeighborGridY } from './grid';
 import {
@@ -19,44 +20,23 @@ export type Guard = {
   limbCount: number;
   bonusRange: number;
   bonusCooldown: number;
-  isCompleted: boolean;
-};
-
-const createGridKey = (gridX: number, gridY: number): string => `${gridX},${gridY}`;
-
-const checkGuardCompleted = (guardBodyParts: BodyPart[]): boolean => {
-  const positionSet = new Set(
-    guardBodyParts.map(bodyPart => createGridKey(bodyPart.gridX, bodyPart.gridY))
-  );
-
-  for (const bodyPart of guardBodyParts) {
-    for (const direction of bodyPart.connectionDirections) {
-      const neighborKey = createGridKey(
-        getNeighborGridX(bodyPart.gridX, direction),
-        getNeighborGridY(bodyPart.gridY, direction)
-      );
-
-      if (!positionSet.has(neighborKey)) {
-        return false;
-      }
-    }
-  }
-
-  return true;
 };
 
 export const computeGuards = (bodyParts: BodyPart[]): Guard[] => {
+  const lockedParts = bodyParts.filter(bodyPart => bodyPart.locked);
   const partsByPosition = new Map<string, BodyPart>();
 
-  for (const bodyPart of bodyParts) {
-    partsByPosition.set(createGridKey(bodyPart.gridX, bodyPart.gridY), bodyPart);
+  for (const bodyPart of lockedParts) {
+    const gridPosition: Vector2 = [bodyPart.gridX, bodyPart.gridY];
+    partsByPosition.set(gridPosition.toString(), bodyPart);
   }
 
   const visited = new Set<string>();
   const guards: Guard[] = [];
 
-  for (const bodyPart of bodyParts) {
-    const startKey = createGridKey(bodyPart.gridX, bodyPart.gridY);
+  for (const bodyPart of lockedParts) {
+    const startPosition: Vector2 = [bodyPart.gridX, bodyPart.gridY];
+    const startKey = startPosition.toString();
 
     if (visited.has(startKey)) {
       continue;
@@ -67,7 +47,8 @@ export const computeGuards = (bodyParts: BodyPart[]): Guard[] => {
 
     while (queue.length > 0) {
       const current = queue.pop()!;
-      const currentKey = createGridKey(current.gridX, current.gridY);
+      const currentPosition: Vector2 = [current.gridX, current.gridY];
+      const currentKey = currentPosition.toString();
 
       if (visited.has(currentKey)) {
         continue;
@@ -79,7 +60,8 @@ export const computeGuards = (bodyParts: BodyPart[]): Guard[] => {
       for (const direction of current.connectionDirections) {
         const neighborGridX = getNeighborGridX(current.gridX, direction);
         const neighborGridY = getNeighborGridY(current.gridY, direction);
-        const neighborKey = createGridKey(neighborGridX, neighborGridY);
+        const neighborPosition: Vector2 = [neighborGridX, neighborGridY];
+        const neighborKey = neighborPosition.toString();
         const neighborPart = partsByPosition.get(neighborKey);
 
         if (
@@ -103,7 +85,6 @@ export const computeGuards = (bodyParts: BodyPart[]): Guard[] => {
       limbCount,
       bonusRange: 0,
       bonusCooldown: 0,
-      isCompleted: checkGuardCompleted(component),
     });
   }
 
@@ -125,12 +106,10 @@ export const tickGuards = (
         continue;
       }
 
-      const completedRangeMultiplier = guard.isCompleted ? 2 : 1;
-      const effectiveRange = (HEAD_BASE_RANGE + guard.bonusRange) * completedRangeMultiplier;
-      const effectiveLimbCount = guard.isCompleted ? guard.limbCount : 0;
-      const effectiveDamage = HEAD_BASE_DAMAGE * Math.pow(2, effectiveLimbCount);
+      const effectiveRange = HEAD_BASE_RANGE + guard.bonusRange;
+      const effectiveDamage = HEAD_BASE_DAMAGE * Math.pow(2, guard.limbCount);
       const effectiveCooldown = Math.max(0.1, HEAD_BASE_COOLDOWN - guard.bonusCooldown);
-      const effectiveScale = Math.pow(LIMB_PROJECTILE_SCALE, effectiveLimbCount);
+      const effectiveScale = Math.pow(LIMB_PROJECTILE_SCALE, guard.limbCount);
       const headPosition = getGridCellPosition(headPart.gridX, headPart.gridY);
 
       let nearestMonster: Monster | undefined;

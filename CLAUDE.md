@@ -60,6 +60,11 @@ The project has **no runtime dependencies** — only dev dependencies listed abo
 - Always use full, descriptive names even when the meaning could be inferred from context (e.g., use `creatureId` not `id`, `tileCoords` not `coords`)
 - The only exception is `i`, `j`, `k` for index variables in loops or array iterators
 - Function names MUST start with a verb (e.g., `createPlayer`, `updateScore`, `getTileNeighbours4`, `tickWorld`)
+- Boolean properties MUST NOT use `is`/`has` prefix (e.g., `locked`, `completed`). Only boolean-returning functions use prefixes like `is`/`has`.
+
+### Map Keys
+
+- Use `Vector2` for grid coordinates and call `.toString()` on it to produce map keys (e.g., `const gridPosition: Vector2 = [gridX, gridY]; map.get(gridPosition.toString())`). Do not create custom key-building helpers.
 
 ### Control Flow
 

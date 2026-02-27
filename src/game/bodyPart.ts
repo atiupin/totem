@@ -10,6 +10,7 @@ export type BodyPart = {
   gridX: number;
   gridY: number;
   connectionDirections: Direction[];
+  locked: boolean;
   cooldownTimer: number;
 };
 
@@ -17,14 +18,14 @@ export const createBodyPart = (
   bodyPartId: number,
   bodyPartKind: BodyPartKind,
   gridX: number,
-  gridY: number,
-  connectionDirections: Direction[]
+  gridY: number
 ): BodyPart => ({
   bodyPartId,
   bodyPartKind,
   gridX,
   gridY,
-  connectionDirections,
+  connectionDirections: [],
+  locked: false,
   cooldownTimer: 0,
 });
 

@@ -4,8 +4,14 @@ import { tickMonsters } from './monster';
 import type { BodyPart } from './bodyPart';
 import { createBodyPart, getGridCellPosition } from './bodyPart';
 import type { BodyPartKind } from './bodyPart';
-import type { Direction } from './grid';
-import { OPPOSITE_DIRECTION, getNeighborGridX, getNeighborGridY } from './grid';
+import type { Vector2 } from './vector2';
+import {
+  ALL_DIRECTIONS,
+  CONNECTION_PRIORITY_DIRECTIONS,
+  OPPOSITE_DIRECTION,
+  getNeighborGridX,
+  getNeighborGridY,
+} from './grid';
 import type { Guard } from './guard';
 import { computeGuards, tickGuards } from './guard';
 import type { Projectile } from './projectile';
@@ -159,12 +165,113 @@ export const tickGameState = (gameState: GameState, deltaTime: number) => {
   checkGamePhase(gameState);
 };
 
+const buildPositionMap = (bodyParts: BodyPart[]): Map<string, BodyPart> => {
+  const partsByPosition = new Map<string, BodyPart>();
+
+  for (const bodyPart of bodyParts) {
+    const gridPosition: Vector2 = [bodyPart.gridX, bodyPart.gridY];
+    partsByPosition.set(gridPosition.toString(), bodyPart);
+  }
+
+  return partsByPosition;
+};
+
+const recomputeConnections = (bodyParts: BodyPart[]) => {
+  const partsByPosition = buildPositionMap(bodyParts);
+
+  for (const bodyPart of bodyParts) {
+    if (bodyPart.locked) {
+      continue;
+    }
+
+    if (bodyPart.bodyPartKind === 'head' || bodyPart.bodyPartKind === 'limb') {
+      bodyPart.connectionDirections = [];
+
+      for (const direction of CONNECTION_PRIORITY_DIRECTIONS) {
+        const neighborGridX = getNeighborGridX(bodyPart.gridX, direction);
+        const neighborGridY = getNeighborGridY(bodyPart.gridY, direction);
+        const neighborPosition: Vector2 = [neighborGridX, neighborGridY];
+        const neighbor = partsByPosition.get(neighborPosition.toString());
+
+        if (neighbor && neighbor.bodyPartKind === 'body' && !neighbor.locked) {
+          bodyPart.connectionDirections = [direction];
+          break;
+        }
+      }
+    }
+  }
+
+  for (const bodyPart of bodyParts) {
+    if (bodyPart.locked || bodyPart.bodyPartKind !== 'body') {
+      continue;
+    }
+
+    bodyPart.connectionDirections = [];
+
+    for (const direction of ALL_DIRECTIONS) {
+      const neighborGridX = getNeighborGridX(bodyPart.gridX, direction);
+      const neighborGridY = getNeighborGridY(bodyPart.gridY, direction);
+      const neighborPosition: Vector2 = [neighborGridX, neighborGridY];
+      const neighbor = partsByPosition.get(neighborPosition.toString());
+
+      if (!neighbor || neighbor.locked) {
+        continue;
+      }
+
+      if (neighbor.bodyPartKind === 'body') {
+        bodyPart.connectionDirections.push(direction);
+      } else {
+        const oppositeDirection = OPPOSITE_DIRECTION[direction];
+
+        if (neighbor.connectionDirections.includes(oppositeDirection)) {
+          bodyPart.connectionDirections.push(direction);
+        }
+      }
+    }
+  }
+};
+
+const lockConnectedGroup = (bodyParts: BodyPart[], headPart: BodyPart) => {
+  const partsByPosition = buildPositionMap(bodyParts);
+  const visited = new Set<string>();
+  const queue: BodyPart[] = [headPart];
+
+  while (queue.length > 0) {
+    const current = queue.pop()!;
+    const currentPosition: Vector2 = [current.gridX, current.gridY];
+    const currentKey = currentPosition.toString();
+
+    if (visited.has(currentKey)) {
+      continue;
+    }
+
+    visited.add(currentKey);
+    current.locked = true;
+
+    for (const direction of current.connectionDirections) {
+      const neighborGridX = getNeighborGridX(current.gridX, direction);
+      const neighborGridY = getNeighborGridY(current.gridY, direction);
+      const neighborPosition: Vector2 = [neighborGridX, neighborGridY];
+      const neighborKey = neighborPosition.toString();
+      const neighbor = partsByPosition.get(neighborKey);
+
+      if (
+        neighbor &&
+        !neighbor.locked &&
+        !visited.has(neighborKey) &&
+        neighbor.connectionDirections.includes(OPPOSITE_DIRECTION[direction])
+      ) {
+        queue.push(neighbor);
+      }
+    }
+  }
+};
+
 export const canPlaceBodyPart = (
   gameState: GameState,
   gridX: number,
   gridY: number,
-  bodyPartKind: BodyPartKind,
-  connectionDirections: Direction[]
+  bodyPartKind: BodyPartKind
 ): boolean => {
   if (gridX < 0 || gridX >= GRID_COLUMNS || gridY < 0 || gridY >= GRID_ROWS) {
     return false;
@@ -182,19 +289,18 @@ export const canPlaceBodyPart = (
     return false;
   }
 
-  if (bodyPartKind === 'limb') {
-    const connectionDirection = connectionDirections[0];
-    const neighborGridX = getNeighborGridX(gridX, connectionDirection);
-    const neighborGridY = getNeighborGridY(gridY, connectionDirection);
-    const neighborBodyPart = gameState.bodyParts.find(
-      bodyPart => bodyPart.gridX === neighborGridX && bodyPart.gridY === neighborGridY
-    );
+  if (bodyPartKind === 'head' || bodyPartKind === 'limb') {
+    const hasAdjacentUnlockedBody = CONNECTION_PRIORITY_DIRECTIONS.some(direction => {
+      const neighborGridX = getNeighborGridX(gridX, direction);
+      const neighborGridY = getNeighborGridY(gridY, direction);
+      const neighbor = gameState.bodyParts.find(
+        bodyPart => bodyPart.gridX === neighborGridX && bodyPart.gridY === neighborGridY
+      );
 
-    if (
-      neighborBodyPart === undefined ||
-      neighborBodyPart.bodyPartKind !== 'body' ||
-      !neighborBodyPart.connectionDirections.includes(OPPOSITE_DIRECTION[connectionDirection])
-    ) {
+      return neighbor !== undefined && neighbor.bodyPartKind === 'body' && !neighbor.locked;
+    });
+
+    if (!hasAdjacentUnlockedBody) {
       return false;
     }
   }
@@ -206,30 +312,22 @@ export const placeBodyPart = (
   gameState: GameState,
   gridX: number,
   gridY: number,
-  bodyPartKind: BodyPartKind,
-  connectionDirections: Direction[]
+  bodyPartKind: BodyPartKind
 ): boolean => {
-  if (gridX < 0 || gridX >= GRID_COLUMNS || gridY < 0 || gridY >= GRID_ROWS) {
+  if (!canPlaceBodyPart(gameState, gridX, gridY, bodyPartKind)) {
     return false;
   }
 
-  const isOccupied = gameState.bodyParts.some(
-    bodyPart => bodyPart.gridX === gridX && bodyPart.gridY === gridY
-  );
-
-  if (isOccupied) {
-    return false;
-  }
-
-  const bodyPart = createBodyPart(
-    gameState.nextEntityId++,
-    bodyPartKind,
-    gridX,
-    gridY,
-    connectionDirections
-  );
-
+  const bodyPart = createBodyPart(gameState.nextEntityId++, bodyPartKind, gridX, gridY);
   gameState.bodyParts.push(bodyPart);
+
+  recomputeConnections(gameState.bodyParts);
+
+  if (bodyPartKind === 'head') {
+    lockConnectedGroup(gameState.bodyParts, bodyPart);
+    recomputeConnections(gameState.bodyParts);
+  }
+
   gameState.guards = computeGuards(gameState.bodyParts);
 
   return true;
@@ -242,7 +340,14 @@ export const removeBodyPart = (gameState: GameState, bodyPartId: number): boolea
     return false;
   }
 
+  const bodyPart = gameState.bodyParts[index];
+
+  if (bodyPart.locked) {
+    return false;
+  }
+
   gameState.bodyParts.splice(index, 1);
+  recomputeConnections(gameState.bodyParts);
   gameState.guards = computeGuards(gameState.bodyParts);
 
   return true;
