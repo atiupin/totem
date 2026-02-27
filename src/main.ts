@@ -45,7 +45,7 @@ import {
   PROJECTILE_SPRITE,
   type BodyPartSpriteKind,
   BODY_PART_SPRITES,
-  BODY_PART_GOLD_SPRITES,
+  ANIMAL_SHAPE_SPRITES,
   WORKSHOP_SPRITES,
   TRASH_SPRITE,
 } from './sprites';
@@ -301,7 +301,9 @@ const renderGameState = (
   }
 
   for (const bodyPart of gameState.bodyParts) {
-    const spriteSet = bodyPart.locked ? BODY_PART_GOLD_SPRITES : BODY_PART_SPRITES;
+    const spriteSet = bodyPart.animalShape
+      ? ANIMAL_SHAPE_SPRITES[bodyPart.animalShape]
+      : BODY_PART_SPRITES;
     const bodyPartPosition = getGridCellPosition(bodyPart.gridX, bodyPart.gridY);
     const spriteKind = getBodyPartSpriteKind(bodyPart);
     const sprite = spriteSet[spriteKind];

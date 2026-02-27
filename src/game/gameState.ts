@@ -2,7 +2,7 @@ import type { Barrier } from './barrier';
 import type { Monster } from './monster';
 import { tickMonsters } from './monster';
 import type { BodyPart } from './bodyPart';
-import { createBodyPart, getGridCellPosition } from './bodyPart';
+import { createBodyPart, getGridCellPosition, getAnimalShapeByLimbCount } from './bodyPart';
 import type { BodyPartKind } from './bodyPart';
 import type { Vector2 } from './vector2';
 import {
@@ -235,6 +235,7 @@ const lockConnectedGroup = (bodyParts: BodyPart[], headPart: BodyPart) => {
   const partsByPosition = buildPositionMap(bodyParts);
   const visited = new Set<string>();
   const queue: BodyPart[] = [headPart];
+  const groupParts: BodyPart[] = [];
 
   while (queue.length > 0) {
     const current = queue.pop()!;
@@ -246,7 +247,7 @@ const lockConnectedGroup = (bodyParts: BodyPart[], headPart: BodyPart) => {
     }
 
     visited.add(currentKey);
-    current.locked = true;
+    groupParts.push(current);
 
     for (const direction of current.connectionDirections) {
       const neighborGridX = getNeighborGridX(current.gridX, direction);
@@ -264,6 +265,14 @@ const lockConnectedGroup = (bodyParts: BodyPart[], headPart: BodyPart) => {
         queue.push(neighbor);
       }
     }
+  }
+
+  const limbCount = groupParts.filter(part => part.bodyPartKind === 'limb').length;
+  const animalShape = getAnimalShapeByLimbCount(limbCount);
+
+  for (const part of groupParts) {
+    part.locked = true;
+    part.animalShape = animalShape;
   }
 };
 

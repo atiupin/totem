@@ -1,4 +1,4 @@
-import type { MonsterKind, Vector2 } from './game';
+import type { AnimalShape, MonsterKind, Vector2 } from './game';
 
 export const SPRITE_SIZE = 24;
 
@@ -8,7 +8,7 @@ export const WORKSHOP_SPRITES: Record<number, Vector2> = {
   2: [2, 0],
 };
 
-export const PROJECTILE_SPRITE: Vector2 = [0, 3];
+export const PROJECTILE_SPRITE: Vector2 = [7, 0];
 
 export const MONSTER_SPRITES: Record<MonsterKind, Vector2> = {
   eye: [4, 0],
@@ -39,13 +39,21 @@ export const BODY_PART_SPRITES: Record<BodyPartSpriteKind, Vector2> = {
 
 export const TRASH_SPRITE: Vector2 = [3, 0];
 
-export const BODY_PART_GOLD_SPRITES: Record<BodyPartSpriteKind, Vector2> = {
-  head: [0, 2],
-  disconnectedBody: [1, 2],
-  endcap: [2, 2],
-  pipe: [3, 2],
-  lShape: [4, 2],
-  tShape: [5, 2],
-  xShape: [6, 2],
-  limb: [7, 2],
+const createShapeSprites = (row: number): Record<BodyPartSpriteKind, Vector2> => ({
+  head: [0, row],
+  disconnectedBody: [1, row],
+  endcap: [2, row],
+  pipe: [3, row],
+  lShape: [4, row],
+  tShape: [5, row],
+  xShape: [6, row],
+  limb: [7, row],
+});
+
+export const ANIMAL_SHAPE_SPRITES: Record<AnimalShape, Record<BodyPartSpriteKind, Vector2>> = {
+  snake: createShapeSprites(2),
+  heron: createShapeSprites(3),
+  toad: createShapeSprites(4),
+  llama: createShapeSprites(5),
+  jaguar: createShapeSprites(6),
 };
