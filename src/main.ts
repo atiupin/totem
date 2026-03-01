@@ -14,6 +14,7 @@ import {
   GRID_CELL_SIZE,
   GRID_ORIGIN,
   BARRIER_COLUMN,
+  BUILD_AREA,
   BENCH_SLOTS,
   BENCH_CELL_SIZE,
   BENCH_ORIGIN,
@@ -28,8 +29,9 @@ import {
   HEAD_BASE_DAMAGE,
   BODY_PART_COST,
   LIMB_PROJECTILE_SCALE,
+  isVector2InVector4,
 } from './game';
-import type { GameState, BodyPart, Guard, Direction, Vector2, Vector4 } from './game';
+import type { GameState, BodyPart, Guard, Direction, Vector2 } from './game';
 import spritesheetUrl from './sprites.png';
 import {
   SPRITE_SIZE,
@@ -60,12 +62,6 @@ const loadImage = (url: string): Promise<HTMLImageElement> =>
     image.onerror = reject;
     image.src = url;
   });
-
-const isInsideRect = (position: Vector2, rect: Vector4): boolean =>
-  position[0] >= rect[0] &&
-  position[0] < rect[0] + rect[2] &&
-  position[1] >= rect[1] &&
-  position[1] < rect[1] + rect[3];
 
 const drawSprite = (
   spritesheet: HTMLImageElement,
@@ -262,24 +258,27 @@ const renderGameState = (
   context.fillStyle = '#1a1a2e';
   context.fillRect(0, 0, CANVAS_SIZE[0], CANVAS_SIZE[1]);
 
-  const gridPixelWidth = BARRIER_COLUMN * GRID_CELL_SIZE;
+  const buildAreaPixelX = GRID_ORIGIN[0] + BUILD_AREA[0] * GRID_CELL_SIZE;
+  const buildAreaPixelY = GRID_ORIGIN[1] + BUILD_AREA[1] * GRID_CELL_SIZE;
+  const buildAreaPixelWidth = BUILD_AREA[2] * GRID_CELL_SIZE;
+  const buildAreaPixelHeight = BUILD_AREA[3] * GRID_CELL_SIZE;
 
   context.strokeStyle = 'rgba(255, 255, 255, 0.15)';
   context.lineWidth = 1;
 
-  for (let column = 0; column <= BARRIER_COLUMN; column++) {
-    const lineX = GRID_ORIGIN[0] + column * GRID_CELL_SIZE;
+  for (let column = 0; column <= BUILD_AREA[2]; column++) {
+    const lineX = buildAreaPixelX + column * GRID_CELL_SIZE;
     context.beginPath();
-    context.moveTo(lineX, GRID_ORIGIN[1]);
-    context.lineTo(lineX, GRID_ORIGIN[1] + GRID_SIZE[1] * GRID_CELL_SIZE);
+    context.moveTo(lineX, buildAreaPixelY);
+    context.lineTo(lineX, buildAreaPixelY + buildAreaPixelHeight);
     context.stroke();
   }
 
-  for (let row = 0; row <= GRID_SIZE[1]; row++) {
-    const lineY = GRID_ORIGIN[1] + row * GRID_CELL_SIZE;
+  for (let row = 0; row <= BUILD_AREA[3]; row++) {
+    const lineY = buildAreaPixelY + row * GRID_CELL_SIZE;
     context.beginPath();
-    context.moveTo(GRID_ORIGIN[0], lineY);
-    context.lineTo(GRID_ORIGIN[0] + gridPixelWidth, lineY);
+    context.moveTo(buildAreaPixelX, lineY);
+    context.lineTo(buildAreaPixelX + buildAreaPixelWidth, lineY);
     context.stroke();
   }
 
@@ -518,10 +517,11 @@ const start = async () => {
     return undefined;
   };
 
-  const isTrashAtPosition = (position: Vector2): boolean => isInsideRect(position, TRASH_RECT);
+  const isTrashAtPosition = (position: Vector2): boolean =>
+    isVector2InVector4(position, TRASH_RECT);
 
   const isPauseButtonAtPosition = (position: Vector2): boolean =>
-    isInsideRect(position, PAUSE_BUTTON_RECT);
+    isVector2InVector4(position, PAUSE_BUTTON_RECT);
 
   const getBenchSlotAtPosition = (position: Vector2): number | undefined => {
     if (position[1] < BENCH_ORIGIN[1] || position[1] >= BENCH_ORIGIN[1] + BENCH_CELL_SIZE) {

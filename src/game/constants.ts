@@ -4,6 +4,8 @@ import type { Vector4 } from './vector4';
 
 export const CANVAS_SIZE: Vector2 = [640, 360];
 
+export const BUILD_AREA: Vector4 = [3, 3, 5, 5];
+
 export const BARRIER_COLUMN = 8;
 export const BARRIER_HEALTH = 100;
 
@@ -14,12 +16,12 @@ export const GRID_ORIGIN: Vector2 = [
   (CANVAS_SIZE[1] - GRID_SIZE[1] * GRID_CELL_SIZE) / 2,
 ];
 
-export const STARTING_GOLD = 15;
+export const STARTING_GOLD = 20;
 
 export const BODY_PART_COST: Record<BodyPartKind, number> = {
-  head: 5,
+  head: 8,
   body: 2,
-  limb: 3,
+  limb: 4,
 };
 
 export const HEAD_BASE_RANGE = 500;

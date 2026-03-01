@@ -21,6 +21,7 @@ import { createBench } from './bench';
 import type { Workshop } from './workshop';
 import { createWorkshops } from './workshop';
 import {
+  BUILD_AREA,
   CANVAS_SIZE,
   BARRIER_COLUMN,
   BARRIER_HEALTH,
@@ -29,6 +30,7 @@ import {
   MONSTER_STATS,
   STARTING_GOLD,
 } from './constants';
+import { isVector2InVector4 } from './vector4';
 
 export type GamePhase = 'playing' | 'victory' | 'defeat';
 
@@ -271,16 +273,7 @@ export const canPlaceBodyPart = (
   gridPosition: Vector2,
   bodyPartKind: BodyPartKind
 ): boolean => {
-  if (
-    gridPosition[0] < 0 ||
-    gridPosition[0] >= GRID_SIZE[0] ||
-    gridPosition[1] < 0 ||
-    gridPosition[1] >= GRID_SIZE[1]
-  ) {
-    return false;
-  }
-
-  if (gridPosition[0] >= BARRIER_COLUMN) {
+  if (!isVector2InVector4(gridPosition, BUILD_AREA)) {
     return false;
   }
 
