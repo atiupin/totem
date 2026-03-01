@@ -1,6 +1,6 @@
 import type { Direction } from './grid';
 import type { Vector2 } from './vector2';
-import { GRID_ORIGIN_X, GRID_ORIGIN_Y, GRID_CELL_SIZE } from './constants';
+import { GRID_ORIGIN, GRID_CELL_SIZE } from './constants';
 
 export type BodyPartKind = 'head' | 'body' | 'limb';
 
@@ -9,8 +9,7 @@ export type AnimalShape = 'snake' | 'heron' | 'toad' | 'llama' | 'jaguar';
 export type BodyPart = {
   bodyPartId: number;
   bodyPartKind: BodyPartKind;
-  gridX: number;
-  gridY: number;
+  gridPosition: Vector2;
   connectionDirections: Direction[];
   locked: boolean;
   cooldownTimer: number;
@@ -20,13 +19,11 @@ export type BodyPart = {
 export const createBodyPart = (
   bodyPartId: number,
   bodyPartKind: BodyPartKind,
-  gridX: number,
-  gridY: number
+  gridPosition: Vector2
 ): BodyPart => ({
   bodyPartId,
   bodyPartKind,
-  gridX,
-  gridY,
+  gridPosition,
   connectionDirections: [],
   locked: false,
   cooldownTimer: 0,
@@ -40,7 +37,7 @@ export const getAnimalShapeByLimbCount = (limbCount: number): AnimalShape => {
   return 'jaguar';
 };
 
-export const getGridCellPosition = (gridX: number, gridY: number): Vector2 => [
-  GRID_ORIGIN_X + gridX * GRID_CELL_SIZE + GRID_CELL_SIZE / 2,
-  GRID_ORIGIN_Y + gridY * GRID_CELL_SIZE + GRID_CELL_SIZE / 2,
+export const getGridCellPosition = (gridPosition: Vector2): Vector2 => [
+  GRID_ORIGIN[0] + gridPosition[0] * GRID_CELL_SIZE + GRID_CELL_SIZE / 2,
+  GRID_ORIGIN[1] + gridPosition[1] * GRID_CELL_SIZE + GRID_CELL_SIZE / 2,
 ];

@@ -9,8 +9,7 @@ import {
   ALL_DIRECTIONS,
   CONNECTION_PRIORITY_DIRECTIONS,
   OPPOSITE_DIRECTION,
-  getNeighborGridX,
-  getNeighborGridY,
+  getNeighborGridPosition,
 } from './grid';
 import type { Guard } from './guard';
 import { computeGuards, tickGuards } from './guard';
@@ -22,11 +21,10 @@ import { createBench } from './bench';
 import type { Workshop } from './workshop';
 import { createWorkshops } from './workshop';
 import {
-  CANVAS_WIDTH,
+  CANVAS_SIZE,
   BARRIER_COLUMN,
   BARRIER_HEALTH,
-  GRID_COLUMNS,
-  GRID_ROWS,
+  GRID_SIZE,
   WAVES,
   MONSTER_STATS,
   STARTING_GOLD,
@@ -95,14 +93,14 @@ const spawnMonsters = (gameState: GameState) => {
   );
 
   for (const spawnEvent of pendingEvents) {
-    const targetRow = Math.floor(Math.random() * GRID_ROWS);
+    const targetRow = Math.floor(Math.random() * GRID_SIZE[1]);
     const monsterStats = MONSTER_STATS[spawnEvent.monsterKind];
-    const spawnY = getGridCellPosition(0, targetRow)[1];
+    const spawnY = getGridCellPosition([0, targetRow])[1];
 
     gameState.monsters.push({
       monsterId: gameState.nextEntityId++,
       monsterKind: spawnEvent.monsterKind,
-      position: [CANVAS_WIDTH, spawnY],
+      position: [CANVAS_SIZE[0], spawnY],
       speed: monsterStats.speed,
       health: monsterStats.health,
       targetRow,
@@ -169,8 +167,7 @@ const buildPositionMap = (bodyParts: BodyPart[]): Map<string, BodyPart> => {
   const partsByPosition = new Map<string, BodyPart>();
 
   for (const bodyPart of bodyParts) {
-    const gridPosition: Vector2 = [bodyPart.gridX, bodyPart.gridY];
-    partsByPosition.set(gridPosition.toString(), bodyPart);
+    partsByPosition.set(bodyPart.gridPosition.toString(), bodyPart);
   }
 
   return partsByPosition;
@@ -188,10 +185,8 @@ const recomputeConnections = (bodyParts: BodyPart[]) => {
       bodyPart.connectionDirections = [];
 
       for (const direction of CONNECTION_PRIORITY_DIRECTIONS) {
-        const neighborGridX = getNeighborGridX(bodyPart.gridX, direction);
-        const neighborGridY = getNeighborGridY(bodyPart.gridY, direction);
-        const neighborPosition: Vector2 = [neighborGridX, neighborGridY];
-        const neighbor = partsByPosition.get(neighborPosition.toString());
+        const neighborGridPosition = getNeighborGridPosition(bodyPart.gridPosition, direction);
+        const neighbor = partsByPosition.get(neighborGridPosition.toString());
 
         if (neighbor && neighbor.bodyPartKind === 'body' && !neighbor.locked) {
           bodyPart.connectionDirections = [direction];
@@ -209,10 +204,8 @@ const recomputeConnections = (bodyParts: BodyPart[]) => {
     bodyPart.connectionDirections = [];
 
     for (const direction of ALL_DIRECTIONS) {
-      const neighborGridX = getNeighborGridX(bodyPart.gridX, direction);
-      const neighborGridY = getNeighborGridY(bodyPart.gridY, direction);
-      const neighborPosition: Vector2 = [neighborGridX, neighborGridY];
-      const neighbor = partsByPosition.get(neighborPosition.toString());
+      const neighborGridPosition = getNeighborGridPosition(bodyPart.gridPosition, direction);
+      const neighbor = partsByPosition.get(neighborGridPosition.toString());
 
       if (!neighbor || neighbor.locked) {
         continue;
@@ -239,8 +232,7 @@ const lockConnectedGroup = (bodyParts: BodyPart[], headPart: BodyPart) => {
 
   while (queue.length > 0) {
     const current = queue.pop()!;
-    const currentPosition: Vector2 = [current.gridX, current.gridY];
-    const currentKey = currentPosition.toString();
+    const currentKey = current.gridPosition.toString();
 
     if (visited.has(currentKey)) {
       continue;
@@ -250,10 +242,8 @@ const lockConnectedGroup = (bodyParts: BodyPart[], headPart: BodyPart) => {
     groupParts.push(current);
 
     for (const direction of current.connectionDirections) {
-      const neighborGridX = getNeighborGridX(current.gridX, direction);
-      const neighborGridY = getNeighborGridY(current.gridY, direction);
-      const neighborPosition: Vector2 = [neighborGridX, neighborGridY];
-      const neighborKey = neighborPosition.toString();
+      const neighborGridPosition = getNeighborGridPosition(current.gridPosition, direction);
+      const neighborKey = neighborGridPosition.toString();
       const neighbor = partsByPosition.get(neighborKey);
 
       if (
@@ -278,20 +268,25 @@ const lockConnectedGroup = (bodyParts: BodyPart[], headPart: BodyPart) => {
 
 export const canPlaceBodyPart = (
   gameState: GameState,
-  gridX: number,
-  gridY: number,
+  gridPosition: Vector2,
   bodyPartKind: BodyPartKind
 ): boolean => {
-  if (gridX < 0 || gridX >= GRID_COLUMNS || gridY < 0 || gridY >= GRID_ROWS) {
+  if (
+    gridPosition[0] < 0 ||
+    gridPosition[0] >= GRID_SIZE[0] ||
+    gridPosition[1] < 0 ||
+    gridPosition[1] >= GRID_SIZE[1]
+  ) {
     return false;
   }
 
-  if (gridX >= BARRIER_COLUMN) {
+  if (gridPosition[0] >= BARRIER_COLUMN) {
     return false;
   }
 
   const isOccupied = gameState.bodyParts.some(
-    bodyPart => bodyPart.gridX === gridX && bodyPart.gridY === gridY
+    bodyPart =>
+      bodyPart.gridPosition[0] === gridPosition[0] && bodyPart.gridPosition[1] === gridPosition[1]
   );
 
   if (isOccupied) {
@@ -300,10 +295,11 @@ export const canPlaceBodyPart = (
 
   if (bodyPartKind === 'head' || bodyPartKind === 'limb') {
     const hasAdjacentUnlockedBody = CONNECTION_PRIORITY_DIRECTIONS.some(direction => {
-      const neighborGridX = getNeighborGridX(gridX, direction);
-      const neighborGridY = getNeighborGridY(gridY, direction);
+      const neighborGridPosition = getNeighborGridPosition(gridPosition, direction);
       const neighbor = gameState.bodyParts.find(
-        bodyPart => bodyPart.gridX === neighborGridX && bodyPart.gridY === neighborGridY
+        bodyPart =>
+          bodyPart.gridPosition[0] === neighborGridPosition[0] &&
+          bodyPart.gridPosition[1] === neighborGridPosition[1]
       );
 
       return neighbor !== undefined && neighbor.bodyPartKind === 'body' && !neighbor.locked;
@@ -319,15 +315,14 @@ export const canPlaceBodyPart = (
 
 export const placeBodyPart = (
   gameState: GameState,
-  gridX: number,
-  gridY: number,
+  gridPosition: Vector2,
   bodyPartKind: BodyPartKind
 ): boolean => {
-  if (!canPlaceBodyPart(gameState, gridX, gridY, bodyPartKind)) {
+  if (!canPlaceBodyPart(gameState, gridPosition, bodyPartKind)) {
     return false;
   }
 
-  const bodyPart = createBodyPart(gameState.nextEntityId++, bodyPartKind, gridX, gridY);
+  const bodyPart = createBodyPart(gameState.nextEntityId++, bodyPartKind, gridPosition);
   gameState.bodyParts.push(bodyPart);
 
   recomputeConnections(gameState.bodyParts);

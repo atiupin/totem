@@ -1,16 +1,18 @@
 import type { BodyPartKind } from './bodyPart';
+import type { Vector2 } from './vector2';
+import type { Vector4 } from './vector4';
 
-export const CANVAS_WIDTH = 640;
-export const CANVAS_HEIGHT = 360;
+export const CANVAS_SIZE: Vector2 = [640, 360];
 
 export const BARRIER_COLUMN = 8;
 export const BARRIER_HEALTH = 100;
 
-export const GRID_COLUMNS = 21;
-export const GRID_ROWS = 11;
+export const GRID_SIZE: Vector2 = [21, 11];
 export const GRID_CELL_SIZE = 24;
-export const GRID_ORIGIN_X = CANVAS_WIDTH - GRID_COLUMNS * GRID_CELL_SIZE;
-export const GRID_ORIGIN_Y = (CANVAS_HEIGHT - GRID_ROWS * GRID_CELL_SIZE) / 2;
+export const GRID_ORIGIN: Vector2 = [
+  CANVAS_SIZE[0] - GRID_SIZE[0] * GRID_CELL_SIZE,
+  (CANVAS_SIZE[1] - GRID_SIZE[1] * GRID_CELL_SIZE) / 2,
+];
 
 export const STARTING_GOLD = 15;
 
@@ -72,20 +74,21 @@ export const WAVES: WaveConfig[] = [
 
 export const BENCH_SLOTS = 6;
 export const BENCH_CELL_SIZE = GRID_CELL_SIZE;
-export const BENCH_ORIGIN_X = (CANVAS_WIDTH - BENCH_SLOTS * BENCH_CELL_SIZE) / 2;
-export const BENCH_ORIGIN_Y = CANVAS_HEIGHT - BENCH_CELL_SIZE - 16;
+export const BENCH_ORIGIN: Vector2 = [
+  (CANVAS_SIZE[0] - BENCH_SLOTS * BENCH_CELL_SIZE) / 2,
+  CANVAS_SIZE[1] - BENCH_CELL_SIZE - 16,
+];
 
-export const TRASH_SIZE = 24;
-export const TRASH_ORIGIN_X = BENCH_ORIGIN_X - TRASH_SIZE - 4;
-export const TRASH_ORIGIN_Y = BENCH_ORIGIN_Y;
+export const TRASH_RECT: Vector4 = [BENCH_ORIGIN[0] - 24 - 4, BENCH_ORIGIN[1], 24, 24];
 
-export const PAUSE_BUTTON_WIDTH = 40;
-export const PAUSE_BUTTON_HEIGHT = BENCH_CELL_SIZE;
-export const PAUSE_BUTTON_ORIGIN_X = BENCH_ORIGIN_X + BENCH_SLOTS * BENCH_CELL_SIZE + 4;
-export const PAUSE_BUTTON_ORIGIN_Y = BENCH_ORIGIN_Y;
+export const PAUSE_BUTTON_RECT: Vector4 = [
+  BENCH_ORIGIN[0] + BENCH_SLOTS * BENCH_CELL_SIZE + 4,
+  BENCH_ORIGIN[1],
+  40,
+  BENCH_CELL_SIZE,
+];
 
 export const WORKSHOP_COUNT = 3;
 export const WORKSHOP_SIZE = 24;
-export const WORKSHOP_ORIGIN_X = (GRID_ORIGIN_X - WORKSHOP_SIZE) / 2;
-export const WORKSHOP_ORIGIN_Y = 120;
+export const WORKSHOP_ORIGIN: Vector2 = [(GRID_ORIGIN[0] - WORKSHOP_SIZE) / 2, 120];
 export const WORKSHOP_GAP = 8;

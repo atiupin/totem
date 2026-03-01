@@ -1,3 +1,6 @@
+import type { Vector2 } from './vector2';
+import { addVector2 } from './vector2';
+
 export type Direction = 'up' | 'down' | 'left' | 'right';
 
 export const ALL_DIRECTIONS: Direction[] = ['up', 'down', 'left', 'right'];
@@ -11,29 +14,18 @@ export const OPPOSITE_DIRECTION: Record<Direction, Direction> = {
   right: 'left',
 };
 
-const DIRECTION_OFFSET_X: Record<Direction, number> = {
-  up: 0,
-  down: 0,
-  left: -1,
-  right: 1,
+const DIRECTION_OFFSET: Record<Direction, Vector2> = {
+  up: [0, -1],
+  down: [0, 1],
+  left: [-1, 0],
+  right: [1, 0],
 };
 
-const DIRECTION_OFFSET_Y: Record<Direction, number> = {
-  up: -1,
-  down: 1,
-  left: 0,
-  right: 0,
-};
+export const getNeighborGridPosition = (gridPosition: Vector2, direction: Direction): Vector2 =>
+  addVector2(gridPosition, DIRECTION_OFFSET[direction]);
 
-export const getNeighborGridX = (gridX: number, direction: Direction): number =>
-  gridX + DIRECTION_OFFSET_X[direction];
-
-export const getNeighborGridY = (gridY: number, direction: Direction): number =>
-  gridY + DIRECTION_OFFSET_Y[direction];
-
-export const isValidGridCell = (
-  gridX: number,
-  gridY: number,
-  columns: number,
-  rows: number
-): boolean => gridX >= 0 && gridX < columns && gridY >= 0 && gridY < rows;
+export const isValidGridCell = (gridPosition: Vector2, gridSize: Vector2): boolean =>
+  gridPosition[0] >= 0 &&
+  gridPosition[0] < gridSize[0] &&
+  gridPosition[1] >= 0 &&
+  gridPosition[1] < gridSize[1];

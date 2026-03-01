@@ -2,9 +2,8 @@ import type { BodyPart } from './bodyPart';
 import { getGridCellPosition } from './bodyPart';
 import type { Monster } from './monster';
 import type { Projectile } from './projectile';
-import type { Vector2 } from './vector2';
 import { getVector2Distance } from './vector2';
-import { OPPOSITE_DIRECTION, getNeighborGridX, getNeighborGridY } from './grid';
+import { OPPOSITE_DIRECTION, getNeighborGridPosition } from './grid';
 import {
   HEAD_BASE_DAMAGE,
   HEAD_BASE_RANGE,
@@ -27,16 +26,14 @@ export const computeGuards = (bodyParts: BodyPart[]): Guard[] => {
   const partsByPosition = new Map<string, BodyPart>();
 
   for (const bodyPart of lockedParts) {
-    const gridPosition: Vector2 = [bodyPart.gridX, bodyPart.gridY];
-    partsByPosition.set(gridPosition.toString(), bodyPart);
+    partsByPosition.set(bodyPart.gridPosition.toString(), bodyPart);
   }
 
   const visited = new Set<string>();
   const guards: Guard[] = [];
 
   for (const bodyPart of lockedParts) {
-    const startPosition: Vector2 = [bodyPart.gridX, bodyPart.gridY];
-    const startKey = startPosition.toString();
+    const startKey = bodyPart.gridPosition.toString();
 
     if (visited.has(startKey)) {
       continue;
@@ -47,8 +44,7 @@ export const computeGuards = (bodyParts: BodyPart[]): Guard[] => {
 
     while (queue.length > 0) {
       const current = queue.pop()!;
-      const currentPosition: Vector2 = [current.gridX, current.gridY];
-      const currentKey = currentPosition.toString();
+      const currentKey = current.gridPosition.toString();
 
       if (visited.has(currentKey)) {
         continue;
@@ -58,10 +54,8 @@ export const computeGuards = (bodyParts: BodyPart[]): Guard[] => {
       component.push(current);
 
       for (const direction of current.connectionDirections) {
-        const neighborGridX = getNeighborGridX(current.gridX, direction);
-        const neighborGridY = getNeighborGridY(current.gridY, direction);
-        const neighborPosition: Vector2 = [neighborGridX, neighborGridY];
-        const neighborKey = neighborPosition.toString();
+        const neighborGridPosition = getNeighborGridPosition(current.gridPosition, direction);
+        const neighborKey = neighborGridPosition.toString();
         const neighborPart = partsByPosition.get(neighborKey);
 
         if (
@@ -110,7 +104,7 @@ export const tickGuards = (
       const effectiveDamage = HEAD_BASE_DAMAGE * Math.pow(2, guard.limbCount);
       const effectiveCooldown = Math.max(0.1, HEAD_BASE_COOLDOWN - guard.bonusCooldown);
       const effectiveScale = Math.pow(LIMB_PROJECTILE_SCALE, guard.limbCount);
-      const headPosition = getGridCellPosition(headPart.gridX, headPart.gridY);
+      const headPosition = getGridCellPosition(headPart.gridPosition);
 
       let nearestMonster: Monster | undefined;
       let nearestDistance = Infinity;

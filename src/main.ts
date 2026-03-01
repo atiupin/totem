@@ -9,35 +9,27 @@ import {
   removeBenchSlot,
   produceFromWorkshop,
   getWorkshopPosition,
-  GRID_COLUMNS,
-  GRID_ROWS,
+  CANVAS_SIZE,
+  GRID_SIZE,
   GRID_CELL_SIZE,
-  GRID_ORIGIN_X,
-  GRID_ORIGIN_Y,
+  GRID_ORIGIN,
   BARRIER_COLUMN,
   BENCH_SLOTS,
   BENCH_CELL_SIZE,
-  BENCH_ORIGIN_X,
-  BENCH_ORIGIN_Y,
-  PAUSE_BUTTON_WIDTH,
-  PAUSE_BUTTON_HEIGHT,
-  PAUSE_BUTTON_ORIGIN_X,
-  PAUSE_BUTTON_ORIGIN_Y,
+  BENCH_ORIGIN,
+  PAUSE_BUTTON_RECT,
   WORKSHOP_COUNT,
   WORKSHOP_SIZE,
-  WORKSHOP_ORIGIN_X,
-  WORKSHOP_ORIGIN_Y,
+  WORKSHOP_ORIGIN,
   WORKSHOP_GAP,
-  TRASH_SIZE,
-  TRASH_ORIGIN_X,
-  TRASH_ORIGIN_Y,
+  TRASH_RECT,
   OPPOSITE_DIRECTION,
   HEAD_BASE_RANGE,
   HEAD_BASE_DAMAGE,
   BODY_PART_COST,
   LIMB_PROJECTILE_SCALE,
 } from './game';
-import type { GameState, BodyPart, Guard, Direction, Vector2 } from './game';
+import type { GameState, BodyPart, Guard, Direction, Vector2, Vector4 } from './game';
 import spritesheetUrl from './sprites.png';
 import {
   SPRITE_SIZE,
@@ -49,9 +41,6 @@ import {
   WORKSHOP_SPRITES,
   TRASH_SPRITE,
 } from './sprites';
-
-const CANVAS_WIDTH = 640;
-const CANVAS_HEIGHT = 360;
 
 const DIRECTION_ROTATION: Record<Direction, number> = {
   right: 0,
@@ -72,22 +61,26 @@ const loadImage = (url: string): Promise<HTMLImageElement> =>
     image.src = url;
   });
 
+const isInsideRect = (position: Vector2, rect: Vector4): boolean =>
+  position[0] >= rect[0] &&
+  position[0] < rect[0] + rect[2] &&
+  position[1] >= rect[1] &&
+  position[1] < rect[1] + rect[3];
+
 const drawSprite = (
   spritesheet: HTMLImageElement,
-  spriteColumn: number,
-  spriteRow: number,
-  positionX: number,
-  positionY: number,
+  sprite: Vector2,
+  position: Vector2,
   rotation: number
 ) => {
-  const drawX = Math.round(positionX);
-  const drawY = Math.round(positionY);
+  const drawX = Math.round(position[0]);
+  const drawY = Math.round(position[1]);
 
   if (rotation === 0) {
     context.drawImage(
       spritesheet,
-      spriteColumn * SPRITE_SIZE,
-      spriteRow * SPRITE_SIZE,
+      sprite[0] * SPRITE_SIZE,
+      sprite[1] * SPRITE_SIZE,
       SPRITE_SIZE,
       SPRITE_SIZE,
       drawX - SPRITE_SIZE / 2,
@@ -103,8 +96,8 @@ const drawSprite = (
   context.rotate(rotation);
   context.drawImage(
     spritesheet,
-    spriteColumn * SPRITE_SIZE,
-    spriteRow * SPRITE_SIZE,
+    sprite[0] * SPRITE_SIZE,
+    sprite[1] * SPRITE_SIZE,
     SPRITE_SIZE,
     SPRITE_SIZE,
     -SPRITE_SIZE / 2,
@@ -229,26 +222,22 @@ const getBodyPartRotation = (bodyPart: BodyPart): number => {
   return (3 * Math.PI) / 2;
 };
 
-const findGuardAtPosition = (
-  guards: Guard[],
-  positionX: number,
-  positionY: number
-): Guard | undefined => {
+const findGuardAtPosition = (guards: Guard[], position: Vector2): Guard | undefined => {
   if (
-    positionX < GRID_ORIGIN_X ||
-    positionX >= GRID_ORIGIN_X + GRID_COLUMNS * GRID_CELL_SIZE ||
-    positionY < GRID_ORIGIN_Y ||
-    positionY >= GRID_ORIGIN_Y + GRID_ROWS * GRID_CELL_SIZE
+    position[0] < GRID_ORIGIN[0] ||
+    position[0] >= GRID_ORIGIN[0] + GRID_SIZE[0] * GRID_CELL_SIZE ||
+    position[1] < GRID_ORIGIN[1] ||
+    position[1] >= GRID_ORIGIN[1] + GRID_SIZE[1] * GRID_CELL_SIZE
   ) {
     return undefined;
   }
 
-  const gridX = Math.floor((positionX - GRID_ORIGIN_X) / GRID_CELL_SIZE);
-  const gridY = Math.floor((positionY - GRID_ORIGIN_Y) / GRID_CELL_SIZE);
+  const gridX = Math.floor((position[0] - GRID_ORIGIN[0]) / GRID_CELL_SIZE);
+  const gridY = Math.floor((position[1] - GRID_ORIGIN[1]) / GRID_CELL_SIZE);
 
   for (const guard of guards) {
     for (const bodyPart of guard.bodyParts) {
-      if (bodyPart.gridX === gridX && bodyPart.gridY === gridY) {
+      if (bodyPart.gridPosition[0] === gridX && bodyPart.gridPosition[1] === gridY) {
         return guard;
       }
     }
@@ -268,10 +257,10 @@ const renderGameState = (
   selectedBenchSlotIndex: number | undefined,
   mousePosition: Vector2
 ) => {
-  context.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+  context.clearRect(0, 0, CANVAS_SIZE[0], CANVAS_SIZE[1]);
 
   context.fillStyle = '#1a1a2e';
-  context.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+  context.fillRect(0, 0, CANVAS_SIZE[0], CANVAS_SIZE[1]);
 
   const gridPixelWidth = BARRIER_COLUMN * GRID_CELL_SIZE;
 
@@ -279,43 +268,36 @@ const renderGameState = (
   context.lineWidth = 1;
 
   for (let column = 0; column <= BARRIER_COLUMN; column++) {
-    const lineX = GRID_ORIGIN_X + column * GRID_CELL_SIZE;
+    const lineX = GRID_ORIGIN[0] + column * GRID_CELL_SIZE;
     context.beginPath();
-    context.moveTo(lineX, GRID_ORIGIN_Y);
-    context.lineTo(lineX, GRID_ORIGIN_Y + GRID_ROWS * GRID_CELL_SIZE);
+    context.moveTo(lineX, GRID_ORIGIN[1]);
+    context.lineTo(lineX, GRID_ORIGIN[1] + GRID_SIZE[1] * GRID_CELL_SIZE);
     context.stroke();
   }
 
-  for (let row = 0; row <= GRID_ROWS; row++) {
-    const lineY = GRID_ORIGIN_Y + row * GRID_CELL_SIZE;
+  for (let row = 0; row <= GRID_SIZE[1]; row++) {
+    const lineY = GRID_ORIGIN[1] + row * GRID_CELL_SIZE;
     context.beginPath();
-    context.moveTo(GRID_ORIGIN_X, lineY);
-    context.lineTo(GRID_ORIGIN_X + gridPixelWidth, lineY);
+    context.moveTo(GRID_ORIGIN[0], lineY);
+    context.lineTo(GRID_ORIGIN[0] + gridPixelWidth, lineY);
     context.stroke();
   }
 
   if (gameState.barrier.health > 0) {
-    const barrierPixelX = GRID_ORIGIN_X + BARRIER_COLUMN * GRID_CELL_SIZE;
+    const barrierPixelX = GRID_ORIGIN[0] + BARRIER_COLUMN * GRID_CELL_SIZE;
     context.fillStyle = 'rgba(100, 180, 255, 0.3)';
-    context.fillRect(barrierPixelX, GRID_ORIGIN_Y, GRID_CELL_SIZE, GRID_ROWS * GRID_CELL_SIZE);
+    context.fillRect(barrierPixelX, GRID_ORIGIN[1], GRID_CELL_SIZE, GRID_SIZE[1] * GRID_CELL_SIZE);
   }
 
   for (const bodyPart of gameState.bodyParts) {
     const spriteSet = bodyPart.animalShape
       ? ANIMAL_SHAPE_SPRITES[bodyPart.animalShape]
       : BODY_PART_SPRITES;
-    const bodyPartPosition = getGridCellPosition(bodyPart.gridX, bodyPart.gridY);
+    const bodyPartPosition = getGridCellPosition(bodyPart.gridPosition);
     const spriteKind = getBodyPartSpriteKind(bodyPart);
     const sprite = spriteSet[spriteKind];
     const rotation = getBodyPartRotation(bodyPart);
-    drawSprite(
-      spritesheet,
-      sprite[0],
-      sprite[1],
-      bodyPartPosition[0],
-      bodyPartPosition[1],
-      rotation
-    );
+    drawSprite(spritesheet, sprite, bodyPartPosition, rotation);
   }
 
   for (const projectile of gameState.projectiles) {
@@ -338,14 +320,7 @@ const renderGameState = (
 
   for (const monster of gameState.monsters) {
     const monsterSprite = MONSTER_SPRITES[monster.monsterKind];
-    drawSprite(
-      spritesheet,
-      monsterSprite[0],
-      monsterSprite[1],
-      monster.position[0],
-      monster.position[1],
-      0
-    );
+    drawSprite(spritesheet, monsterSprite, monster.position, 0);
   }
 
   context.fillStyle = '#e0e0e0';
@@ -362,14 +337,7 @@ const renderGameState = (
   for (let workshopIndex = 0; workshopIndex < WORKSHOP_COUNT; workshopIndex++) {
     const workshopPosition = getWorkshopPosition(workshopIndex);
     const workshopSprite = WORKSHOP_SPRITES[workshopIndex];
-    drawSprite(
-      spritesheet,
-      workshopSprite[0],
-      workshopSprite[1],
-      workshopPosition[0],
-      workshopPosition[1],
-      0
-    );
+    drawSprite(spritesheet, workshopSprite, workshopPosition, 0);
 
     const workshop = gameState.workshops[workshopIndex];
     const cost = BODY_PART_COST[workshop.bodyPartKind];
@@ -385,48 +353,50 @@ const renderGameState = (
   context.fillStyle = 'rgba(255, 255, 255, 0.3)';
   context.font = '10px monospace';
   context.textAlign = 'right';
-  context.fillText(__BUILD_VERSION__, CANVAS_WIDTH - 8, CANVAS_HEIGHT - 8);
+  context.fillText(__BUILD_VERSION__, CANVAS_SIZE[0] - 8, CANVAS_SIZE[1] - 8);
   context.textAlign = 'left';
 
   context.strokeStyle = 'rgba(255, 255, 255, 0.15)';
   context.lineWidth = 1;
 
   for (let column = 0; column <= BENCH_SLOTS; column++) {
-    const lineX = BENCH_ORIGIN_X + column * BENCH_CELL_SIZE;
+    const lineX = BENCH_ORIGIN[0] + column * BENCH_CELL_SIZE;
     context.beginPath();
-    context.moveTo(lineX, BENCH_ORIGIN_Y);
-    context.lineTo(lineX, BENCH_ORIGIN_Y + BENCH_CELL_SIZE);
+    context.moveTo(lineX, BENCH_ORIGIN[1]);
+    context.lineTo(lineX, BENCH_ORIGIN[1] + BENCH_CELL_SIZE);
     context.stroke();
   }
 
   for (let row = 0; row <= 1; row++) {
-    const lineY = BENCH_ORIGIN_Y + row * BENCH_CELL_SIZE;
+    const lineY = BENCH_ORIGIN[1] + row * BENCH_CELL_SIZE;
     context.beginPath();
-    context.moveTo(BENCH_ORIGIN_X, lineY);
-    context.lineTo(BENCH_ORIGIN_X + BENCH_SLOTS * BENCH_CELL_SIZE, lineY);
+    context.moveTo(BENCH_ORIGIN[0], lineY);
+    context.lineTo(BENCH_ORIGIN[0] + BENCH_SLOTS * BENCH_CELL_SIZE, lineY);
     context.stroke();
   }
 
-  const trashCenterX = TRASH_ORIGIN_X + TRASH_SIZE / 2;
-  const trashCenterY = TRASH_ORIGIN_Y + TRASH_SIZE / 2;
-  drawSprite(spritesheet, TRASH_SPRITE[0], TRASH_SPRITE[1], trashCenterX, trashCenterY, 0);
+  const trashCenter: Vector2 = [
+    TRASH_RECT[0] + TRASH_RECT[2] / 2,
+    TRASH_RECT[1] + TRASH_RECT[3] / 2,
+  ];
+  drawSprite(spritesheet, TRASH_SPRITE, trashCenter, 0);
 
   const pauseLabel = gameState.paused ? 'Play' : 'Pause';
   context.strokeStyle = 'rgba(255, 255, 255, 0.3)';
   context.lineWidth = 1;
   context.strokeRect(
-    PAUSE_BUTTON_ORIGIN_X,
-    PAUSE_BUTTON_ORIGIN_Y,
-    PAUSE_BUTTON_WIDTH,
-    PAUSE_BUTTON_HEIGHT
+    PAUSE_BUTTON_RECT[0],
+    PAUSE_BUTTON_RECT[1],
+    PAUSE_BUTTON_RECT[2],
+    PAUSE_BUTTON_RECT[3]
   );
   context.fillStyle = '#e0e0e0';
   context.font = '10px monospace';
   context.textAlign = 'center';
   context.fillText(
     pauseLabel,
-    PAUSE_BUTTON_ORIGIN_X + PAUSE_BUTTON_WIDTH / 2,
-    PAUSE_BUTTON_ORIGIN_Y + PAUSE_BUTTON_HEIGHT / 2 + 4
+    PAUSE_BUTTON_RECT[0] + PAUSE_BUTTON_RECT[2] / 2,
+    PAUSE_BUTTON_RECT[1] + PAUSE_BUTTON_RECT[3] / 2 + 4
   );
   context.textAlign = 'left';
 
@@ -441,14 +411,14 @@ const renderGameState = (
     const benchSpriteKind: BodyPartSpriteKind =
       benchSlot.bodyPartKind === 'body' ? 'disconnectedBody' : benchSlot.bodyPartKind;
     const sprite = BODY_PART_SPRITES[benchSpriteKind];
-    drawSprite(spritesheet, sprite[0], sprite[1], slotPosition[0], slotPosition[1], 0);
+    drawSprite(spritesheet, sprite, slotPosition, 0);
   }
 
   if (selectedBenchSlotIndex !== undefined) {
-    const selectedSlotX = BENCH_ORIGIN_X + selectedBenchSlotIndex * BENCH_CELL_SIZE;
+    const selectedSlotX = BENCH_ORIGIN[0] + selectedBenchSlotIndex * BENCH_CELL_SIZE;
     context.strokeStyle = '#88ccff';
     context.lineWidth = 2;
-    context.strokeRect(selectedSlotX, BENCH_ORIGIN_Y, BENCH_CELL_SIZE, BENCH_CELL_SIZE);
+    context.strokeRect(selectedSlotX, BENCH_ORIGIN[1], BENCH_CELL_SIZE, BENCH_CELL_SIZE);
 
     const benchSlot = gameState.bench.slots[selectedBenchSlotIndex];
 
@@ -456,15 +426,15 @@ const renderGameState = (
       const benchSpriteKind: BodyPartSpriteKind =
         benchSlot.bodyPartKind === 'body' ? 'disconnectedBody' : benchSlot.bodyPartKind;
       const sprite = BODY_PART_SPRITES[benchSpriteKind];
-      drawSprite(spritesheet, sprite[0], sprite[1], mousePosition[0], mousePosition[1], 0);
+      drawSprite(spritesheet, sprite, mousePosition, 0);
     }
   }
 
-  const hoveredGuard = findGuardAtPosition(gameState.guards, mousePosition[0], mousePosition[1]);
+  const hoveredGuard = findGuardAtPosition(gameState.guards, mousePosition);
 
   if (hoveredGuard) {
     const tooltipX = 16;
-    const tooltipY = CANVAS_HEIGHT - 16;
+    const tooltipY = CANVAS_SIZE[1] - 16;
     const lineHeight = 16;
 
     const effectiveRange = getEffectiveRange(hoveredGuard);
@@ -497,7 +467,7 @@ const start = async () => {
   // Account for object-fit: contain letterboxing when calculating mouse position
   const getCanvasMousePosition = (event: MouseEvent): Vector2 => {
     const rect = canvas.getBoundingClientRect();
-    const canvasAspect = CANVAS_WIDTH / CANVAS_HEIGHT;
+    const canvasAspect = CANVAS_SIZE[0] / CANVAS_SIZE[1];
     const elementAspect = rect.width / rect.height;
 
     let offsetX = 0;
@@ -509,41 +479,38 @@ const start = async () => {
       offsetY = (rect.height - rect.width / canvasAspect) / 2;
     }
 
-    const scale = CANVAS_WIDTH / (rect.width - offsetX * 2);
+    const scale = CANVAS_SIZE[0] / (rect.width - offsetX * 2);
     return [
       (event.clientX - rect.left - offsetX) * scale,
       (event.clientY - rect.top - offsetY) * scale,
     ];
   };
 
-  const getGridCellAtPosition = (
-    positionX: number,
-    positionY: number
-  ): { gridX: number; gridY: number } | undefined => {
+  const getGridCellAtPosition = (position: Vector2): Vector2 | undefined => {
     if (
-      positionX < GRID_ORIGIN_X ||
-      positionX >= GRID_ORIGIN_X + GRID_COLUMNS * GRID_CELL_SIZE ||
-      positionY < GRID_ORIGIN_Y ||
-      positionY >= GRID_ORIGIN_Y + GRID_ROWS * GRID_CELL_SIZE
+      position[0] < GRID_ORIGIN[0] ||
+      position[0] >= GRID_ORIGIN[0] + GRID_SIZE[0] * GRID_CELL_SIZE ||
+      position[1] < GRID_ORIGIN[1] ||
+      position[1] >= GRID_ORIGIN[1] + GRID_SIZE[1] * GRID_CELL_SIZE
     ) {
       return undefined;
     }
 
-    return {
-      gridX: Math.floor((positionX - GRID_ORIGIN_X) / GRID_CELL_SIZE),
-      gridY: Math.floor((positionY - GRID_ORIGIN_Y) / GRID_CELL_SIZE),
-    };
+    return [
+      Math.floor((position[0] - GRID_ORIGIN[0]) / GRID_CELL_SIZE),
+      Math.floor((position[1] - GRID_ORIGIN[1]) / GRID_CELL_SIZE),
+    ];
   };
 
-  const getWorkshopAtPosition = (positionX: number, positionY: number): number | undefined => {
-    if (positionX < WORKSHOP_ORIGIN_X || positionX >= WORKSHOP_ORIGIN_X + WORKSHOP_SIZE) {
+  const getWorkshopAtPosition = (position: Vector2): number | undefined => {
+    if (position[0] < WORKSHOP_ORIGIN[0] || position[0] >= WORKSHOP_ORIGIN[0] + WORKSHOP_SIZE) {
       return undefined;
     }
 
     for (let workshopIndex = 0; workshopIndex < WORKSHOP_COUNT; workshopIndex++) {
-      const workshopY = WORKSHOP_ORIGIN_Y + workshopIndex * (WORKSHOP_SIZE + WORKSHOP_GAP);
+      const workshopY = WORKSHOP_ORIGIN[1] + workshopIndex * (WORKSHOP_SIZE + WORKSHOP_GAP);
 
-      if (positionY >= workshopY && positionY < workshopY + WORKSHOP_SIZE) {
+      if (position[1] >= workshopY && position[1] < workshopY + WORKSHOP_SIZE) {
         return workshopIndex;
       }
     }
@@ -551,24 +518,17 @@ const start = async () => {
     return undefined;
   };
 
-  const isTrashAtPosition = (positionX: number, positionY: number): boolean =>
-    positionX >= TRASH_ORIGIN_X &&
-    positionX < TRASH_ORIGIN_X + TRASH_SIZE &&
-    positionY >= TRASH_ORIGIN_Y &&
-    positionY < TRASH_ORIGIN_Y + TRASH_SIZE;
+  const isTrashAtPosition = (position: Vector2): boolean => isInsideRect(position, TRASH_RECT);
 
-  const isPauseButtonAtPosition = (positionX: number, positionY: number): boolean =>
-    positionX >= PAUSE_BUTTON_ORIGIN_X &&
-    positionX < PAUSE_BUTTON_ORIGIN_X + PAUSE_BUTTON_WIDTH &&
-    positionY >= PAUSE_BUTTON_ORIGIN_Y &&
-    positionY < PAUSE_BUTTON_ORIGIN_Y + PAUSE_BUTTON_HEIGHT;
+  const isPauseButtonAtPosition = (position: Vector2): boolean =>
+    isInsideRect(position, PAUSE_BUTTON_RECT);
 
-  const getBenchSlotAtPosition = (positionX: number, positionY: number): number | undefined => {
-    if (positionY < BENCH_ORIGIN_Y || positionY >= BENCH_ORIGIN_Y + BENCH_CELL_SIZE) {
+  const getBenchSlotAtPosition = (position: Vector2): number | undefined => {
+    if (position[1] < BENCH_ORIGIN[1] || position[1] >= BENCH_ORIGIN[1] + BENCH_CELL_SIZE) {
       return undefined;
     }
 
-    const slotIndex = Math.floor((positionX - BENCH_ORIGIN_X) / BENCH_CELL_SIZE);
+    const slotIndex = Math.floor((position[0] - BENCH_ORIGIN[0]) / BENCH_CELL_SIZE);
 
     if (slotIndex < 0 || slotIndex >= BENCH_SLOTS) {
       return undefined;
@@ -582,14 +542,14 @@ const start = async () => {
   });
 
   canvas.addEventListener('click', event => {
-    const [clickX, clickY] = getCanvasMousePosition(event);
+    const clickPosition = getCanvasMousePosition(event);
 
-    if (isPauseButtonAtPosition(clickX, clickY)) {
+    if (isPauseButtonAtPosition(clickPosition)) {
       togglePause(gameState);
       return;
     }
 
-    const workshopIndex = getWorkshopAtPosition(clickX, clickY);
+    const workshopIndex = getWorkshopAtPosition(clickPosition);
 
     if (workshopIndex !== undefined) {
       const workshop = gameState.workshops[workshopIndex];
@@ -608,7 +568,7 @@ const start = async () => {
       return;
     }
 
-    const slotIndex = getBenchSlotAtPosition(clickX, clickY);
+    const slotIndex = getBenchSlotAtPosition(clickPosition);
 
     if (slotIndex !== undefined && gameState.bench.slots[slotIndex] !== undefined) {
       selectedBenchSlotIndex = slotIndex;
@@ -616,25 +576,20 @@ const start = async () => {
     }
 
     if (selectedBenchSlotIndex !== undefined) {
-      if (isTrashAtPosition(clickX, clickY)) {
+      if (isTrashAtPosition(clickPosition)) {
         removeBenchSlot(gameState.bench, selectedBenchSlotIndex);
         selectedBenchSlotIndex = undefined;
         return;
       }
 
-      const gridCell = getGridCellAtPosition(clickX, clickY);
+      const gridPosition = getGridCellAtPosition(clickPosition);
       const benchSlot = gameState.bench.slots[selectedBenchSlotIndex];
 
-      if (gridCell !== undefined && benchSlot !== undefined) {
-        const canPlace = canPlaceBodyPart(
-          gameState,
-          gridCell.gridX,
-          gridCell.gridY,
-          benchSlot.bodyPartKind
-        );
+      if (gridPosition !== undefined && benchSlot !== undefined) {
+        const canPlace = canPlaceBodyPart(gameState, gridPosition, benchSlot.bodyPartKind);
 
         if (canPlace) {
-          placeBodyPart(gameState, gridCell.gridX, gridCell.gridY, benchSlot.bodyPartKind);
+          placeBodyPart(gameState, gridPosition, benchSlot.bodyPartKind);
           removeBenchSlot(gameState.bench, selectedBenchSlotIndex);
           selectedBenchSlotIndex = undefined;
         }

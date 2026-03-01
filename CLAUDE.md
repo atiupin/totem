@@ -66,6 +66,12 @@ The project has **no runtime dependencies** — only dev dependencies listed abo
 
 - Use `Vector2` for grid coordinates and call `.toString()` on it to produce map keys (e.g., `const gridPosition: Vector2 = [gridX, gridY]; map.get(gridPosition.toString())`). Do not create custom key-building helpers.
 
+### Vectors
+
+- Always use `Vector2` when passing or storing positions, coordinates, 2D points, or sizes — never use separate `x`/`y` or `width`/`height` variables for paired values
+- Always use `Vector4` when passing rectangles or regions as `[x, y, width, height]` — never pass origin and size as separate arguments
+- Use `position` for pixel positions and `gridPosition` for grid coordinates
+
 ### Control Flow
 
 - Don't use early `return` or `continue` unless it significantly reduces indentation depth — for short blocks (a few lines), use normal `if`/`else` or ternary instead

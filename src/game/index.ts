@@ -1,5 +1,6 @@
 export * from './constants';
 export * from './vector2';
+export * from './vector4';
 export * from './grid';
 export * from './barrier';
 export * from './monster';

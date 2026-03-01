@@ -1,6 +1,6 @@
 import type { BodyPartKind } from './bodyPart';
 import type { Vector2 } from './vector2';
-import { BENCH_SLOTS, BENCH_CELL_SIZE, BENCH_ORIGIN_X, BENCH_ORIGIN_Y } from './constants';
+import { BENCH_SLOTS, BENCH_CELL_SIZE, BENCH_ORIGIN } from './constants';
 
 export type BenchSlot = {
   bodyPartKind: BodyPartKind;
@@ -24,6 +24,6 @@ export const removeBenchSlot = (bench: Bench, slotIndex: number) => {
 };
 
 export const getBenchSlotPosition = (slotIndex: number): Vector2 => [
-  BENCH_ORIGIN_X + slotIndex * BENCH_CELL_SIZE + BENCH_CELL_SIZE / 2,
-  BENCH_ORIGIN_Y + BENCH_CELL_SIZE / 2,
+  BENCH_ORIGIN[0] + slotIndex * BENCH_CELL_SIZE + BENCH_CELL_SIZE / 2,
+  BENCH_ORIGIN[1] + BENCH_CELL_SIZE / 2,
 ];
