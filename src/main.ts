@@ -348,6 +348,16 @@ const renderGameState = (
       workshopPosition[0] + WORKSHOP_SIZE / 2 + 4,
       workshopPosition[1] + 4
     );
+
+    context.fillStyle = 'rgba(255, 255, 255, 0.5)';
+    context.font = '8px monospace';
+    context.textAlign = 'right';
+    context.fillText(
+      `[${workshopIndex + 1}]`,
+      workshopPosition[0] - WORKSHOP_SIZE / 2 - 2,
+      workshopPosition[1] + 3
+    );
+    context.textAlign = 'left';
   }
 
   context.fillStyle = 'rgba(255, 255, 255, 0.3)';
@@ -380,6 +390,12 @@ const renderGameState = (
     DAGGER_ORIGIN[1] + WORKSHOP_SIZE / 2,
   ];
   drawSprite(spritesheet, DAGGER_SPRITE, daggerPosition, 0);
+
+  context.fillStyle = 'rgba(255, 255, 255, 0.5)';
+  context.font = '8px monospace';
+  context.textAlign = 'right';
+  context.fillText('[4]', daggerPosition[0] - WORKSHOP_SIZE / 2 - 2, daggerPosition[1] + 3);
+  context.textAlign = 'left';
 
   const pauseLabel = gameState.paused ? 'Play' : 'Pause';
   context.strokeStyle = 'rgba(255, 255, 255, 0.3)';
@@ -643,6 +659,7 @@ const start = async () => {
           if (gameState.gold >= cost && canPlaceBodyPart(gameState, gridPosition, bodyPartKind)) {
             gameState.gold -= cost;
             placeBodyPart(gameState, gridPosition, bodyPartKind);
+            selectedTool = undefined;
           }
         } else if (selectedTool.toolKind === 'bench') {
           const benchSlot = gameState.bench.slots[selectedTool.slotIndex];
@@ -668,6 +685,21 @@ const start = async () => {
   document.addEventListener('keydown', event => {
     if (event.key === 'Escape') {
       selectedTool = undefined;
+    }
+
+    const workshopIndex = Number(event.key) - 1;
+
+    if (workshopIndex >= 0 && workshopIndex < WORKSHOP_COUNT) {
+      const workshop = gameState.workshops[workshopIndex];
+      const cost = BODY_PART_COST[workshop.bodyPartKind];
+
+      if (gameState.gold >= cost) {
+        selectedTool = { toolKind: 'workshop', workshopIndex };
+      }
+    }
+
+    if (event.key === `${WORKSHOP_COUNT + 1}`) {
+      selectedTool = { toolKind: 'dagger' };
     }
   });
 
