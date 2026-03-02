@@ -16,7 +16,7 @@ export const GRID_ORIGIN: Vector2 = [
   (CANVAS_SIZE[1] - GRID_SIZE[1] * GRID_CELL_SIZE) / 2,
 ];
 
-export const STARTING_GOLD = 40;
+export const STARTING_GOLD = 100;
 
 export const BODY_PART_COST: Record<BodyPartKind, number> = {
   head: 8,
