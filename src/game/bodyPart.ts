@@ -19,7 +19,8 @@ export type BodyPart = {
 export const createBodyPart = (
   bodyPartId: number,
   bodyPartKind: BodyPartKind,
-  gridPosition: Vector2
+  gridPosition: Vector2,
+  animalShape?: AnimalShape
 ): BodyPart => ({
   bodyPartId,
   bodyPartKind,
@@ -27,6 +28,7 @@ export const createBodyPart = (
   connectionDirections: [],
   locked: false,
   cooldownTimer: 0,
+  animalShape,
 });
 
 export const getAnimalShapeByLimbCount = (limbCount: number): AnimalShape => {

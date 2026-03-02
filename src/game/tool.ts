@@ -8,4 +8,8 @@ export type BenchTool = {
   slotIndex: number;
 };
 
-export type Tool = WorkshopTool | BenchTool;
+export type DaggerTool = {
+  toolKind: 'dagger';
+};
+
+export type Tool = WorkshopTool | BenchTool | DaggerTool;

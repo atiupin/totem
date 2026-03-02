@@ -37,7 +37,7 @@ export const BODY_PART_SPRITES: Record<BodyPartSpriteKind, Vector2> = {
   limb: [7, 1],
 };
 
-export const TRASH_SPRITE: Vector2 = [3, 0];
+export const DAGGER_SPRITE: Vector2 = [3, 0];
 
 const createShapeSprites = (row: number): Record<BodyPartSpriteKind, Vector2> => ({
   head: [0, row],

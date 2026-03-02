@@ -16,7 +16,7 @@ export const GRID_ORIGIN: Vector2 = [
   (CANVAS_SIZE[1] - GRID_SIZE[1] * GRID_CELL_SIZE) / 2,
 ];
 
-export const STARTING_GOLD = 20;
+export const STARTING_GOLD = 40;
 
 export const BODY_PART_COST: Record<BodyPartKind, number> = {
   head: 8,
@@ -81,8 +81,6 @@ export const BENCH_ORIGIN: Vector2 = [
   CANVAS_SIZE[1] - BENCH_CELL_SIZE - 16,
 ];
 
-export const TRASH_RECT: Vector4 = [BENCH_ORIGIN[0] - 24 - 4, BENCH_ORIGIN[1], 24, 24];
-
 export const PAUSE_BUTTON_RECT: Vector4 = [
   BENCH_ORIGIN[0] + BENCH_SLOTS * BENCH_CELL_SIZE + 4,
   BENCH_ORIGIN[1],
@@ -94,3 +92,8 @@ export const WORKSHOP_COUNT = 3;
 export const WORKSHOP_SIZE = 24;
 export const WORKSHOP_ORIGIN: Vector2 = [(GRID_ORIGIN[0] - WORKSHOP_SIZE) / 2, 120];
 export const WORKSHOP_GAP = 8;
+
+export const DAGGER_ORIGIN: Vector2 = [
+  WORKSHOP_ORIGIN[0],
+  WORKSHOP_ORIGIN[1] + WORKSHOP_COUNT * (WORKSHOP_SIZE + WORKSHOP_GAP),
+];

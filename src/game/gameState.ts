@@ -1,7 +1,7 @@
 import type { Barrier } from './barrier';
 import type { Monster } from './monster';
 import { tickMonsters } from './monster';
-import type { BodyPart } from './bodyPart';
+import type { BodyPart, AnimalShape } from './bodyPart';
 import { createBodyPart, getGridCellPosition, getAnimalShapeByLimbCount } from './bodyPart';
 import type { BodyPartKind } from './bodyPart';
 import type { Vector2 } from './vector2';
@@ -17,7 +17,7 @@ import type { Projectile } from './projectile';
 import { tickProjectiles } from './projectile';
 import type { SpawnEvent } from './spawnSchedule';
 import type { Bench } from './bench';
-import { createBench } from './bench';
+import { createBench, addBenchSlot } from './bench';
 import type { Workshop } from './workshop';
 import { createWorkshops } from './workshop';
 import {
@@ -29,6 +29,7 @@ import {
   WAVES,
   MONSTER_STATS,
   STARTING_GOLD,
+  BODY_PART_COST,
 } from './constants';
 import { isVector2InVector4 } from './vector4';
 
@@ -264,7 +265,10 @@ const lockConnectedGroup = (bodyParts: BodyPart[], headPart: BodyPart) => {
 
   for (const part of groupParts) {
     part.locked = true;
-    part.animalShape = animalShape;
+
+    if (part.animalShape === undefined) {
+      part.animalShape = animalShape;
+    }
   }
 };
 
@@ -309,13 +313,19 @@ export const canPlaceBodyPart = (
 export const placeBodyPart = (
   gameState: GameState,
   gridPosition: Vector2,
-  bodyPartKind: BodyPartKind
+  bodyPartKind: BodyPartKind,
+  animalShape?: AnimalShape
 ): boolean => {
   if (!canPlaceBodyPart(gameState, gridPosition, bodyPartKind)) {
     return false;
   }
 
-  const bodyPart = createBodyPart(gameState.nextEntityId++, bodyPartKind, gridPosition);
+  const bodyPart = createBodyPart(
+    gameState.nextEntityId++,
+    bodyPartKind,
+    gridPosition,
+    animalShape
+  );
   gameState.bodyParts.push(bodyPart);
 
   recomputeConnections(gameState.bodyParts);
@@ -330,7 +340,7 @@ export const placeBodyPart = (
   return true;
 };
 
-export const removeBodyPart = (gameState: GameState, bodyPartId: number): boolean => {
+export const removeBodyPartWithRefund = (gameState: GameState, bodyPartId: number): boolean => {
   const index = gameState.bodyParts.findIndex(bodyPart => bodyPart.bodyPartId === bodyPartId);
 
   if (index === -1) {
@@ -343,7 +353,33 @@ export const removeBodyPart = (gameState: GameState, bodyPartId: number): boolea
     return false;
   }
 
+  gameState.gold += BODY_PART_COST[bodyPart.bodyPartKind];
   gameState.bodyParts.splice(index, 1);
+  recomputeConnections(gameState.bodyParts);
+  gameState.guards = computeGuards(gameState.bodyParts);
+
+  return true;
+};
+
+export const destroyGuard = (gameState: GameState, guardId: number): boolean => {
+  const guard = gameState.guards.find(guard => guard.guardId === guardId);
+
+  if (guard === undefined) {
+    return false;
+  }
+
+  for (const bodyPart of guard.bodyParts) {
+    if (bodyPart.bodyPartKind === 'limb') {
+      addBenchSlot(gameState.bench, 'limb', bodyPart.animalShape);
+    }
+  }
+
+  const guardBodyPartIds = new Set(guard.bodyParts.map(bodyPart => bodyPart.bodyPartId));
+
+  gameState.bodyParts = gameState.bodyParts.filter(
+    bodyPart => !guardBodyPartIds.has(bodyPart.bodyPartId)
+  );
+
   recomputeConnections(gameState.bodyParts);
   gameState.guards = computeGuards(gameState.bodyParts);
 
