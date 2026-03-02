@@ -7,7 +7,6 @@ import {
   getGridCellPosition,
   getBenchSlotPosition,
   removeBenchSlot,
-  produceFromWorkshop,
   getWorkshopPosition,
   CANVAS_SIZE,
   GRID_SIZE,
@@ -31,7 +30,7 @@ import {
   LIMB_PROJECTILE_SCALE,
   isVector2InVector4,
 } from './game';
-import type { GameState, BodyPart, Guard, Direction, Vector2 } from './game';
+import type { GameState, BodyPart, Guard, Direction, Vector2, Tool } from './game';
 import spritesheetUrl from './sprites.png';
 import {
   SPRITE_SIZE,
@@ -250,7 +249,7 @@ const getEffectiveDamage = (guard: Guard): number =>
 const renderGameState = (
   spritesheet: HTMLImageElement,
   gameState: GameState,
-  selectedBenchSlotIndex: number | undefined,
+  selectedTool: Tool | undefined,
   mousePosition: Vector2
 ) => {
   context.clearRect(0, 0, CANVAS_SIZE[0], CANVAS_SIZE[1]);
@@ -413,18 +412,37 @@ const renderGameState = (
     drawSprite(spritesheet, sprite, slotPosition, 0);
   }
 
-  if (selectedBenchSlotIndex !== undefined) {
-    const selectedSlotX = BENCH_ORIGIN[0] + selectedBenchSlotIndex * BENCH_CELL_SIZE;
+  if (selectedTool !== undefined) {
     context.strokeStyle = '#88ccff';
     context.lineWidth = 2;
-    context.strokeRect(selectedSlotX, BENCH_ORIGIN[1], BENCH_CELL_SIZE, BENCH_CELL_SIZE);
 
-    const benchSlot = gameState.bench.slots[selectedBenchSlotIndex];
+    let previewBodyPartKind: BodyPartSpriteKind | undefined;
 
-    if (benchSlot !== undefined) {
-      const benchSpriteKind: BodyPartSpriteKind =
-        benchSlot.bodyPartKind === 'body' ? 'disconnectedBody' : benchSlot.bodyPartKind;
-      const sprite = BODY_PART_SPRITES[benchSpriteKind];
+    if (selectedTool.toolKind === 'bench') {
+      const selectedSlotX = BENCH_ORIGIN[0] + selectedTool.slotIndex * BENCH_CELL_SIZE;
+      context.strokeRect(selectedSlotX, BENCH_ORIGIN[1], BENCH_CELL_SIZE, BENCH_CELL_SIZE);
+
+      const benchSlot = gameState.bench.slots[selectedTool.slotIndex];
+
+      if (benchSlot !== undefined) {
+        previewBodyPartKind =
+          benchSlot.bodyPartKind === 'body' ? 'disconnectedBody' : benchSlot.bodyPartKind;
+      }
+    } else {
+      const workshopPosition = getWorkshopPosition(selectedTool.workshopIndex);
+      context.strokeRect(
+        workshopPosition[0] - WORKSHOP_SIZE / 2,
+        workshopPosition[1] - WORKSHOP_SIZE / 2,
+        WORKSHOP_SIZE,
+        WORKSHOP_SIZE
+      );
+
+      const bodyPartKind = gameState.workshops[selectedTool.workshopIndex].bodyPartKind;
+      previewBodyPartKind = bodyPartKind === 'body' ? 'disconnectedBody' : bodyPartKind;
+    }
+
+    if (previewBodyPartKind !== undefined) {
+      const sprite = BODY_PART_SPRITES[previewBodyPartKind];
       drawSprite(spritesheet, sprite, mousePosition, 0);
     }
   }
@@ -460,7 +478,7 @@ const start = async () => {
   const spritesheet = await loadImage(spritesheetUrl);
   const gameState = createGameState();
 
-  let selectedBenchSlotIndex: number | undefined;
+  let selectedTool: Tool | undefined;
   let mousePosition: Vector2 = [0, 0];
 
   // Account for object-fit: contain letterboxing when calculating mouse position
@@ -556,13 +574,7 @@ const start = async () => {
       const cost = BODY_PART_COST[workshop.bodyPartKind];
 
       if (gameState.gold >= cost) {
-        const emptySlotIndex = gameState.bench.slots.findIndex(slot => slot === undefined);
-        const produced = produceFromWorkshop(workshop, gameState.bench);
-
-        if (produced) {
-          gameState.gold -= cost;
-          selectedBenchSlotIndex = emptySlotIndex;
-        }
+        selectedTool = { toolKind: 'workshop', workshopIndex };
       }
 
       return;
@@ -571,27 +583,39 @@ const start = async () => {
     const slotIndex = getBenchSlotAtPosition(clickPosition);
 
     if (slotIndex !== undefined && gameState.bench.slots[slotIndex] !== undefined) {
-      selectedBenchSlotIndex = slotIndex;
+      selectedTool = { toolKind: 'bench', slotIndex };
       return;
     }
 
-    if (selectedBenchSlotIndex !== undefined) {
-      if (isTrashAtPosition(clickPosition)) {
-        removeBenchSlot(gameState.bench, selectedBenchSlotIndex);
-        selectedBenchSlotIndex = undefined;
+    if (selectedTool !== undefined) {
+      if (selectedTool.toolKind === 'bench' && isTrashAtPosition(clickPosition)) {
+        removeBenchSlot(gameState.bench, selectedTool.slotIndex);
+        selectedTool = undefined;
         return;
       }
 
       const gridPosition = getGridCellAtPosition(clickPosition);
-      const benchSlot = gameState.bench.slots[selectedBenchSlotIndex];
 
-      if (gridPosition !== undefined && benchSlot !== undefined) {
-        const canPlace = canPlaceBodyPart(gameState, gridPosition, benchSlot.bodyPartKind);
+      if (gridPosition !== undefined) {
+        if (selectedTool.toolKind === 'workshop') {
+          const bodyPartKind = gameState.workshops[selectedTool.workshopIndex].bodyPartKind;
+          const cost = BODY_PART_COST[bodyPartKind];
 
-        if (canPlace) {
-          placeBodyPart(gameState, gridPosition, benchSlot.bodyPartKind);
-          removeBenchSlot(gameState.bench, selectedBenchSlotIndex);
-          selectedBenchSlotIndex = undefined;
+          if (gameState.gold >= cost && canPlaceBodyPart(gameState, gridPosition, bodyPartKind)) {
+            gameState.gold -= cost;
+            placeBodyPart(gameState, gridPosition, bodyPartKind);
+          }
+        } else {
+          const benchSlot = gameState.bench.slots[selectedTool.slotIndex];
+
+          if (
+            benchSlot !== undefined &&
+            canPlaceBodyPart(gameState, gridPosition, benchSlot.bodyPartKind)
+          ) {
+            placeBodyPart(gameState, gridPosition, benchSlot.bodyPartKind);
+            removeBenchSlot(gameState.bench, selectedTool.slotIndex);
+            selectedTool = undefined;
+          }
         }
       }
     }
@@ -599,11 +623,12 @@ const start = async () => {
 
   canvas.addEventListener('contextmenu', event => {
     event.preventDefault();
+    selectedTool = undefined;
   });
 
   document.addEventListener('keydown', event => {
     if (event.key === 'Escape') {
-      selectedBenchSlotIndex = undefined;
+      selectedTool = undefined;
     }
   });
 
@@ -614,7 +639,7 @@ const start = async () => {
     previousTime = currentTime;
 
     tickGameState(gameState, deltaTime);
-    renderGameState(spritesheet, gameState, selectedBenchSlotIndex, mousePosition);
+    renderGameState(spritesheet, gameState, selectedTool, mousePosition);
 
     requestAnimationFrame(loop);
   };

@@ -10,4 +10,5 @@ export * from './projectile';
 export * from './spawnSchedule';
 export * from './bench';
 export * from './workshop';
+export * from './tool';
 export * from './gameState';
