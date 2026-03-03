@@ -7,9 +7,11 @@ import {
   removeBodyPartWithRefund,
   destroyGuard,
   getGridCellPosition,
+  getBodyPartType,
   getBenchSlotPosition,
   removeBenchSlot,
   getWorkshopPosition,
+  GENERIC_BODY_PART_NAMES,
   CANVAS_SIZE,
   GRID_SIZE,
   GRID_CELL_SIZE,
@@ -38,9 +40,10 @@ import {
   SPRITE_SIZE,
   MONSTER_SPRITES,
   PROJECTILE_SPRITE,
-  type BodyPartSpriteKind,
-  BODY_PART_SPRITES,
-  ANIMAL_SHAPE_SPRITES,
+  type BodySpriteKind,
+  BODY_SPRITES,
+  LOCKED_BODY_SPRITES,
+  BODY_PART_NAME_SPRITES,
   WORKSHOP_SPRITES,
   DAGGER_SPRITE,
 } from './sprites';
@@ -112,27 +115,17 @@ const areOppositeDirections = (directionA: Direction, directionB: Direction): bo
   OPPOSITE_DIRECTION[directionA] === directionB;
 
 // Base sprite orientations:
-// - Head: faces right
 // - Disconnected body: no orientation
 // - Endcap: connects right
 // - Pipe: horizontal (left-right)
 // - L-shape: connects right and down
 // - T-shape: connects up, right, down (missing left)
 // - X-shape: all four directions
-// - Limb: faces right
-const getBodyPartSpriteKind = (bodyPart: BodyPart): BodyPartSpriteKind => {
-  if (bodyPart.bodyPartKind === 'head') {
-    return 'head';
-  }
-
-  if (bodyPart.bodyPartKind === 'limb') {
-    return 'limb';
-  }
-
+const getBodySpriteKind = (bodyPart: BodyPart): BodySpriteKind => {
   const connectionCount = bodyPart.connectionDirections.length;
 
   if (connectionCount === 0) {
-    return 'disconnectedBody';
+    return 'disconnected';
   }
 
   if (connectionCount === 1) {
@@ -158,8 +151,9 @@ const getBodyPartSpriteKind = (bodyPart: BodyPart): BodyPartSpriteKind => {
 
 const getBodyPartRotation = (bodyPart: BodyPart): number => {
   const directions = bodyPart.connectionDirections;
+  const bodyPartType = getBodyPartType(bodyPart.bodyPartName);
 
-  if (bodyPart.bodyPartKind === 'head' || bodyPart.bodyPartKind === 'limb') {
+  if (bodyPartType === 'head' || bodyPartType === 'limb') {
     if (directions.length === 0) {
       return 0;
     }
@@ -290,14 +284,22 @@ const renderGameState = (
   }
 
   for (const bodyPart of gameState.bodyParts) {
-    const spriteSet = bodyPart.animalShape
-      ? ANIMAL_SHAPE_SPRITES[bodyPart.animalShape]
-      : BODY_PART_SPRITES;
     const bodyPartPosition = getGridCellPosition(bodyPart.gridPosition);
-    const spriteKind = getBodyPartSpriteKind(bodyPart);
-    const sprite = spriteSet[spriteKind];
+    const bodyPartType = getBodyPartType(bodyPart.bodyPartName);
     const rotation = getBodyPartRotation(bodyPart);
-    drawSprite(spritesheet, sprite, bodyPartPosition, rotation);
+
+    if (bodyPartType === 'body') {
+      const bodySpriteKind = getBodySpriteKind(bodyPart);
+      const bodySpriteSet = bodyPart.locked ? LOCKED_BODY_SPRITES : BODY_SPRITES;
+      drawSprite(spritesheet, bodySpriteSet[bodySpriteKind], bodyPartPosition, rotation);
+    } else {
+      drawSprite(
+        spritesheet,
+        BODY_PART_NAME_SPRITES[bodyPart.bodyPartName],
+        bodyPartPosition,
+        rotation
+      );
+    }
   }
 
   for (const projectile of gameState.projectiles) {
@@ -340,7 +342,7 @@ const renderGameState = (
     drawSprite(spritesheet, workshopSprite, workshopPosition, 0);
 
     const workshop = gameState.workshops[workshopIndex];
-    const cost = BODY_PART_COST[workshop.bodyPartKind];
+    const cost = BODY_PART_COST[workshop.bodyPartType];
     context.fillStyle = '#e0e0e0';
     context.font = '10px monospace';
     context.fillText(
@@ -424,12 +426,11 @@ const renderGameState = (
     }
 
     const slotPosition = getBenchSlotPosition(slotIndex);
-    const benchSpriteKind: BodyPartSpriteKind =
-      benchSlot.bodyPartKind === 'body' ? 'disconnectedBody' : benchSlot.bodyPartKind;
-    const spriteSet = benchSlot.animalShape
-      ? ANIMAL_SHAPE_SPRITES[benchSlot.animalShape]
-      : BODY_PART_SPRITES;
-    const sprite = spriteSet[benchSpriteKind];
+    const benchSlotType = getBodyPartType(benchSlot.bodyPartName);
+    const sprite =
+      benchSlotType === 'body'
+        ? BODY_SPRITES['disconnected']
+        : BODY_PART_NAME_SPRITES[benchSlot.bodyPartName];
     drawSprite(spritesheet, sprite, slotPosition, 0);
   }
 
@@ -437,8 +438,7 @@ const renderGameState = (
     context.strokeStyle = '#88ccff';
     context.lineWidth = 2;
 
-    let previewBodyPartKind: BodyPartSpriteKind | undefined;
-    let previewSpriteSet: Record<BodyPartSpriteKind, Vector2> = BODY_PART_SPRITES;
+    let previewSprite: Vector2 | undefined;
 
     if (selectedTool.toolKind === 'bench') {
       const selectedSlotX = BENCH_ORIGIN[0] + selectedTool.slotIndex * BENCH_CELL_SIZE;
@@ -447,11 +447,11 @@ const renderGameState = (
       const benchSlot = gameState.bench.slots[selectedTool.slotIndex];
 
       if (benchSlot !== undefined) {
-        previewBodyPartKind =
-          benchSlot.bodyPartKind === 'body' ? 'disconnectedBody' : benchSlot.bodyPartKind;
-        previewSpriteSet = benchSlot.animalShape
-          ? ANIMAL_SHAPE_SPRITES[benchSlot.animalShape]
-          : BODY_PART_SPRITES;
+        const benchSlotType = getBodyPartType(benchSlot.bodyPartName);
+        previewSprite =
+          benchSlotType === 'body'
+            ? BODY_SPRITES['disconnected']
+            : BODY_PART_NAME_SPRITES[benchSlot.bodyPartName];
       }
     } else if (selectedTool.toolKind === 'workshop') {
       const workshopPosition = getWorkshopPosition(selectedTool.workshopIndex);
@@ -462,15 +462,17 @@ const renderGameState = (
         WORKSHOP_SIZE
       );
 
-      const bodyPartKind = gameState.workshops[selectedTool.workshopIndex].bodyPartKind;
-      previewBodyPartKind = bodyPartKind === 'body' ? 'disconnectedBody' : bodyPartKind;
+      const bodyPartType = gameState.workshops[selectedTool.workshopIndex].bodyPartType;
+      previewSprite =
+        bodyPartType === 'body'
+          ? BODY_SPRITES['disconnected']
+          : BODY_PART_NAME_SPRITES[GENERIC_BODY_PART_NAMES[bodyPartType]];
     } else if (selectedTool.toolKind === 'dagger') {
       context.strokeRect(DAGGER_ORIGIN[0], DAGGER_ORIGIN[1], WORKSHOP_SIZE, WORKSHOP_SIZE);
     }
 
-    if (previewBodyPartKind !== undefined) {
-      const sprite = previewSpriteSet[previewBodyPartKind];
-      drawSprite(spritesheet, sprite, mousePosition, 0);
+    if (previewSprite !== undefined) {
+      drawSprite(spritesheet, previewSprite, mousePosition, 0);
     }
   }
 
@@ -606,7 +608,7 @@ const start = async () => {
 
     if (workshopIndex !== undefined) {
       const workshop = gameState.workshops[workshopIndex];
-      const cost = BODY_PART_COST[workshop.bodyPartKind];
+      const cost = BODY_PART_COST[workshop.bodyPartType];
 
       if (gameState.gold >= cost) {
         selectedTool = { toolKind: 'workshop', workshopIndex };
@@ -653,12 +655,12 @@ const start = async () => {
         }
 
         if (selectedTool.toolKind === 'workshop') {
-          const bodyPartKind = gameState.workshops[selectedTool.workshopIndex].bodyPartKind;
-          const cost = BODY_PART_COST[bodyPartKind];
+          const bodyPartType = gameState.workshops[selectedTool.workshopIndex].bodyPartType;
+          const cost = BODY_PART_COST[bodyPartType];
 
-          if (gameState.gold >= cost && canPlaceBodyPart(gameState, gridPosition, bodyPartKind)) {
+          if (gameState.gold >= cost && canPlaceBodyPart(gameState, gridPosition, bodyPartType)) {
             gameState.gold -= cost;
-            placeBodyPart(gameState, gridPosition, bodyPartKind);
+            placeBodyPart(gameState, gridPosition, bodyPartType);
             selectedTool = undefined;
           }
         } else if (selectedTool.toolKind === 'bench') {
@@ -666,9 +668,9 @@ const start = async () => {
 
           if (
             benchSlot !== undefined &&
-            canPlaceBodyPart(gameState, gridPosition, benchSlot.bodyPartKind)
+            canPlaceBodyPart(gameState, gridPosition, getBodyPartType(benchSlot.bodyPartName))
           ) {
-            placeBodyPart(gameState, gridPosition, benchSlot.bodyPartKind, benchSlot.animalShape);
+            placeBodyPart(gameState, gridPosition, getBodyPartType(benchSlot.bodyPartName));
             removeBenchSlot(gameState.bench, selectedTool.slotIndex);
             selectedTool = undefined;
           }
@@ -691,7 +693,7 @@ const start = async () => {
 
     if (workshopIndex >= 0 && workshopIndex < WORKSHOP_COUNT) {
       const workshop = gameState.workshops[workshopIndex];
-      const cost = BODY_PART_COST[workshop.bodyPartKind];
+      const cost = BODY_PART_COST[workshop.bodyPartType];
 
       if (gameState.gold >= cost) {
         selectedTool = { toolKind: 'workshop', workshopIndex };

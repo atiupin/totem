@@ -1,5 +1,5 @@
 import type { BodyPart } from './bodyPart';
-import { getGridCellPosition } from './bodyPart';
+import { getBodyPartType, getGridCellPosition } from './bodyPart';
 import type { Monster } from './monster';
 import type { Projectile } from './projectile';
 import { getVector2Distance } from './vector2';
@@ -68,8 +68,10 @@ export const computeGuards = (bodyParts: BodyPart[]): Guard[] => {
       }
     }
 
-    const headParts = component.filter(part => part.bodyPartKind === 'head');
-    const limbCount = component.filter(part => part.bodyPartKind === 'limb').length;
+    const headParts = component.filter(part => getBodyPartType(part.bodyPartName) === 'head');
+    const limbCount = component.filter(
+      part => getBodyPartType(part.bodyPartName) === 'limb'
+    ).length;
     const minBodyPartId = Math.min(...component.map(part => part.bodyPartId));
 
     guards.push({

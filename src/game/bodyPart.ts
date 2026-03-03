@@ -2,41 +2,100 @@ import type { Direction } from './grid';
 import type { Vector2 } from './vector2';
 import { GRID_ORIGIN, GRID_CELL_SIZE } from './constants';
 
-export type BodyPartKind = 'head' | 'body' | 'limb';
+type HeadBodyPartName =
+  | 'genericHead'
+  | 'snakeHead'
+  | 'heronHead'
+  | 'toadHead'
+  | 'llamaHead'
+  | 'jaguarHead';
 
-export type AnimalShape = 'snake' | 'heron' | 'toad' | 'llama' | 'jaguar';
+type FootBodyPartName = 'genericFoot' | 'heronFoot' | 'toadFoot' | 'llamaFoot' | 'jaguarFoot';
+
+type BodyBodyPartName = 'genericBody';
+
+export type BodyPartName = HeadBodyPartName | FootBodyPartName | BodyBodyPartName;
+
+export type BodyPartType = 'head' | 'body' | 'limb';
+
+export const BODY_PART_TYPES: Record<BodyPartName, BodyPartType> = {
+  genericHead: 'head',
+  snakeHead: 'head',
+  heronHead: 'head',
+  toadHead: 'head',
+  llamaHead: 'head',
+  jaguarHead: 'head',
+  genericBody: 'body',
+  genericFoot: 'limb',
+  heronFoot: 'limb',
+  toadFoot: 'limb',
+  llamaFoot: 'limb',
+  jaguarFoot: 'limb',
+};
+
+export const getBodyPartType = (bodyPartName: BodyPartName): BodyPartType =>
+  BODY_PART_TYPES[bodyPartName];
+
+export const GENERIC_BODY_PART_NAMES: Record<BodyPartType, BodyPartName> = {
+  head: 'genericHead',
+  body: 'genericBody',
+  limb: 'genericFoot',
+};
 
 export type BodyPart = {
   bodyPartId: number;
-  bodyPartKind: BodyPartKind;
+  bodyPartName: BodyPartName;
   gridPosition: Vector2;
   connectionDirections: Direction[];
   locked: boolean;
   cooldownTimer: number;
-  animalShape?: AnimalShape;
 };
 
 export const createBodyPart = (
   bodyPartId: number,
-  bodyPartKind: BodyPartKind,
-  gridPosition: Vector2,
-  animalShape?: AnimalShape
+  bodyPartName: BodyPartName,
+  gridPosition: Vector2
 ): BodyPart => ({
   bodyPartId,
-  bodyPartKind,
+  bodyPartName,
   gridPosition,
   connectionDirections: [],
   locked: false,
   cooldownTimer: 0,
-  animalShape,
 });
 
-export const getAnimalShapeByLimbCount = (limbCount: number): AnimalShape => {
-  if (limbCount === 0) return 'snake';
-  if (limbCount === 1) return 'heron';
-  if (limbCount === 2) return 'toad';
-  if (limbCount === 3) return 'llama';
-  return 'jaguar';
+const HEAD_NAMES_BY_LIMB_COUNT: HeadBodyPartName[] = [
+  'snakeHead',
+  'heronHead',
+  'toadHead',
+  'llamaHead',
+  'jaguarHead',
+];
+
+const FOOT_NAMES_BY_LIMB_COUNT: FootBodyPartName[] = [
+  'heronFoot',
+  'toadFoot',
+  'llamaFoot',
+  'jaguarFoot',
+];
+
+export const getLockedBodyPartName = (
+  bodyPartName: BodyPartName,
+  limbCount: number
+): BodyPartName => {
+  const bodyPartType = getBodyPartType(bodyPartName);
+
+  if (bodyPartType === 'body') {
+    return 'genericBody';
+  }
+
+  if (bodyPartType === 'head') {
+    const index = Math.min(limbCount, HEAD_NAMES_BY_LIMB_COUNT.length - 1);
+    return HEAD_NAMES_BY_LIMB_COUNT[index];
+  }
+
+  const index = Math.min(limbCount - 1, FOOT_NAMES_BY_LIMB_COUNT.length - 1);
+  return FOOT_NAMES_BY_LIMB_COUNT[index];
 };
 
 export const getGridCellPosition = (gridPosition: Vector2): Vector2 => [

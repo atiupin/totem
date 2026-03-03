@@ -1,4 +1,4 @@
-import type { AnimalShape, MonsterKind, Vector2 } from './game';
+import type { BodyPartName, MonsterKind, Vector2 } from './game';
 
 export const SPRITE_SIZE = 24;
 
@@ -8,6 +8,8 @@ export const WORKSHOP_SPRITES: Record<number, Vector2> = {
   2: [2, 0],
 };
 
+export const DAGGER_SPRITE: Vector2 = [3, 0];
+
 export const PROJECTILE_SPRITE: Vector2 = [7, 0];
 
 export const MONSTER_SPRITES: Record<MonsterKind, Vector2> = {
@@ -16,44 +18,40 @@ export const MONSTER_SPRITES: Record<MonsterKind, Vector2> = {
   demon: [6, 0],
 };
 
-export type BodyPartSpriteKind =
-  | 'head'
-  | 'disconnectedBody'
-  | 'endcap'
-  | 'pipe'
-  | 'lShape'
-  | 'tShape'
-  | 'xShape'
-  | 'limb';
+export type BodySpriteKind = 'disconnected' | 'endcap' | 'pipe' | 'lShape' | 'tShape' | 'xShape';
 
-export const BODY_PART_SPRITES: Record<BodyPartSpriteKind, Vector2> = {
-  head: [0, 1],
-  disconnectedBody: [1, 1],
-  endcap: [2, 1],
-  pipe: [3, 1],
-  lShape: [4, 1],
-  tShape: [5, 1],
-  xShape: [6, 1],
-  limb: [7, 1],
+export const BODY_SPRITES: Record<BodySpriteKind, Vector2> = {
+  disconnected: [0, 1],
+  endcap: [1, 1],
+  pipe: [2, 1],
+  lShape: [3, 1],
+  tShape: [4, 1],
+  xShape: [5, 1],
 };
 
-export const DAGGER_SPRITE: Vector2 = [3, 0];
+export const LOCKED_BODY_SPRITES: Record<BodySpriteKind, Vector2> = {
+  disconnected: [0, 2],
+  endcap: [1, 2],
+  pipe: [2, 2],
+  lShape: [3, 2],
+  tShape: [4, 2],
+  xShape: [5, 2],
+};
 
-const createShapeSprites = (row: number): Record<BodyPartSpriteKind, Vector2> => ({
-  head: [0, row],
-  disconnectedBody: [1, row],
-  endcap: [2, row],
-  pipe: [3, row],
-  lShape: [4, row],
-  tShape: [5, row],
-  xShape: [6, row],
-  limb: [7, row],
-});
+export const BODY_PART_NAME_SPRITES: Record<BodyPartName, Vector2> = {
+  genericHead: [0, 3],
+  snakeHead: [1, 3],
+  heronHead: [2, 3],
+  toadHead: [3, 3],
+  llamaHead: [4, 3],
+  jaguarHead: [5, 3],
 
-export const ANIMAL_SHAPE_SPRITES: Record<AnimalShape, Record<BodyPartSpriteKind, Vector2>> = {
-  snake: createShapeSprites(2),
-  heron: createShapeSprites(3),
-  toad: createShapeSprites(4),
-  llama: createShapeSprites(5),
-  jaguar: createShapeSprites(6),
+  genericFoot: [0, 4],
+  heronFoot: [1, 4],
+  toadFoot: [2, 4],
+  llamaFoot: [3, 4],
+  jaguarFoot: [4, 4],
+
+  // Never used
+  genericBody: [0, 0],
 };

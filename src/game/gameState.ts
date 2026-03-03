@@ -1,9 +1,14 @@
 import type { Barrier } from './barrier';
 import type { Monster } from './monster';
 import { tickMonsters } from './monster';
-import type { BodyPart, AnimalShape } from './bodyPart';
-import { createBodyPart, getGridCellPosition, getAnimalShapeByLimbCount } from './bodyPart';
-import type { BodyPartKind } from './bodyPart';
+import type { BodyPart, BodyPartType } from './bodyPart';
+import {
+  createBodyPart,
+  getBodyPartType,
+  getLockedBodyPartName,
+  getGridCellPosition,
+  GENERIC_BODY_PART_NAMES,
+} from './bodyPart';
 import type { Vector2 } from './vector2';
 import {
   ALL_DIRECTIONS,
@@ -184,14 +189,16 @@ const recomputeConnections = (bodyParts: BodyPart[]) => {
       continue;
     }
 
-    if (bodyPart.bodyPartKind === 'head' || bodyPart.bodyPartKind === 'limb') {
+    const bodyPartType = getBodyPartType(bodyPart.bodyPartName);
+
+    if (bodyPartType === 'head' || bodyPartType === 'limb') {
       bodyPart.connectionDirections = [];
 
       for (const direction of CONNECTION_PRIORITY_DIRECTIONS) {
         const neighborGridPosition = getNeighborGridPosition(bodyPart.gridPosition, direction);
         const neighbor = partsByPosition.get(neighborGridPosition.toString());
 
-        if (neighbor && neighbor.bodyPartKind === 'body' && !neighbor.locked) {
+        if (neighbor && getBodyPartType(neighbor.bodyPartName) === 'body' && !neighbor.locked) {
           bodyPart.connectionDirections = [direction];
           break;
         }
@@ -200,7 +207,7 @@ const recomputeConnections = (bodyParts: BodyPart[]) => {
   }
 
   for (const bodyPart of bodyParts) {
-    if (bodyPart.locked || bodyPart.bodyPartKind !== 'body') {
+    if (bodyPart.locked || getBodyPartType(bodyPart.bodyPartName) !== 'body') {
       continue;
     }
 
@@ -214,7 +221,7 @@ const recomputeConnections = (bodyParts: BodyPart[]) => {
         continue;
       }
 
-      if (neighbor.bodyPartKind === 'body') {
+      if (getBodyPartType(neighbor.bodyPartName) === 'body') {
         bodyPart.connectionDirections.push(direction);
       } else {
         const oppositeDirection = OPPOSITE_DIRECTION[direction];
@@ -260,22 +267,18 @@ const lockConnectedGroup = (bodyParts: BodyPart[], headPart: BodyPart) => {
     }
   }
 
-  const limbCount = groupParts.filter(part => part.bodyPartKind === 'limb').length;
-  const animalShape = getAnimalShapeByLimbCount(limbCount);
+  const limbCount = groupParts.filter(part => getBodyPartType(part.bodyPartName) === 'limb').length;
 
   for (const part of groupParts) {
     part.locked = true;
-
-    if (part.animalShape === undefined) {
-      part.animalShape = animalShape;
-    }
+    part.bodyPartName = getLockedBodyPartName(part.bodyPartName, limbCount);
   }
 };
 
 export const canPlaceBodyPart = (
   gameState: GameState,
   gridPosition: Vector2,
-  bodyPartKind: BodyPartKind
+  bodyPartType: BodyPartType
 ): boolean => {
   if (!isVector2InVector4(gridPosition, BUILD_AREA)) {
     return false;
@@ -290,7 +293,7 @@ export const canPlaceBodyPart = (
     return false;
   }
 
-  if (bodyPartKind === 'head' || bodyPartKind === 'limb') {
+  if (bodyPartType === 'head' || bodyPartType === 'limb') {
     const hasAdjacentUnlockedBody = CONNECTION_PRIORITY_DIRECTIONS.some(direction => {
       const neighborGridPosition = getNeighborGridPosition(gridPosition, direction);
       const neighbor = gameState.bodyParts.find(
@@ -299,7 +302,11 @@ export const canPlaceBodyPart = (
           bodyPart.gridPosition[1] === neighborGridPosition[1]
       );
 
-      return neighbor !== undefined && neighbor.bodyPartKind === 'body' && !neighbor.locked;
+      return (
+        neighbor !== undefined &&
+        getBodyPartType(neighbor.bodyPartName) === 'body' &&
+        !neighbor.locked
+      );
     });
 
     if (!hasAdjacentUnlockedBody) {
@@ -313,24 +320,19 @@ export const canPlaceBodyPart = (
 export const placeBodyPart = (
   gameState: GameState,
   gridPosition: Vector2,
-  bodyPartKind: BodyPartKind,
-  animalShape?: AnimalShape
+  bodyPartType: BodyPartType
 ): boolean => {
-  if (!canPlaceBodyPart(gameState, gridPosition, bodyPartKind)) {
+  if (!canPlaceBodyPart(gameState, gridPosition, bodyPartType)) {
     return false;
   }
 
-  const bodyPart = createBodyPart(
-    gameState.nextEntityId++,
-    bodyPartKind,
-    gridPosition,
-    animalShape
-  );
+  const bodyPartName = GENERIC_BODY_PART_NAMES[bodyPartType];
+  const bodyPart = createBodyPart(gameState.nextEntityId++, bodyPartName, gridPosition);
   gameState.bodyParts.push(bodyPart);
 
   recomputeConnections(gameState.bodyParts);
 
-  if (bodyPartKind === 'head') {
+  if (bodyPartType === 'head') {
     lockConnectedGroup(gameState.bodyParts, bodyPart);
     recomputeConnections(gameState.bodyParts);
   }
@@ -353,7 +355,7 @@ export const removeBodyPartWithRefund = (gameState: GameState, bodyPartId: numbe
     return false;
   }
 
-  gameState.gold += BODY_PART_COST[bodyPart.bodyPartKind];
+  gameState.gold += BODY_PART_COST[getBodyPartType(bodyPart.bodyPartName)];
   gameState.bodyParts.splice(index, 1);
   recomputeConnections(gameState.bodyParts);
   gameState.guards = computeGuards(gameState.bodyParts);
@@ -369,8 +371,8 @@ export const destroyGuard = (gameState: GameState, guardId: number): boolean => 
   }
 
   for (const bodyPart of guard.bodyParts) {
-    if (bodyPart.bodyPartKind === 'limb') {
-      addBenchSlot(gameState.bench, 'limb', bodyPart.animalShape);
+    if (getBodyPartType(bodyPart.bodyPartName) === 'limb') {
+      addBenchSlot(gameState.bench, bodyPart.bodyPartName);
     }
   }
 

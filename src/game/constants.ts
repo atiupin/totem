@@ -1,4 +1,4 @@
-import type { BodyPartKind } from './bodyPart';
+import type { BodyPartType } from './bodyPart';
 import type { Vector2 } from './vector2';
 import type { Vector4 } from './vector4';
 
@@ -18,7 +18,7 @@ export const GRID_ORIGIN: Vector2 = [
 
 export const STARTING_GOLD = 100;
 
-export const BODY_PART_COST: Record<BodyPartKind, number> = {
+export const BODY_PART_COST: Record<BodyPartType, number> = {
   head: 8,
   body: 2,
   limb: 4,
