@@ -22,6 +22,8 @@ import type { Projectile } from './projectile';
 import { tickProjectiles } from './projectile';
 import type { Summon } from './summon';
 import { tickSummons } from './summon';
+import type { FloatingText } from './floatingText';
+import { tickFloatingTexts } from './floatingText';
 import type { SpawnEvent } from './spawnSchedule';
 import type { Bench } from './bench';
 import { createBench, addBenchSlot } from './bench';
@@ -52,6 +54,7 @@ export type GameState = {
   guards: Guard[];
   projectiles: Projectile[];
   summons: Summon[];
+  floatingTexts: FloatingText[];
   spawnEvents: SpawnEvent[];
   bench: Bench;
   workshops: Workshop[];
@@ -92,6 +95,7 @@ export const createGameState = (): GameState => ({
   guards: [],
   projectiles: [],
   summons: [],
+  floatingTexts: [],
   spawnEvents: createDefaultSpawnEvents(),
   bench: createBench(),
   workshops: createWorkshops(),
@@ -161,7 +165,13 @@ export const tickGameState = (gameState: GameState, deltaTime: number) => {
   gameState.elapsedTime += deltaTime;
 
   spawnMonsters(gameState);
-  tickMonsters(gameState.monsters, gameState.barrier, gameState.summons, deltaTime);
+  tickMonsters(
+    gameState.monsters,
+    gameState.barrier,
+    gameState.summons,
+    gameState.floatingTexts,
+    deltaTime
+  );
 
   gameState.nextEntityId = tickGuards(
     gameState.guards,
@@ -171,8 +181,19 @@ export const tickGameState = (gameState: GameState, deltaTime: number) => {
     gameState.nextEntityId,
     deltaTime
   );
-  gameState.summons = tickSummons(gameState.summons, gameState.monsters, deltaTime);
-  gameState.projectiles = tickProjectiles(gameState.projectiles, gameState.monsters, deltaTime);
+  gameState.summons = tickSummons(
+    gameState.summons,
+    gameState.monsters,
+    gameState.floatingTexts,
+    deltaTime
+  );
+  gameState.projectiles = tickProjectiles(
+    gameState.projectiles,
+    gameState.monsters,
+    gameState.floatingTexts,
+    deltaTime
+  );
+  gameState.floatingTexts = tickFloatingTexts(gameState.floatingTexts, deltaTime);
   removeDeadMonsters(gameState);
   checkGamePhase(gameState);
 };

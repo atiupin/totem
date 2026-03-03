@@ -7,6 +7,8 @@ import {
   getVector2Distance,
 } from './vector2';
 import type { Monster } from './monster';
+import type { FloatingText } from './floatingText';
+import { createFloatingText } from './floatingText';
 import { PROJECTILE_HIT_DISTANCE } from './constants';
 
 export type Projectile = {
@@ -21,6 +23,7 @@ export type Projectile = {
 export const tickProjectiles = (
   projectiles: Projectile[],
   monsters: Monster[],
+  floatingTexts: FloatingText[],
   deltaTime: number
 ): Projectile[] => {
   const remainingProjectiles: Projectile[] = [];
@@ -44,6 +47,8 @@ export const tickProjectiles = (
       getVector2Distance(projectile.position, targetMonster.position) <= PROJECTILE_HIT_DISTANCE
     ) {
       targetMonster.health -= projectile.damage;
+
+      floatingTexts.push(createFloatingText(targetMonster.position, projectile.damage, '#ffffff'));
     } else {
       remainingProjectiles.push(projectile);
     }

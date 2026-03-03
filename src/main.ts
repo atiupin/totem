@@ -37,6 +37,7 @@ import {
   BODY_PART_COST,
   LIMB_PROJECTILE_SCALE,
   isVector2InVector4,
+  FLOATING_TEXT_LIFETIME,
 } from './game';
 import type { GameState, BodyPart, BodyPartName, Guard, Direction, Vector2, Tool } from './game';
 import spritesheetUrl from './sprites.png';
@@ -336,6 +337,23 @@ const renderGameState = (
     const monsterSprite = MONSTER_SPRITES[monster.monsterKind];
     drawSprite(spritesheet, monsterSprite, monster.position, 0);
   }
+
+  context.font = '10px monospace';
+  context.textAlign = 'center';
+
+  for (const floatingText of gameState.floatingTexts) {
+    const opacity = floatingText.lifetime / FLOATING_TEXT_LIFETIME;
+    context.globalAlpha = opacity;
+    context.fillStyle = floatingText.color;
+    context.fillText(
+      floatingText.text,
+      Math.round(floatingText.position[0]),
+      Math.round(floatingText.position[1])
+    );
+  }
+
+  context.globalAlpha = 1;
+  context.textAlign = 'left';
 
   context.fillStyle = '#e0e0e0';
   context.font = '14px monospace';

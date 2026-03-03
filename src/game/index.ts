@@ -8,6 +8,7 @@ export * from './bodyPart';
 export * from './guard';
 export * from './projectile';
 export * from './summon';
+export * from './floatingText';
 export * from './spawnSchedule';
 export * from './bench';
 export * from './workshop';

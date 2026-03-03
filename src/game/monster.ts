@@ -10,6 +10,8 @@ import {
   addVector2,
 } from './vector2';
 import type { Summon } from './summon';
+import type { FloatingText } from './floatingText';
+import { createFloatingText } from './floatingText';
 
 export type Monster = {
   monsterId: number;
@@ -27,6 +29,7 @@ export const tickMonsters = (
   monsters: Monster[],
   barrier: Barrier,
   summons: Summon[],
+  floatingTexts: FloatingText[],
   deltaTime: number
 ): void => {
   for (const monster of monsters) {
@@ -57,6 +60,10 @@ export const tickMonsters = (
         const monsterStats = MONSTER_STATS[monster.monsterKind];
         barrier.health -= monsterStats.attackDamage;
         monster.attackCooldownTimer += monsterStats.attackCooldown;
+
+        floatingTexts.push(
+          createFloatingText(monster.position, monsterStats.attackDamage, '#ff8888')
+        );
       }
 
       continue;

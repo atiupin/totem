@@ -7,6 +7,8 @@ import {
   getVector2Distance,
 } from './vector2';
 import type { Monster } from './monster';
+import type { FloatingText } from './floatingText';
+import { createFloatingText } from './floatingText';
 import {
   SUMMON_MAX_HEALTH,
   SUMMON_SPEED,
@@ -43,6 +45,7 @@ export const createSummon = (summonId: number, guardId: number, homePosition: Ve
 export const tickSummons = (
   summons: Summon[],
   monsters: Monster[],
+  floatingTexts: FloatingText[],
   deltaTime: number
 ): Summon[] => {
   for (const summon of summons) {
@@ -119,9 +122,16 @@ export const tickSummons = (
 
         if (combatDistance <= SUMMON_HIT_DISTANCE) {
           engagedMonster.health -= SUMMON_ATTACK_DAMAGE;
+          floatingTexts.push(
+            createFloatingText(engagedMonster.position, SUMMON_ATTACK_DAMAGE, '#ffffff')
+          );
 
           const monsterStats = MONSTER_STATS[engagedMonster.monsterKind];
           summon.health -= monsterStats.attackDamage;
+          floatingTexts.push(
+            createFloatingText(summon.position, monsterStats.attackDamage, '#ff8888')
+          );
+
           attacked = true;
         }
       }
