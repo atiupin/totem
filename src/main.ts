@@ -655,7 +655,7 @@ const start = async () => {
 
           if (gameState.gold >= cost && canPlaceBodyPart(gameState, gridPosition, bodyPartType)) {
             gameState.gold -= cost;
-            placeBodyPart(gameState, gridPosition, bodyPartType);
+            placeBodyPart(gameState, gridPosition, GENERIC_BODY_PART_NAMES[bodyPartType]);
             selectedTool = undefined;
           }
         } else if (selectedTool.toolKind === 'bench') {
@@ -665,7 +665,7 @@ const start = async () => {
             benchSlot !== undefined &&
             canPlaceBodyPart(gameState, gridPosition, getBodyPartType(benchSlot.bodyPartName))
           ) {
-            placeBodyPart(gameState, gridPosition, getBodyPartType(benchSlot.bodyPartName));
+            placeBodyPart(gameState, gridPosition, benchSlot.bodyPartName);
             removeBenchSlot(gameState.bench, selectedTool.slotIndex);
             selectedTool = undefined;
           }

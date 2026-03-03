@@ -1,14 +1,13 @@
 import type { Barrier } from './barrier';
 import type { Monster } from './monster';
 import { tickMonsters } from './monster';
-import type { BodyPart, BodyPartType } from './bodyPart';
+import type { BodyPart, BodyPartName, BodyPartType } from './bodyPart';
 import {
   createBodyPart,
   getBodyPartType,
   getLockedBodyPartName,
   getGridCellPosition,
   buildPositionMap,
-  GENERIC_BODY_PART_NAMES,
 } from './bodyPart';
 import type { Vector2 } from './vector2';
 import {
@@ -311,15 +310,14 @@ export const canPlaceBodyPart = (
 export const placeBodyPart = (
   gameState: GameState,
   gridPosition: Vector2,
-  bodyPartType: BodyPartType
+  bodyPartName: BodyPartName
 ) => {
-  const bodyPartName = GENERIC_BODY_PART_NAMES[bodyPartType];
   const bodyPart = createBodyPart(gameState.nextEntityId++, bodyPartName, gridPosition);
   gameState.bodyParts.push(bodyPart);
 
   recomputeConnections(gameState.bodyParts);
 
-  if (bodyPartType === 'head') {
+  if (getBodyPartType(bodyPartName) === 'head') {
     lockConnectedGroup(gameState.bodyParts, bodyPart);
     recomputeConnections(gameState.bodyParts);
   }

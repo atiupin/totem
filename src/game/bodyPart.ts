@@ -85,6 +85,10 @@ export const getLockedBodyPartName = (
 ): BodyPartName => {
   const bodyPartType = getBodyPartType(bodyPartName);
 
+  if (bodyPartName !== GENERIC_BODY_PART_NAMES[bodyPartType]) {
+    return bodyPartName;
+  }
+
   if (bodyPartType === 'body') {
     return 'genericBody';
   }
