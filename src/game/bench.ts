@@ -1,4 +1,5 @@
 import type { BodyPartName } from './bodyPart';
+import { isLimbBodyPartName, getLimbSubtype, getCombinedLimbName } from './bodyPart';
 import type { Vector2 } from './vector2';
 import { BENCH_SLOTS, BENCH_CELL_SIZE, BENCH_ORIGIN } from './constants';
 
@@ -31,3 +32,40 @@ export const getBenchSlotPosition = (slotIndex: number): Vector2 => [
   BENCH_ORIGIN[0] + slotIndex * BENCH_CELL_SIZE + BENCH_CELL_SIZE / 2,
   BENCH_ORIGIN[1] + BENCH_CELL_SIZE / 2,
 ];
+
+export const combineBenchSlots = (
+  bench: Bench,
+  sourceSlotIndex: number,
+  targetSlotIndex: number
+): boolean => {
+  const sourceSlot = bench.slots[sourceSlotIndex];
+  const targetSlot = bench.slots[targetSlotIndex];
+
+  if (sourceSlot === undefined || targetSlot === undefined) {
+    return false;
+  }
+
+  if (
+    !isLimbBodyPartName(sourceSlot.bodyPartName) ||
+    !isLimbBodyPartName(targetSlot.bodyPartName)
+  ) {
+    return false;
+  }
+
+  const sourceSubtype = getLimbSubtype(sourceSlot.bodyPartName);
+  const targetSubtype = getLimbSubtype(targetSlot.bodyPartName);
+
+  if (sourceSubtype !== targetSubtype) {
+    return false;
+  }
+
+  const combinedName = getCombinedLimbName(sourceSubtype);
+
+  if (combinedName === undefined) {
+    return false;
+  }
+
+  bench.slots[sourceSlotIndex] = undefined;
+  bench.slots[targetSlotIndex] = { bodyPartName: combinedName };
+  return true;
+};

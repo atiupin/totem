@@ -179,9 +179,9 @@ const recomputeConnections = (bodyParts: BodyPart[]) => {
       continue;
     }
 
-    const bodyPartType = getBodyPartType(bodyPart.bodyPartName);
+    const bodyPartSupertype = getBodyPartType(bodyPart.bodyPartName);
 
-    if (bodyPartType === 'head' || bodyPartType === 'limb') {
+    if (bodyPartSupertype === 'head' || bodyPartSupertype === 'limb') {
       bodyPart.connectionDirections = [];
 
       for (const direction of CONNECTION_PRIORITY_DIRECTIONS) {

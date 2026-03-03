@@ -2,50 +2,55 @@ import type { Direction } from './grid';
 import type { Vector2 } from './vector2';
 import { GRID_ORIGIN, GRID_CELL_SIZE, GRID_SIZE } from './constants';
 
-type HeadBodyPartName =
-  | 'genericHead'
-  | 'snakeHead'
-  | 'heronHead'
-  | 'toadHead'
-  | 'llamaHead'
-  | 'jaguarHead';
+type LimbBodyPartSubtype = 'foot' | 'tail' | 'wing';
+type NonLimbBodyPartSubtype = 'head' | 'body';
+type BodyPartSubtype = NonLimbBodyPartSubtype | LimbBodyPartSubtype;
 
-type BodyBodyPartName = 'genericBody';
-
-type FootBodyPartName = 'genericFoot' | 'heronFoot' | 'toadFoot' | 'llamaFoot' | 'jaguarFoot';
-
-type TailBodyPartName = 'jaguarTail';
-
-type WingBodyPartName = 'heronWing';
-
-export type BodyPartName =
-  | HeadBodyPartName
-  | FootBodyPartName
-  | TailBodyPartName
-  | WingBodyPartName
-  | BodyBodyPartName;
-
-export type BodyPartType = 'head' | 'body' | 'limb';
-
-export const BODY_PART_TYPES: Record<BodyPartName, BodyPartType> = {
-  genericHead: 'head',
-  snakeHead: 'head',
-  heronHead: 'head',
-  toadHead: 'head',
-  llamaHead: 'head',
-  jaguarHead: 'head',
-  genericBody: 'body',
-  genericFoot: 'limb',
-  heronFoot: 'limb',
-  toadFoot: 'limb',
-  llamaFoot: 'limb',
-  jaguarFoot: 'limb',
-  jaguarTail: 'limb',
-  heronWing: 'limb',
+type BodyPartRef = {
+  subtype: BodyPartSubtype;
 };
 
-export const getBodyPartType = (bodyPartName: BodyPartName): BodyPartType =>
-  BODY_PART_TYPES[bodyPartName];
+const BODY_PART_REFS = {
+  genericHead: { subtype: 'head' },
+  snakeHead: { subtype: 'head' },
+  heronHead: { subtype: 'head' },
+  toadHead: { subtype: 'head' },
+  llamaHead: { subtype: 'head' },
+  jaguarHead: { subtype: 'head' },
+  genericBody: { subtype: 'body' },
+  genericFoot: { subtype: 'foot' },
+  heronFoot: { subtype: 'foot' },
+  toadFoot: { subtype: 'foot' },
+  llamaFoot: { subtype: 'foot' },
+  jaguarFoot: { subtype: 'foot' },
+  jaguarTail: { subtype: 'tail' },
+  heronWing: { subtype: 'wing' },
+} as const satisfies Record<string, BodyPartRef>;
+
+export type BodyPartName = keyof typeof BODY_PART_REFS;
+
+type BodyPartNamesBySubtype = {
+  [TSubtype in BodyPartSubtype]: {
+    [TKey in BodyPartName]: (typeof BODY_PART_REFS)[TKey]['subtype'] extends TSubtype
+      ? TKey
+      : never;
+  }[BodyPartName];
+};
+
+type LimbBodyPartName = BodyPartNamesBySubtype[LimbBodyPartSubtype];
+
+export type BodyPartType = NonLimbBodyPartSubtype | 'limb';
+
+export const getBodyPartType = (bodyPartName: BodyPartName): BodyPartType => {
+  const { subtype } = BODY_PART_REFS[bodyPartName];
+  return subtype === 'head' || subtype === 'body' ? subtype : 'limb';
+};
+
+export const isLimbBodyPartName = (bodyPartName: BodyPartName): bodyPartName is LimbBodyPartName =>
+  getBodyPartType(bodyPartName) === 'limb';
+
+export const getLimbSubtype = (bodyPartName: LimbBodyPartName): LimbBodyPartSubtype =>
+  BODY_PART_REFS[bodyPartName].subtype;
 
 export const GENERIC_BODY_PART_NAMES: Record<BodyPartType, BodyPartName> = {
   head: 'genericHead',
@@ -75,7 +80,7 @@ export const createBodyPart = (
   cooldownTimer: 0,
 });
 
-const HEAD_NAMES_BY_LIMB_COUNT: HeadBodyPartName[] = [
+const HEAD_NAMES_BY_LIMB_COUNT: BodyPartNamesBySubtype['head'][] = [
   'snakeHead',
   'heronHead',
   'toadHead',
@@ -83,7 +88,7 @@ const HEAD_NAMES_BY_LIMB_COUNT: HeadBodyPartName[] = [
   'jaguarHead',
 ];
 
-const FOOT_NAMES_BY_LIMB_COUNT: FootBodyPartName[] = [
+const FOOT_NAMES_BY_LIMB_COUNT: BodyPartNamesBySubtype['foot'][] = [
   'heronFoot',
   'toadFoot',
   'llamaFoot',
@@ -112,6 +117,14 @@ export const getLockedBodyPartName = (
   const index = Math.min(limbCount - 1, FOOT_NAMES_BY_LIMB_COUNT.length - 1);
   return FOOT_NAMES_BY_LIMB_COUNT[index];
 };
+
+const COMBINED_LIMB_NAMES: Partial<Record<LimbBodyPartSubtype, BodyPartName>> = {
+  foot: 'jaguarTail',
+  tail: 'heronWing',
+};
+
+export const getCombinedLimbName = (limbSubtype: LimbBodyPartSubtype): BodyPartName | undefined =>
+  COMBINED_LIMB_NAMES[limbSubtype];
 
 export const buildPositionMap = (bodyParts: BodyPart[]): Map<string, BodyPart> => {
   const partsByPosition = new Map<string, BodyPart>();

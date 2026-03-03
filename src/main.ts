@@ -11,6 +11,7 @@ import {
   getBodyPartType,
   getBenchSlotPosition,
   removeBenchSlot,
+  combineBenchSlots,
   getWorkshopPosition,
   GENERIC_BODY_PART_NAMES,
   CANVAS_SIZE,
@@ -615,6 +616,17 @@ const start = async () => {
     const slotIndex = getBenchSlotAtPosition(clickPosition);
 
     if (slotIndex !== undefined && gameState.bench.slots[slotIndex] !== undefined) {
+      if (
+        selectedTool !== undefined &&
+        selectedTool.toolKind === 'bench' &&
+        slotIndex !== selectedTool.slotIndex
+      ) {
+        if (combineBenchSlots(gameState.bench, selectedTool.slotIndex, slotIndex)) {
+          selectedTool = undefined;
+          return;
+        }
+      }
+
       selectedTool = { toolKind: 'bench', slotIndex };
       return;
     }
