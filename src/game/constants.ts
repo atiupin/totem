@@ -79,6 +79,7 @@ export const WAVES: WaveConfig[] = [
 ];
 
 export const BENCH_SLOTS = 6;
+export const BENCH_KEYS = ['q', 'w', 'e', 'r', 't', 'y'];
 export const BENCH_CELL_SIZE = GRID_CELL_SIZE;
 export const BENCH_ORIGIN: Vector2 = [
   (CANVAS_SIZE[0] - BENCH_SLOTS * BENCH_CELL_SIZE) / 2,

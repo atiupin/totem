@@ -20,6 +20,7 @@ import {
   BARRIER_COLUMN,
   BUILD_AREA,
   BENCH_SLOTS,
+  BENCH_KEYS,
   BENCH_CELL_SIZE,
   BENCH_ORIGIN,
   PAUSE_BUTTON_RECT,
@@ -410,16 +411,34 @@ const renderGameState = (
     PAUSE_BUTTON_RECT[0] + PAUSE_BUTTON_RECT[2] / 2,
     PAUSE_BUTTON_RECT[1] + PAUSE_BUTTON_RECT[3] / 2 + 4
   );
+
+  context.fillStyle = 'rgba(255, 255, 255, 0.3)';
+  context.font = '8px monospace';
+  context.fillText(
+    '[Space]',
+    PAUSE_BUTTON_RECT[0] + PAUSE_BUTTON_RECT[2] / 2,
+    PAUSE_BUTTON_RECT[1] - 3
+  );
   context.textAlign = 'left';
 
   for (let slotIndex = 0; slotIndex < BENCH_SLOTS; slotIndex++) {
     const benchSlot = gameState.bench.slots[slotIndex];
+    const slotPosition = getBenchSlotPosition(slotIndex);
+
+    context.fillStyle = 'rgba(255, 255, 255, 0.3)';
+    context.font = '8px monospace';
+    context.textAlign = 'center';
+    context.fillText(
+      `[${BENCH_KEYS[slotIndex].toUpperCase()}]`,
+      slotPosition[0],
+      BENCH_ORIGIN[1] - 3
+    );
+    context.textAlign = 'left';
 
     if (benchSlot === undefined) {
       continue;
     }
 
-    const slotPosition = getBenchSlotPosition(slotIndex);
     const sprite = getBodyPartPreviewSprite(
       benchSlot.bodyPartName,
       getBodyPartType(benchSlot.bodyPartName)
@@ -665,6 +684,11 @@ const start = async () => {
       selectedTool = undefined;
     }
 
+    if (event.key === ' ') {
+      event.preventDefault();
+      togglePause(gameState);
+    }
+
     const workshopIndex = Number(event.key) - 1;
 
     if (workshopIndex >= 0 && workshopIndex < WORKSHOP_COUNT) {
@@ -678,6 +702,12 @@ const start = async () => {
 
     if (event.key === `${WORKSHOP_COUNT + 1}`) {
       selectedTool = { toolKind: 'dagger' };
+    }
+
+    const benchSlotIndex = BENCH_KEYS.indexOf(event.key.toLowerCase());
+
+    if (benchSlotIndex !== -1 && gameState.bench.slots[benchSlotIndex] !== undefined) {
+      selectedTool = { toolKind: 'bench', slotIndex: benchSlotIndex };
     }
   });
 
