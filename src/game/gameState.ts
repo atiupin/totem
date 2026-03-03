@@ -7,6 +7,7 @@ import {
   getBodyPartType,
   getLockedBodyPartName,
   getGridCellPosition,
+  buildPositionMap,
   GENERIC_BODY_PART_NAMES,
 } from './bodyPart';
 import type { Vector2 } from './vector2';
@@ -112,7 +113,7 @@ const spawnMonsters = (gameState: GameState) => {
       speed: monsterStats.speed,
       health: monsterStats.health,
       targetRow,
-      isAttackingBarrier: false,
+      attackingBarrier: false,
       attackCooldownTimer: 0,
     });
   }
@@ -169,16 +170,6 @@ export const tickGameState = (gameState: GameState, deltaTime: number) => {
   gameState.projectiles = tickProjectiles(gameState.projectiles, gameState.monsters, deltaTime);
   removeDeadMonsters(gameState);
   checkGamePhase(gameState);
-};
-
-const buildPositionMap = (bodyParts: BodyPart[]): Map<string, BodyPart> => {
-  const partsByPosition = new Map<string, BodyPart>();
-
-  for (const bodyPart of bodyParts) {
-    partsByPosition.set(bodyPart.gridPosition.toString(), bodyPart);
-  }
-
-  return partsByPosition;
 };
 
 const recomputeConnections = (bodyParts: BodyPart[]) => {
@@ -321,11 +312,7 @@ export const placeBodyPart = (
   gameState: GameState,
   gridPosition: Vector2,
   bodyPartType: BodyPartType
-): boolean => {
-  if (!canPlaceBodyPart(gameState, gridPosition, bodyPartType)) {
-    return false;
-  }
-
+) => {
   const bodyPartName = GENERIC_BODY_PART_NAMES[bodyPartType];
   const bodyPart = createBodyPart(gameState.nextEntityId++, bodyPartName, gridPosition);
   gameState.bodyParts.push(bodyPart);
@@ -338,36 +325,32 @@ export const placeBodyPart = (
   }
 
   gameState.guards = computeGuards(gameState.bodyParts);
-
-  return true;
 };
 
-export const removeBodyPartWithRefund = (gameState: GameState, bodyPartId: number): boolean => {
+export const removeBodyPartWithRefund = (gameState: GameState, bodyPartId: number) => {
   const index = gameState.bodyParts.findIndex(bodyPart => bodyPart.bodyPartId === bodyPartId);
 
   if (index === -1) {
-    return false;
+    return;
   }
 
   const bodyPart = gameState.bodyParts[index];
 
   if (bodyPart.locked) {
-    return false;
+    return;
   }
 
   gameState.gold += BODY_PART_COST[getBodyPartType(bodyPart.bodyPartName)];
   gameState.bodyParts.splice(index, 1);
   recomputeConnections(gameState.bodyParts);
   gameState.guards = computeGuards(gameState.bodyParts);
-
-  return true;
 };
 
-export const destroyGuard = (gameState: GameState, guardId: number): boolean => {
+export const destroyGuard = (gameState: GameState, guardId: number) => {
   const guard = gameState.guards.find(guard => guard.guardId === guardId);
 
   if (guard === undefined) {
-    return false;
+    return;
   }
 
   for (const bodyPart of guard.bodyParts) {
@@ -384,6 +367,4 @@ export const destroyGuard = (gameState: GameState, guardId: number): boolean => 
 
   recomputeConnections(gameState.bodyParts);
   gameState.guards = computeGuards(gameState.bodyParts);
-
-  return true;
 };

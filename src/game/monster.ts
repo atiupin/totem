@@ -1,5 +1,5 @@
 import type { MonsterKind } from './constants';
-import { MONSTER_STATS, BARRIER_COLUMN, GRID_CELL_SIZE, GRID_ORIGIN } from './constants';
+import { MONSTER_STATS, BARRIER_PIXEL_X } from './constants';
 import type { Barrier } from './barrier';
 import type { Vector2 } from './vector2';
 
@@ -10,15 +10,13 @@ export type Monster = {
   speed: number;
   health: number;
   targetRow: number;
-  isAttackingBarrier: boolean;
+  attackingBarrier: boolean;
   attackCooldownTimer: number;
 };
 
-const BARRIER_PIXEL_X = GRID_ORIGIN[0] + (BARRIER_COLUMN + 1) * GRID_CELL_SIZE + GRID_CELL_SIZE / 2;
-
 export const tickMonsters = (monsters: Monster[], barrier: Barrier, deltaTime: number): void => {
   for (const monster of monsters) {
-    if (monster.isAttackingBarrier) {
+    if (monster.attackingBarrier) {
       monster.attackCooldownTimer -= deltaTime;
 
       if (monster.attackCooldownTimer <= 0) {
@@ -35,7 +33,7 @@ export const tickMonsters = (monsters: Monster[], barrier: Barrier, deltaTime: n
 
     if (monster.position[0] <= BARRIER_PIXEL_X) {
       monster.position[0] = BARRIER_PIXEL_X;
-      monster.isAttackingBarrier = true;
+      monster.attackingBarrier = true;
       monster.attackCooldownTimer = MONSTER_STATS[monster.monsterKind].attackCooldown;
     }
   }

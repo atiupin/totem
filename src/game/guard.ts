@@ -1,5 +1,5 @@
 import type { BodyPart } from './bodyPart';
-import { getBodyPartType, getGridCellPosition } from './bodyPart';
+import { getBodyPartType, getGridCellPosition, buildPositionMap } from './bodyPart';
 import type { Monster } from './monster';
 import type { Projectile } from './projectile';
 import { getVector2Distance } from './vector2';
@@ -23,11 +23,7 @@ export type Guard = {
 
 export const computeGuards = (bodyParts: BodyPart[]): Guard[] => {
   const lockedParts = bodyParts.filter(bodyPart => bodyPart.locked);
-  const partsByPosition = new Map<string, BodyPart>();
-
-  for (const bodyPart of lockedParts) {
-    partsByPosition.set(bodyPart.gridPosition.toString(), bodyPart);
-  }
+  const partsByPosition = buildPositionMap(lockedParts);
 
   const visited = new Set<string>();
   const guards: Guard[] = [];

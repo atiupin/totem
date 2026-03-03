@@ -16,6 +16,9 @@ export const GRID_ORIGIN: Vector2 = [
   (CANVAS_SIZE[1] - GRID_SIZE[1] * GRID_CELL_SIZE) / 2,
 ];
 
+export const BARRIER_PIXEL_X =
+  GRID_ORIGIN[0] + (BARRIER_COLUMN + 1) * GRID_CELL_SIZE + GRID_CELL_SIZE / 2;
+
 export const STARTING_GOLD = 100;
 
 export const BODY_PART_COST: Record<BodyPartType, number> = {
@@ -29,6 +32,7 @@ export const HEAD_BASE_COOLDOWN = 1;
 export const HEAD_BASE_DAMAGE = 1;
 export const HEAD_PROJECTILE_SPEED = 200;
 export const LIMB_PROJECTILE_SCALE = 1.3;
+export const PROJECTILE_HIT_DISTANCE = 5;
 
 export type MonsterKind = 'eye' | 'yeti' | 'demon';
 

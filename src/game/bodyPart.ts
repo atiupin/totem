@@ -1,6 +1,6 @@
 import type { Direction } from './grid';
 import type { Vector2 } from './vector2';
-import { GRID_ORIGIN, GRID_CELL_SIZE } from './constants';
+import { GRID_ORIGIN, GRID_CELL_SIZE, GRID_SIZE } from './constants';
 
 type HeadBodyPartName =
   | 'genericHead'
@@ -98,7 +98,33 @@ export const getLockedBodyPartName = (
   return FOOT_NAMES_BY_LIMB_COUNT[index];
 };
 
+export const buildPositionMap = (bodyParts: BodyPart[]): Map<string, BodyPart> => {
+  const partsByPosition = new Map<string, BodyPart>();
+
+  for (const bodyPart of bodyParts) {
+    partsByPosition.set(bodyPart.gridPosition.toString(), bodyPart);
+  }
+
+  return partsByPosition;
+};
+
 export const getGridCellPosition = (gridPosition: Vector2): Vector2 => [
   GRID_ORIGIN[0] + gridPosition[0] * GRID_CELL_SIZE + GRID_CELL_SIZE / 2,
   GRID_ORIGIN[1] + gridPosition[1] * GRID_CELL_SIZE + GRID_CELL_SIZE / 2,
 ];
+
+export const getGridCellAtPosition = (position: Vector2): Vector2 | undefined => {
+  if (
+    position[0] < GRID_ORIGIN[0] ||
+    position[0] >= GRID_ORIGIN[0] + GRID_SIZE[0] * GRID_CELL_SIZE ||
+    position[1] < GRID_ORIGIN[1] ||
+    position[1] >= GRID_ORIGIN[1] + GRID_SIZE[1] * GRID_CELL_SIZE
+  ) {
+    return undefined;
+  }
+
+  return [
+    Math.floor((position[0] - GRID_ORIGIN[0]) / GRID_CELL_SIZE),
+    Math.floor((position[1] - GRID_ORIGIN[1]) / GRID_CELL_SIZE),
+  ];
+};

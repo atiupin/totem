@@ -7,8 +7,7 @@ import {
   getVector2Distance,
 } from './vector2';
 import type { Monster } from './monster';
-
-const HIT_DISTANCE = 5;
+import { PROJECTILE_HIT_DISTANCE } from './constants';
 
 export type Projectile = {
   projectileId: number;
@@ -41,7 +40,9 @@ export const tickProjectiles = (
     const movement = scaleVector2(direction, projectile.speed * deltaTime);
     projectile.position = addVector2(projectile.position, movement);
 
-    if (getVector2Distance(projectile.position, targetMonster.position) <= HIT_DISTANCE) {
+    if (
+      getVector2Distance(projectile.position, targetMonster.position) <= PROJECTILE_HIT_DISTANCE
+    ) {
       targetMonster.health -= projectile.damage;
     } else {
       remainingProjectiles.push(projectile);

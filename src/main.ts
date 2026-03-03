@@ -7,6 +7,7 @@ import {
   removeBodyPartWithRefund,
   destroyGuard,
   getGridCellPosition,
+  getGridCellAtPosition,
   getBodyPartType,
   getBenchSlotPosition,
   removeBenchSlot,
@@ -28,13 +29,14 @@ import {
   WORKSHOP_GAP,
   DAGGER_ORIGIN,
   OPPOSITE_DIRECTION,
+  areOppositeDirections,
   HEAD_BASE_RANGE,
   HEAD_BASE_DAMAGE,
   BODY_PART_COST,
   LIMB_PROJECTILE_SCALE,
   isVector2InVector4,
 } from './game';
-import type { GameState, BodyPart, Guard, Direction, Vector2, Tool } from './game';
+import type { GameState, BodyPart, BodyPartName, Guard, Direction, Vector2, Tool } from './game';
 import spritesheetUrl from './sprites.png';
 import {
   SPRITE_SIZE,
@@ -46,6 +48,7 @@ import {
   BODY_PART_NAME_SPRITES,
   WORKSHOP_SPRITES,
   DAGGER_SPRITE,
+  getBodyPartPreviewSprite,
 } from './sprites';
 
 const DIRECTION_ROTATION: Record<Direction, number> = {
@@ -107,12 +110,6 @@ const drawSprite = (
   );
   context.restore();
 };
-
-const hasDirection = (directions: Direction[], direction: Direction): boolean =>
-  directions.includes(direction);
-
-const areOppositeDirections = (directionA: Direction, directionB: Direction): boolean =>
-  OPPOSITE_DIRECTION[directionA] === directionB;
 
 // Base sprite orientations:
 // - Disconnected body: no orientation
@@ -183,7 +180,7 @@ const getBodyPartRotation = (bodyPart: BodyPart): number => {
       left: (3 * Math.PI) / 2,
     };
     const missingDirection = (['up', 'down', 'left', 'right'] as Direction[]).find(
-      direction => !hasDirection(directions, direction)
+      direction => !directions.includes(direction)
     )!;
     return T_SHAPE_ROTATION[missingDirection];
   }
@@ -191,22 +188,22 @@ const getBodyPartRotation = (bodyPart: BodyPart): number => {
   const [first, second] = directions;
 
   if (areOppositeDirections(first, second)) {
-    if (hasDirection(directions, 'up')) {
+    if (directions.includes('up')) {
       return Math.PI / 2;
     }
 
     return 0;
   }
 
-  if (hasDirection(directions, 'up') && hasDirection(directions, 'right')) {
+  if (directions.includes('up') && directions.includes('right')) {
     return 0;
   }
 
-  if (hasDirection(directions, 'right') && hasDirection(directions, 'down')) {
+  if (directions.includes('right') && directions.includes('down')) {
     return Math.PI / 2;
   }
 
-  if (hasDirection(directions, 'down') && hasDirection(directions, 'left')) {
+  if (directions.includes('down') && directions.includes('left')) {
     return Math.PI;
   }
 
@@ -214,21 +211,18 @@ const getBodyPartRotation = (bodyPart: BodyPart): number => {
 };
 
 const findGuardAtPosition = (guards: Guard[], position: Vector2): Guard | undefined => {
-  if (
-    position[0] < GRID_ORIGIN[0] ||
-    position[0] >= GRID_ORIGIN[0] + GRID_SIZE[0] * GRID_CELL_SIZE ||
-    position[1] < GRID_ORIGIN[1] ||
-    position[1] >= GRID_ORIGIN[1] + GRID_SIZE[1] * GRID_CELL_SIZE
-  ) {
+  const gridPosition = getGridCellAtPosition(position);
+
+  if (gridPosition === undefined) {
     return undefined;
   }
 
-  const gridX = Math.floor((position[0] - GRID_ORIGIN[0]) / GRID_CELL_SIZE);
-  const gridY = Math.floor((position[1] - GRID_ORIGIN[1]) / GRID_CELL_SIZE);
-
   for (const guard of guards) {
     for (const bodyPart of guard.bodyParts) {
-      if (bodyPart.gridPosition[0] === gridX && bodyPart.gridPosition[1] === gridY) {
+      if (
+        bodyPart.gridPosition[0] === gridPosition[0] &&
+        bodyPart.gridPosition[1] === gridPosition[1]
+      ) {
         return guard;
       }
     }
@@ -295,7 +289,7 @@ const renderGameState = (
     } else {
       drawSprite(
         spritesheet,
-        BODY_PART_NAME_SPRITES[bodyPart.bodyPartName],
+        BODY_PART_NAME_SPRITES[bodyPart.bodyPartName as Exclude<BodyPartName, 'genericBody'>],
         bodyPartPosition,
         rotation
       );
@@ -426,11 +420,10 @@ const renderGameState = (
     }
 
     const slotPosition = getBenchSlotPosition(slotIndex);
-    const benchSlotType = getBodyPartType(benchSlot.bodyPartName);
-    const sprite =
-      benchSlotType === 'body'
-        ? BODY_SPRITES['disconnected']
-        : BODY_PART_NAME_SPRITES[benchSlot.bodyPartName];
+    const sprite = getBodyPartPreviewSprite(
+      benchSlot.bodyPartName,
+      getBodyPartType(benchSlot.bodyPartName)
+    );
     drawSprite(spritesheet, sprite, slotPosition, 0);
   }
 
@@ -447,11 +440,10 @@ const renderGameState = (
       const benchSlot = gameState.bench.slots[selectedTool.slotIndex];
 
       if (benchSlot !== undefined) {
-        const benchSlotType = getBodyPartType(benchSlot.bodyPartName);
-        previewSprite =
-          benchSlotType === 'body'
-            ? BODY_SPRITES['disconnected']
-            : BODY_PART_NAME_SPRITES[benchSlot.bodyPartName];
+        previewSprite = getBodyPartPreviewSprite(
+          benchSlot.bodyPartName,
+          getBodyPartType(benchSlot.bodyPartName)
+        );
       }
     } else if (selectedTool.toolKind === 'workshop') {
       const workshopPosition = getWorkshopPosition(selectedTool.workshopIndex);
@@ -463,10 +455,7 @@ const renderGameState = (
       );
 
       const bodyPartType = gameState.workshops[selectedTool.workshopIndex].bodyPartType;
-      previewSprite =
-        bodyPartType === 'body'
-          ? BODY_SPRITES['disconnected']
-          : BODY_PART_NAME_SPRITES[GENERIC_BODY_PART_NAMES[bodyPartType]];
+      previewSprite = getBodyPartPreviewSprite(GENERIC_BODY_PART_NAMES[bodyPartType], bodyPartType);
     } else if (selectedTool.toolKind === 'dagger') {
       context.strokeRect(DAGGER_ORIGIN[0], DAGGER_ORIGIN[1], WORKSHOP_SIZE, WORKSHOP_SIZE);
     }
@@ -532,22 +521,6 @@ const start = async () => {
     ];
   };
 
-  const getGridCellAtPosition = (position: Vector2): Vector2 | undefined => {
-    if (
-      position[0] < GRID_ORIGIN[0] ||
-      position[0] >= GRID_ORIGIN[0] + GRID_SIZE[0] * GRID_CELL_SIZE ||
-      position[1] < GRID_ORIGIN[1] ||
-      position[1] >= GRID_ORIGIN[1] + GRID_SIZE[1] * GRID_CELL_SIZE
-    ) {
-      return undefined;
-    }
-
-    return [
-      Math.floor((position[0] - GRID_ORIGIN[0]) / GRID_CELL_SIZE),
-      Math.floor((position[1] - GRID_ORIGIN[1]) / GRID_CELL_SIZE),
-    ];
-  };
-
   const getWorkshopAtPosition = (position: Vector2): number | undefined => {
     if (position[0] < WORKSHOP_ORIGIN[0] || position[0] >= WORKSHOP_ORIGIN[0] + WORKSHOP_SIZE) {
       return undefined;
@@ -565,26 +538,29 @@ const start = async () => {
   };
 
   const isDaggerAtPosition = (position: Vector2): boolean =>
-    position[0] >= DAGGER_ORIGIN[0] &&
-    position[0] < DAGGER_ORIGIN[0] + WORKSHOP_SIZE &&
-    position[1] >= DAGGER_ORIGIN[1] &&
-    position[1] < DAGGER_ORIGIN[1] + WORKSHOP_SIZE;
+    isVector2InVector4(position, [
+      DAGGER_ORIGIN[0],
+      DAGGER_ORIGIN[1],
+      WORKSHOP_SIZE,
+      WORKSHOP_SIZE,
+    ]);
 
   const isPauseButtonAtPosition = (position: Vector2): boolean =>
     isVector2InVector4(position, PAUSE_BUTTON_RECT);
 
   const getBenchSlotAtPosition = (position: Vector2): number | undefined => {
-    if (position[1] < BENCH_ORIGIN[1] || position[1] >= BENCH_ORIGIN[1] + BENCH_CELL_SIZE) {
+    if (
+      !isVector2InVector4(position, [
+        BENCH_ORIGIN[0],
+        BENCH_ORIGIN[1],
+        BENCH_SLOTS * BENCH_CELL_SIZE,
+        BENCH_CELL_SIZE,
+      ])
+    ) {
       return undefined;
     }
 
-    const slotIndex = Math.floor((position[0] - BENCH_ORIGIN[0]) / BENCH_CELL_SIZE);
-
-    if (slotIndex < 0 || slotIndex >= BENCH_SLOTS) {
-      return undefined;
-    }
-
-    return slotIndex;
+    return Math.floor((position[0] - BENCH_ORIGIN[0]) / BENCH_CELL_SIZE);
   };
 
   canvas.addEventListener('mousemove', event => {

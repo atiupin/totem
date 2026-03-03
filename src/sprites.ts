@@ -1,4 +1,4 @@
-import type { BodyPartName, MonsterKind, Vector2 } from './game';
+import type { BodyPartName, BodyPartType, MonsterKind, Vector2 } from './game';
 
 export const SPRITE_SIZE = 24;
 
@@ -38,7 +38,7 @@ export const LOCKED_BODY_SPRITES: Record<BodySpriteKind, Vector2> = {
   xShape: [5, 2],
 };
 
-export const BODY_PART_NAME_SPRITES: Record<BodyPartName, Vector2> = {
+export const BODY_PART_NAME_SPRITES: Record<Exclude<BodyPartName, 'genericBody'>, Vector2> = {
   genericHead: [0, 3],
   snakeHead: [1, 3],
   heronHead: [2, 3],
@@ -51,7 +51,12 @@ export const BODY_PART_NAME_SPRITES: Record<BodyPartName, Vector2> = {
   toadFoot: [2, 4],
   llamaFoot: [3, 4],
   jaguarFoot: [4, 4],
-
-  // Never used
-  genericBody: [0, 0],
 };
+
+export const getBodyPartPreviewSprite = (
+  bodyPartName: BodyPartName,
+  bodyPartType: BodyPartType
+): Vector2 =>
+  bodyPartType === 'body'
+    ? BODY_SPRITES['disconnected']
+    : BODY_PART_NAME_SPRITES[bodyPartName as Exclude<BodyPartName, 'genericBody'>];

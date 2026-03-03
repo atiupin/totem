@@ -10,24 +10,17 @@ export type Bench = {
   slots: (BenchSlot | undefined)[];
 };
 
-export const createBenchSlot = (bodyPartName: BodyPartName): BenchSlot => ({
-  bodyPartName,
-});
-
 export const createBench = (): Bench => {
   const slots: (BenchSlot | undefined)[] = new Array(BENCH_SLOTS).fill(undefined);
   return { slots };
 };
 
-export const addBenchSlot = (bench: Bench, bodyPartName: BodyPartName): boolean => {
+export const addBenchSlot = (bench: Bench, bodyPartName: BodyPartName) => {
   const emptyIndex = bench.slots.indexOf(undefined);
 
-  if (emptyIndex === -1) {
-    return false;
+  if (emptyIndex !== -1) {
+    bench.slots[emptyIndex] = { bodyPartName };
   }
-
-  bench.slots[emptyIndex] = createBenchSlot(bodyPartName);
-  return true;
 };
 
 export const removeBenchSlot = (bench: Bench, slotIndex: number) => {
