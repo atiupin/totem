@@ -10,11 +10,20 @@ type HeadBodyPartName =
   | 'llamaHead'
   | 'jaguarHead';
 
-type FootBodyPartName = 'genericFoot' | 'heronFoot' | 'toadFoot' | 'llamaFoot' | 'jaguarFoot';
-
 type BodyBodyPartName = 'genericBody';
 
-export type BodyPartName = HeadBodyPartName | FootBodyPartName | BodyBodyPartName;
+type FootBodyPartName = 'genericFoot' | 'heronFoot' | 'toadFoot' | 'llamaFoot' | 'jaguarFoot';
+
+type TailBodyPartName = 'jaguarTail';
+
+type WingBodyPartName = 'heronWing';
+
+export type BodyPartName =
+  | HeadBodyPartName
+  | FootBodyPartName
+  | TailBodyPartName
+  | WingBodyPartName
+  | BodyBodyPartName;
 
 export type BodyPartType = 'head' | 'body' | 'limb';
 
@@ -31,6 +40,8 @@ export const BODY_PART_TYPES: Record<BodyPartName, BodyPartType> = {
   toadFoot: 'limb',
   llamaFoot: 'limb',
   jaguarFoot: 'limb',
+  jaguarTail: 'limb',
+  heronWing: 'limb',
 };
 
 export const getBodyPartType = (bodyPartName: BodyPartName): BodyPartType =>
