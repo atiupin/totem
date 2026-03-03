@@ -1,8 +1,16 @@
 import type { BodyPart } from './bodyPart';
-import { getBodyPartType, getGridCellPosition, buildPositionMap } from './bodyPart';
+import {
+  getBodyPartType,
+  getGridCellPosition,
+  buildPositionMap,
+  getHeadSpellKind,
+} from './bodyPart';
 import type { Monster } from './monster';
 import type { Projectile } from './projectile';
+import type { Summon } from './summon';
+import { createSummon } from './summon';
 import { getVector2Distance } from './vector2';
+import type { Vector2 } from './vector2';
 import { OPPOSITE_DIRECTION, getNeighborGridPosition } from './grid';
 import {
   HEAD_BASE_DAMAGE,
@@ -10,6 +18,12 @@ import {
   HEAD_BASE_COOLDOWN,
   HEAD_PROJECTILE_SPEED,
   LIMB_PROJECTILE_SCALE,
+  BARRIER_PIXEL_X,
+  GRID_CELL_SIZE,
+  SUMMON_CAP_PER_HEAD,
+  SUMMON_COOLDOWN,
+  SUMMON_HOME_OFFSET_CELLS,
+  SUMMON_HOME_RANDOM_VARIATION,
 } from './constants';
 
 export type Guard = {
@@ -87,6 +101,7 @@ export const tickGuards = (
   guards: Guard[],
   monsters: Monster[],
   projectiles: Projectile[],
+  summons: Summon[],
   nextEntityId: number,
   deltaTime: number
 ): number => {
@@ -98,34 +113,51 @@ export const tickGuards = (
         continue;
       }
 
-      const effectiveRange = HEAD_BASE_RANGE + guard.bonusRange;
-      const effectiveDamage = HEAD_BASE_DAMAGE * Math.pow(2, guard.limbCount);
-      const effectiveCooldown = Math.max(0.1, HEAD_BASE_COOLDOWN - guard.bonusCooldown);
-      const effectiveScale = Math.pow(LIMB_PROJECTILE_SCALE, guard.limbCount);
-      const headPosition = getGridCellPosition(headPart.gridPosition);
+      const spellKind = getHeadSpellKind(headPart.bodyPartName);
 
-      let nearestMonster: Monster | undefined;
-      let nearestDistance = Infinity;
+      if (spellKind === 'projectile') {
+        const effectiveRange = HEAD_BASE_RANGE + guard.bonusRange;
+        const effectiveDamage = HEAD_BASE_DAMAGE * Math.pow(2, guard.limbCount);
+        const effectiveCooldown = Math.max(0.1, HEAD_BASE_COOLDOWN - guard.bonusCooldown);
+        const effectiveScale = Math.pow(LIMB_PROJECTILE_SCALE, guard.limbCount);
+        const headPosition = getGridCellPosition(headPart.gridPosition);
 
-      for (const monster of monsters) {
-        const distance = getVector2Distance(headPosition, monster.position);
+        let nearestMonster: Monster | undefined;
+        let nearestDistance = Infinity;
 
-        if (distance <= effectiveRange && distance < nearestDistance) {
-          nearestMonster = monster;
-          nearestDistance = distance;
+        for (const monster of monsters) {
+          const distance = getVector2Distance(headPosition, monster.position);
+
+          if (distance <= effectiveRange && distance < nearestDistance) {
+            nearestMonster = monster;
+            nearestDistance = distance;
+          }
         }
-      }
 
-      if (nearestMonster) {
-        projectiles.push({
-          projectileId: nextEntityId++,
-          position: [...headPosition],
-          targetMonsterId: nearestMonster.monsterId,
-          speed: HEAD_PROJECTILE_SPEED,
-          damage: effectiveDamage,
-          scale: effectiveScale,
-        });
-        headPart.cooldownTimer = effectiveCooldown;
+        if (nearestMonster) {
+          projectiles.push({
+            projectileId: nextEntityId++,
+            position: [...headPosition],
+            targetMonsterId: nearestMonster.monsterId,
+            speed: HEAD_PROJECTILE_SPEED,
+            damage: effectiveDamage,
+            scale: effectiveScale,
+          });
+          headPart.cooldownTimer = effectiveCooldown;
+        }
+      } else if (spellKind === 'summon') {
+        const summonCount = summons.filter(summon => summon.guardId === guard.guardId).length;
+
+        if (summonCount < SUMMON_CAP_PER_HEAD) {
+          const headPosition = getGridCellPosition(headPart.gridPosition);
+          const homePosition: Vector2 = [
+            BARRIER_PIXEL_X + SUMMON_HOME_OFFSET_CELLS * GRID_CELL_SIZE,
+            headPosition[1] + (Math.random() - 0.5) * SUMMON_HOME_RANDOM_VARIATION * 2,
+          ];
+
+          summons.push(createSummon(nextEntityId++, guard.guardId, homePosition));
+          headPart.cooldownTimer = SUMMON_COOLDOWN;
+        }
       }
     }
   }

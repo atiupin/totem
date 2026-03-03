@@ -20,6 +20,8 @@ import type { Guard } from './guard';
 import { computeGuards, tickGuards } from './guard';
 import type { Projectile } from './projectile';
 import { tickProjectiles } from './projectile';
+import type { Summon } from './summon';
+import { tickSummons } from './summon';
 import type { SpawnEvent } from './spawnSchedule';
 import type { Bench } from './bench';
 import { createBench, addBenchSlot } from './bench';
@@ -49,6 +51,7 @@ export type GameState = {
   bodyParts: BodyPart[];
   guards: Guard[];
   projectiles: Projectile[];
+  summons: Summon[];
   spawnEvents: SpawnEvent[];
   bench: Bench;
   workshops: Workshop[];
@@ -88,6 +91,7 @@ export const createGameState = (): GameState => ({
   bodyParts: [],
   guards: [],
   projectiles: [],
+  summons: [],
   spawnEvents: createDefaultSpawnEvents(),
   bench: createBench(),
   workshops: createWorkshops(),
@@ -157,15 +161,17 @@ export const tickGameState = (gameState: GameState, deltaTime: number) => {
   gameState.elapsedTime += deltaTime;
 
   spawnMonsters(gameState);
-  tickMonsters(gameState.monsters, gameState.barrier, deltaTime);
+  tickMonsters(gameState.monsters, gameState.barrier, gameState.summons, deltaTime);
 
   gameState.nextEntityId = tickGuards(
     gameState.guards,
     gameState.monsters,
     gameState.projectiles,
+    gameState.summons,
     gameState.nextEntityId,
     deltaTime
   );
+  gameState.summons = tickSummons(gameState.summons, gameState.monsters, deltaTime);
   gameState.projectiles = tickProjectiles(gameState.projectiles, gameState.monsters, deltaTime);
   removeDeadMonsters(gameState);
   checkGamePhase(gameState);
@@ -354,6 +360,18 @@ export const destroyGuard = (gameState: GameState, guardId: number) => {
   for (const bodyPart of guard.bodyParts) {
     if (getBodyPartType(bodyPart.bodyPartName) === 'limb') {
       addBenchSlot(gameState.bench, bodyPart.bodyPartName);
+    }
+  }
+
+  const destroyedSummonIds = new Set(
+    gameState.summons.filter(summon => summon.guardId === guardId).map(summon => summon.summonId)
+  );
+
+  gameState.summons = gameState.summons.filter(summon => summon.guardId !== guardId);
+
+  for (const monster of gameState.monsters) {
+    if (monster.engagedSummonId !== undefined && destroyedSummonIds.has(monster.engagedSummonId)) {
+      monster.engagedSummonId = undefined;
     }
   }
 

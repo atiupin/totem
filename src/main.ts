@@ -44,6 +44,7 @@ import {
   SPRITE_SIZE,
   MONSTER_SPRITES,
   PROJECTILE_SPRITE,
+  SUMMON_SPRITE,
   type BodySpriteKind,
   BODY_SPRITES,
   LOCKED_BODY_SPRITES,
@@ -314,6 +315,21 @@ const renderGameState = (
       scaledSize,
       scaledSize
     );
+  }
+
+  for (const summon of gameState.summons) {
+    drawSprite(spritesheet, SUMMON_SPRITE, summon.position, 0);
+
+    const healthBarWidth = 16;
+    const healthBarHeight = 2;
+    const healthBarX = summon.position[0] - healthBarWidth / 2;
+    const healthBarY = summon.position[1] - SPRITE_SIZE / 2 - 4;
+    const healthFraction = summon.health / summon.maxHealth;
+
+    context.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    context.fillRect(healthBarX, healthBarY, healthBarWidth, healthBarHeight);
+    context.fillStyle = '#44cc44';
+    context.fillRect(healthBarX, healthBarY, healthBarWidth * healthFraction, healthBarHeight);
   }
 
   for (const monster of gameState.monsters) {

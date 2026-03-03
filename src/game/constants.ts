@@ -93,6 +93,18 @@ export const PAUSE_BUTTON_RECT: Vector4 = [
   BENCH_CELL_SIZE,
 ];
 
+export const SUMMON_MAX_HEALTH = 20;
+export const SUMMON_SPEED = 30;
+export const SUMMON_ATTACK_DAMAGE = 1;
+export const SUMMON_ATTACK_COOLDOWN = 1;
+export const SUMMON_ENGAGE_RANGE = 120;
+export const SUMMON_HIT_DISTANCE = 10;
+export const SUMMON_MAX_ENGAGEMENTS = 2;
+export const SUMMON_CAP_PER_HEAD = 2;
+export const SUMMON_COOLDOWN = 5;
+export const SUMMON_HOME_OFFSET_CELLS = 3;
+export const SUMMON_HOME_RANDOM_VARIATION = 24;
+
 export const WORKSHOP_COUNT = 3;
 export const WORKSHOP_SIZE = 24;
 export const WORKSHOP_ORIGIN: Vector2 = [(GRID_ORIGIN[0] - WORKSHOP_SIZE) / 2, 120];

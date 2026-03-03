@@ -7,6 +7,7 @@ export * from './monster';
 export * from './bodyPart';
 export * from './guard';
 export * from './projectile';
+export * from './summon';
 export * from './spawnSchedule';
 export * from './bench';
 export * from './workshop';

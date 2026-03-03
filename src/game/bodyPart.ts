@@ -126,6 +126,15 @@ const COMBINED_LIMB_NAMES: Partial<Record<LimbBodyPartSubtype, BodyPartName>> = 
 export const getCombinedLimbName = (limbSubtype: LimbBodyPartSubtype): BodyPartName | undefined =>
   COMBINED_LIMB_NAMES[limbSubtype];
 
+export type SpellKind = 'projectile' | 'summon';
+
+const HEAD_SPELL_KINDS: Partial<Record<BodyPartName, SpellKind>> = {
+  toadHead: 'summon',
+};
+
+export const getHeadSpellKind = (bodyPartName: BodyPartName): SpellKind =>
+  HEAD_SPELL_KINDS[bodyPartName] ?? 'projectile';
+
 export const buildPositionMap = (bodyParts: BodyPart[]): Map<string, BodyPart> => {
   const partsByPosition = new Map<string, BodyPart>();
 
