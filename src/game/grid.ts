@@ -1,7 +1,5 @@
-import type { Vector2 } from './vector2';
+import type { Direction, Vector2 } from './model';
 import { addVector2 } from './vector2';
-
-export type Direction = 'up' | 'down' | 'left' | 'right';
 
 export const ALL_DIRECTIONS: Direction[] = ['up', 'down', 'left', 'right'];
 

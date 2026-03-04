@@ -1,16 +1,13 @@
-import type { BodyPart } from './bodyPart';
+import type { BodyPart, Guard, Vector2, GameState } from './model';
 import {
   getBodyPartType,
   getGridCellPosition,
   buildPositionMap,
   getHeadSpellKind,
 } from './bodyPart';
-import type { Monster } from './monster';
-import type { Projectile } from './projectile';
-import type { Summon } from './summon';
 import { createSummon } from './summon';
+import { createPool } from './pool';
 import { getVector2Distance } from './vector2';
-import type { Vector2 } from './vector2';
 import { OPPOSITE_DIRECTION, getNeighborGridPosition } from './grid';
 import {
   HEAD_BASE_DAMAGE,
@@ -24,16 +21,11 @@ import {
   SUMMON_COOLDOWN,
   SUMMON_HOME_OFFSET_CELLS,
   SUMMON_HOME_RANDOM_VARIATION,
+  POOL_CAP_PER_HEAD,
+  POOL_COOLDOWN,
+  POOL_MAX_OFFSET_CELLS,
+  POOL_MIN_DISTANCE,
 } from './constants';
-
-export type Guard = {
-  guardId: number;
-  bodyParts: BodyPart[];
-  headParts: BodyPart[];
-  limbCount: number;
-  bonusRange: number;
-  bonusCooldown: number;
-};
 
 export const computeGuards = (bodyParts: BodyPart[]): Guard[] => {
   const lockedParts = bodyParts.filter(bodyPart => bodyPart.locked);
@@ -97,15 +89,8 @@ export const computeGuards = (bodyParts: BodyPart[]): Guard[] => {
   return guards;
 };
 
-export const tickGuards = (
-  guards: Guard[],
-  monsters: Monster[],
-  projectiles: Projectile[],
-  summons: Summon[],
-  nextEntityId: number,
-  deltaTime: number
-): number => {
-  for (const guard of guards) {
+export const tickGuards = (gameState: GameState, deltaTime: number): void => {
+  for (const guard of gameState.guards) {
     for (const headPart of guard.headParts) {
       headPart.cooldownTimer = Math.max(0, headPart.cooldownTimer - deltaTime);
 
@@ -122,10 +107,10 @@ export const tickGuards = (
         const effectiveScale = Math.pow(LIMB_PROJECTILE_SCALE, guard.limbCount);
         const headPosition = getGridCellPosition(headPart.gridPosition);
 
-        let nearestMonster: Monster | undefined;
+        let nearestMonster = undefined;
         let nearestDistance = Infinity;
 
-        for (const monster of monsters) {
+        for (const monster of gameState.monsters) {
           const distance = getVector2Distance(headPosition, monster.position);
 
           if (distance <= effectiveRange && distance < nearestDistance) {
@@ -135,8 +120,8 @@ export const tickGuards = (
         }
 
         if (nearestMonster) {
-          projectiles.push({
-            projectileId: nextEntityId++,
+          gameState.projectiles.push({
+            projectileId: gameState.nextEntityId++,
             position: [...headPosition],
             targetMonsterId: nearestMonster.monsterId,
             speed: HEAD_PROJECTILE_SPEED,
@@ -146,7 +131,9 @@ export const tickGuards = (
           headPart.cooldownTimer = effectiveCooldown;
         }
       } else if (spellKind === 'summon') {
-        const summonCount = summons.filter(summon => summon.guardId === guard.guardId).length;
+        const summonCount = gameState.summons.filter(
+          summon => summon.guardId === guard.guardId
+        ).length;
 
         if (summonCount < SUMMON_CAP_PER_HEAD) {
           const headPosition = getGridCellPosition(headPart.gridPosition);
@@ -155,12 +142,50 @@ export const tickGuards = (
             headPosition[1] + (Math.random() - 0.5) * SUMMON_HOME_RANDOM_VARIATION * 2,
           ];
 
-          summons.push(createSummon(nextEntityId++, guard.guardId, homePosition));
+          gameState.summons.push(
+            createSummon(gameState.nextEntityId++, guard.guardId, homePosition)
+          );
           headPart.cooldownTimer = SUMMON_COOLDOWN;
+        }
+      } else if (spellKind === 'pool') {
+        const poolCount = gameState.pools.filter(pool => pool.guardId === guard.guardId).length;
+
+        if (poolCount < POOL_CAP_PER_HEAD) {
+          const maxPoolX = BARRIER_PIXEL_X + POOL_MAX_OFFSET_CELLS * GRID_CELL_SIZE;
+
+          let targetMonster = undefined;
+          let targetDistance = Infinity;
+
+          for (const monster of gameState.monsters) {
+            if (monster.health <= 0 || monster.position[0] > maxPoolX) {
+              continue;
+            }
+
+            const tooCloseToPool = gameState.pools.some(
+              pool => getVector2Distance(pool.position, monster.position) < POOL_MIN_DISTANCE
+            );
+
+            if (tooCloseToPool) {
+              continue;
+            }
+
+            const headPosition = getGridCellPosition(headPart.gridPosition);
+            const distance = getVector2Distance(headPosition, monster.position);
+
+            if (distance < targetDistance) {
+              targetMonster = monster;
+              targetDistance = distance;
+            }
+          }
+
+          if (targetMonster) {
+            gameState.pools.push(
+              createPool(gameState.nextEntityId++, guard.guardId, [...targetMonster.position])
+            );
+            headPart.cooldownTimer = POOL_COOLDOWN;
+          }
         }
       }
     }
   }
-
-  return nextEntityId;
 };

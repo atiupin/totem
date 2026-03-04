@@ -1,6 +1,11 @@
-import type { BodyPartType } from './bodyPart';
-import type { Vector2 } from './vector2';
-import type { Vector4 } from './vector4';
+import type {
+  BodyPartType,
+  MonsterKind,
+  MonsterStats,
+  Vector2,
+  Vector4,
+  WaveConfig,
+} from './model';
 
 export const CANVAS_SIZE: Vector2 = [640, 360];
 
@@ -34,27 +39,10 @@ export const HEAD_PROJECTILE_SPEED = 200;
 export const LIMB_PROJECTILE_SCALE = 1.3;
 export const PROJECTILE_HIT_DISTANCE = 5;
 
-export type MonsterKind = 'eye' | 'yeti' | 'demon';
-
-export type MonsterStats = {
-  health: number;
-  speed: number;
-  attackDamage: number;
-  attackCooldown: number;
-  goldReward: number;
-};
-
 export const MONSTER_STATS: Record<MonsterKind, MonsterStats> = {
   eye: { health: 4, speed: 30, attackDamage: 4, attackCooldown: 0.5, goldReward: 1 },
   yeti: { health: 8, speed: 25, attackDamage: 8, attackCooldown: 0.8, goldReward: 2 },
   demon: { health: 16, speed: 20, attackDamage: 24, attackCooldown: 1.0, goldReward: 4 },
-};
-
-export type WaveConfig = {
-  monsterKind: MonsterKind;
-  startTime: number;
-  duration: number;
-  spawnInterval: number;
 };
 
 export const WAVES: WaveConfig[] = [
@@ -109,6 +97,16 @@ export const WORKSHOP_COUNT = 3;
 export const WORKSHOP_SIZE = 24;
 export const WORKSHOP_ORIGIN: Vector2 = [(GRID_ORIGIN[0] - WORKSHOP_SIZE) / 2, 120];
 export const WORKSHOP_GAP = 8;
+
+export const POOL_RADIUS = 36;
+export const POOL_ELLIPSE_RATIO = 0.6;
+export const POOL_DAMAGE = 1;
+export const POOL_DAMAGE_COOLDOWN = 0.5;
+export const POOL_LIFETIME = 10;
+export const POOL_CAP_PER_HEAD = 1;
+export const POOL_COOLDOWN = 8;
+export const POOL_MAX_OFFSET_CELLS = 3;
+export const POOL_MIN_DISTANCE = 24;
 
 export const DAGGER_ORIGIN: Vector2 = [
   WORKSHOP_ORIGIN[0],

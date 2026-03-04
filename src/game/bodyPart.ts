@@ -1,45 +1,14 @@
-import type { Direction } from './grid';
-import type { Vector2 } from './vector2';
+import type {
+  BodyPart,
+  BodyPartName,
+  BodyPartType,
+  LimbBodyPartName,
+  LimbBodyPartSubtype,
+  SpellKind,
+  Vector2,
+} from './model';
+import { BODY_PART_REFS, GENERIC_BODY_PART_NAMES, HEAD_SPELL_KINDS } from './model';
 import { GRID_ORIGIN, GRID_CELL_SIZE, GRID_SIZE } from './constants';
-
-type LimbBodyPartSubtype = 'foot' | 'tail' | 'wing';
-type NonLimbBodyPartSubtype = 'head' | 'body';
-type BodyPartSubtype = NonLimbBodyPartSubtype | LimbBodyPartSubtype;
-
-type BodyPartRef = {
-  subtype: BodyPartSubtype;
-};
-
-const BODY_PART_REFS = {
-  genericHead: { subtype: 'head' },
-  snakeHead: { subtype: 'head' },
-  heronHead: { subtype: 'head' },
-  toadHead: { subtype: 'head' },
-  llamaHead: { subtype: 'head' },
-  jaguarHead: { subtype: 'head' },
-  genericBody: { subtype: 'body' },
-  genericFoot: { subtype: 'foot' },
-  heronFoot: { subtype: 'foot' },
-  toadFoot: { subtype: 'foot' },
-  llamaFoot: { subtype: 'foot' },
-  jaguarFoot: { subtype: 'foot' },
-  jaguarTail: { subtype: 'tail' },
-  heronWing: { subtype: 'wing' },
-} as const satisfies Record<string, BodyPartRef>;
-
-export type BodyPartName = keyof typeof BODY_PART_REFS;
-
-type BodyPartNamesBySubtype = {
-  [TSubtype in BodyPartSubtype]: {
-    [TKey in BodyPartName]: (typeof BODY_PART_REFS)[TKey]['subtype'] extends TSubtype
-      ? TKey
-      : never;
-  }[BodyPartName];
-};
-
-type LimbBodyPartName = BodyPartNamesBySubtype[LimbBodyPartSubtype];
-
-export type BodyPartType = NonLimbBodyPartSubtype | 'limb';
 
 export const getBodyPartType = (bodyPartName: BodyPartName): BodyPartType => {
   const { subtype } = BODY_PART_REFS[bodyPartName];
@@ -51,21 +20,6 @@ export const isLimbBodyPartName = (bodyPartName: BodyPartName): bodyPartName is 
 
 export const getLimbSubtype = (bodyPartName: LimbBodyPartName): LimbBodyPartSubtype =>
   BODY_PART_REFS[bodyPartName].subtype;
-
-export const GENERIC_BODY_PART_NAMES: Record<BodyPartType, BodyPartName> = {
-  head: 'genericHead',
-  body: 'genericBody',
-  limb: 'genericFoot',
-};
-
-export type BodyPart = {
-  bodyPartId: number;
-  bodyPartName: BodyPartName;
-  gridPosition: Vector2;
-  connectionDirections: Direction[];
-  locked: boolean;
-  cooldownTimer: number;
-};
 
 export const createBodyPart = (
   bodyPartId: number,
@@ -80,7 +34,7 @@ export const createBodyPart = (
   cooldownTimer: 0,
 });
 
-const HEAD_NAMES_BY_LIMB_COUNT: BodyPartNamesBySubtype['head'][] = [
+const HEAD_NAMES_BY_LIMB_COUNT: BodyPartName[] = [
   'snakeHead',
   'heronHead',
   'toadHead',
@@ -88,7 +42,7 @@ const HEAD_NAMES_BY_LIMB_COUNT: BodyPartNamesBySubtype['head'][] = [
   'jaguarHead',
 ];
 
-const FOOT_NAMES_BY_LIMB_COUNT: BodyPartNamesBySubtype['foot'][] = [
+const FOOT_NAMES_BY_LIMB_COUNT: BodyPartName[] = [
   'heronFoot',
   'toadFoot',
   'llamaFoot',
@@ -125,12 +79,6 @@ const COMBINED_LIMB_NAMES: Partial<Record<LimbBodyPartSubtype, BodyPartName>> = 
 
 export const getCombinedLimbName = (limbSubtype: LimbBodyPartSubtype): BodyPartName | undefined =>
   COMBINED_LIMB_NAMES[limbSubtype];
-
-export type SpellKind = 'projectile' | 'summon';
-
-const HEAD_SPELL_KINDS: Partial<Record<BodyPartName, SpellKind>> = {
-  toadHead: 'summon',
-};
 
 export const getHeadSpellKind = (bodyPartName: BodyPartName): SpellKind =>
   HEAD_SPELL_KINDS[bodyPartName] ?? 'projectile';

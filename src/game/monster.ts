@@ -1,7 +1,5 @@
-import type { MonsterKind } from './constants';
+import type { GameState } from './model';
 import { MONSTER_STATS, BARRIER_PIXEL_X, SUMMON_HIT_DISTANCE } from './constants';
-import type { Barrier } from './barrier';
-import type { Vector2 } from './vector2';
 import {
   getVector2Distance,
   subtractVector2,
@@ -9,32 +7,14 @@ import {
   scaleVector2,
   addVector2,
 } from './vector2';
-import type { Summon } from './summon';
-import type { FloatingText } from './floatingText';
 import { createFloatingText } from './floatingText';
 
-export type Monster = {
-  monsterId: number;
-  monsterKind: MonsterKind;
-  position: Vector2;
-  speed: number;
-  health: number;
-  targetRow: number;
-  attackingBarrier: boolean;
-  attackCooldownTimer: number;
-  engagedSummonId?: number;
-};
-
-export const tickMonsters = (
-  monsters: Monster[],
-  barrier: Barrier,
-  summons: Summon[],
-  floatingTexts: FloatingText[],
-  deltaTime: number
-): void => {
-  for (const monster of monsters) {
+export const tickMonsters = (gameState: GameState, deltaTime: number): void => {
+  for (const monster of gameState.monsters) {
     if (monster.engagedSummonId !== undefined) {
-      const engagedSummon = summons.find(summon => summon.summonId === monster.engagedSummonId);
+      const engagedSummon = gameState.summons.find(
+        summon => summon.summonId === monster.engagedSummonId
+      );
 
       if (engagedSummon !== undefined) {
         const distanceToSummon = getVector2Distance(monster.position, engagedSummon.position);
@@ -58,11 +38,11 @@ export const tickMonsters = (
 
       if (monster.attackCooldownTimer <= 0) {
         const monsterStats = MONSTER_STATS[monster.monsterKind];
-        barrier.health -= monsterStats.attackDamage;
+        gameState.barrier.health -= monsterStats.attackDamage;
         monster.attackCooldownTimer += monsterStats.attackCooldown;
 
-        floatingTexts.push(
-          createFloatingText(monster.position, monsterStats.attackDamage, '#ff8888')
+        gameState.floatingTexts.push(
+          createFloatingText(monster.position, monsterStats.attackDamage, 'received')
         );
       }
 

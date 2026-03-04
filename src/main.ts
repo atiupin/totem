@@ -38,6 +38,8 @@ import {
   LIMB_PROJECTILE_SCALE,
   isVector2InVector4,
   FLOATING_TEXT_LIFETIME,
+  POOL_RADIUS,
+  POOL_ELLIPSE_RATIO,
 } from './game';
 import type { GameState, BodyPart, BodyPartName, Guard, Direction, Vector2, Tool } from './game';
 import spritesheetUrl from './sprites.png';
@@ -279,6 +281,21 @@ const renderGameState = (
     const barrierPixelX = GRID_ORIGIN[0] + BARRIER_COLUMN * GRID_CELL_SIZE;
     context.fillStyle = 'rgba(100, 180, 255, 0.3)';
     context.fillRect(barrierPixelX, GRID_ORIGIN[1], GRID_CELL_SIZE, GRID_SIZE[1] * GRID_CELL_SIZE);
+  }
+
+  for (const pool of gameState.pools) {
+    context.fillStyle = 'rgba(0, 100, 0, 0.4)';
+    context.beginPath();
+    context.ellipse(
+      pool.position[0],
+      pool.position[1],
+      POOL_RADIUS,
+      POOL_RADIUS * POOL_ELLIPSE_RATIO,
+      0,
+      0,
+      Math.PI * 2
+    );
+    context.fill();
   }
 
   for (const bodyPart of gameState.bodyParts) {

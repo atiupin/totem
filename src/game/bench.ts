@@ -1,15 +1,6 @@
-import type { BodyPartName } from './bodyPart';
+import type { BodyPartName, Vector2, Bench, BenchSlot } from './model';
 import { isLimbBodyPartName, getLimbSubtype, getCombinedLimbName } from './bodyPart';
-import type { Vector2 } from './vector2';
 import { BENCH_SLOTS, BENCH_CELL_SIZE, BENCH_ORIGIN } from './constants';
-
-export type BenchSlot = {
-  bodyPartName: BodyPartName;
-};
-
-export type Bench = {
-  slots: (BenchSlot | undefined)[];
-};
 
 export const createBench = (): Bench => {
   const slots: (BenchSlot | undefined)[] = new Array(BENCH_SLOTS).fill(undefined);

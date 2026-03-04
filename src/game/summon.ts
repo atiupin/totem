@@ -1,4 +1,4 @@
-import type { Vector2 } from './vector2';
+import type { Vector2, Summon, GameState } from './model';
 import {
   subtractVector2,
   normalizeVector2,
@@ -6,8 +6,6 @@ import {
   addVector2,
   getVector2Distance,
 } from './vector2';
-import type { Monster } from './monster';
-import type { FloatingText } from './floatingText';
 import { createFloatingText } from './floatingText';
 import {
   SUMMON_MAX_HEALTH,
@@ -20,17 +18,6 @@ import {
   MONSTER_STATS,
 } from './constants';
 
-export type Summon = {
-  summonId: number;
-  guardId: number;
-  homePosition: Vector2;
-  position: Vector2;
-  health: number;
-  maxHealth: number;
-  engagedMonsterIds: number[];
-  attackCooldownTimer: number;
-};
-
 export const createSummon = (summonId: number, guardId: number, homePosition: Vector2): Summon => ({
   summonId,
   guardId,
@@ -42,22 +29,19 @@ export const createSummon = (summonId: number, guardId: number, homePosition: Ve
   attackCooldownTimer: 0,
 });
 
-export const tickSummons = (
-  summons: Summon[],
-  monsters: Monster[],
-  floatingTexts: FloatingText[],
-  deltaTime: number
-): Summon[] => {
-  for (const summon of summons) {
+export const tickSummons = (gameState: GameState, deltaTime: number): void => {
+  for (const summon of gameState.summons) {
     summon.engagedMonsterIds = summon.engagedMonsterIds.filter(engagedMonsterId =>
-      monsters.some(monster => monster.monsterId === engagedMonsterId && monster.health > 0)
+      gameState.monsters.some(
+        monster => monster.monsterId === engagedMonsterId && monster.health > 0
+      )
     );
 
     while (summon.engagedMonsterIds.length < SUMMON_MAX_ENGAGEMENTS) {
       let nearestMonsterId: number | undefined;
       let nearestDistance = Infinity;
 
-      for (const monster of monsters) {
+      for (const monster of gameState.monsters) {
         if (
           monster.health <= 0 ||
           monster.engagedSummonId !== undefined ||
@@ -80,14 +64,16 @@ export const tickSummons = (
 
       summon.engagedMonsterIds.push(nearestMonsterId);
 
-      const engagedMonster = monsters.find(monster => monster.monsterId === nearestMonsterId)!;
+      const engagedMonster = gameState.monsters.find(
+        monster => monster.monsterId === nearestMonsterId
+      )!;
       engagedMonster.engagedSummonId = summon.summonId;
     }
 
     let targetPosition: Vector2;
 
     if (summon.engagedMonsterIds.length > 0) {
-      const firstEngagedMonster = monsters.find(
+      const firstEngagedMonster = gameState.monsters.find(
         monster => monster.monsterId === summon.engagedMonsterIds[0]
       );
       targetPosition = firstEngagedMonster ? firstEngagedMonster.position : summon.homePosition;
@@ -112,7 +98,9 @@ export const tickSummons = (
       let attacked = false;
 
       for (const engagedMonsterId of summon.engagedMonsterIds) {
-        const engagedMonster = monsters.find(monster => monster.monsterId === engagedMonsterId);
+        const engagedMonster = gameState.monsters.find(
+          monster => monster.monsterId === engagedMonsterId
+        );
 
         if (engagedMonster === undefined) {
           continue;
@@ -122,14 +110,14 @@ export const tickSummons = (
 
         if (combatDistance <= SUMMON_HIT_DISTANCE) {
           engagedMonster.health -= SUMMON_ATTACK_DAMAGE;
-          floatingTexts.push(
-            createFloatingText(engagedMonster.position, SUMMON_ATTACK_DAMAGE, '#ffffff')
+          gameState.floatingTexts.push(
+            createFloatingText(engagedMonster.position, SUMMON_ATTACK_DAMAGE, 'damage')
           );
 
           const monsterStats = MONSTER_STATS[engagedMonster.monsterKind];
           summon.health -= monsterStats.attackDamage;
-          floatingTexts.push(
-            createFloatingText(summon.position, monsterStats.attackDamage, '#ff8888')
+          gameState.floatingTexts.push(
+            createFloatingText(summon.position, monsterStats.attackDamage, 'received')
           );
 
           attacked = true;
@@ -142,9 +130,9 @@ export const tickSummons = (
     }
   }
 
-  const remainingSummons = summons.filter(summon => summon.health > 0);
+  const remainingSummons = gameState.summons.filter(summon => summon.health > 0);
 
-  for (const monster of monsters) {
+  for (const monster of gameState.monsters) {
     if (monster.engagedSummonId !== undefined) {
       const summonExists = remainingSummons.some(
         summon => summon.summonId === monster.engagedSummonId
@@ -156,5 +144,5 @@ export const tickSummons = (
     }
   }
 
-  return remainingSummons;
+  gameState.summons = remainingSummons;
 };

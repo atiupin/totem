@@ -1,10 +1,5 @@
-import type { BodyPartType } from './bodyPart';
-import type { Vector2 } from './vector2';
+import type { BodyPartType, Vector2, Workshop } from './model';
 import { WORKSHOP_SIZE, WORKSHOP_ORIGIN, WORKSHOP_GAP } from './constants';
-
-export type Workshop = {
-  bodyPartType: BodyPartType;
-};
 
 const WORKSHOP_BODY_PART_TYPES: BodyPartType[] = ['head', 'body', 'limb'];
 

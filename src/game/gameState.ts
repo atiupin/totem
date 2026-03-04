@@ -1,7 +1,5 @@
-import type { Barrier } from './barrier';
-import type { Monster } from './monster';
+import type { BodyPart, BodyPartName, BodyPartType, GameState, SpawnEvent, Vector2 } from './model';
 import { tickMonsters } from './monster';
-import type { BodyPart, BodyPartName, BodyPartType } from './bodyPart';
 import {
   createBodyPart,
   getBodyPartType,
@@ -9,25 +7,18 @@ import {
   getGridCellPosition,
   buildPositionMap,
 } from './bodyPart';
-import type { Vector2 } from './vector2';
 import {
   ALL_DIRECTIONS,
   CONNECTION_PRIORITY_DIRECTIONS,
   OPPOSITE_DIRECTION,
   getNeighborGridPosition,
 } from './grid';
-import type { Guard } from './guard';
 import { computeGuards, tickGuards } from './guard';
-import type { Projectile } from './projectile';
 import { tickProjectiles } from './projectile';
-import type { Summon } from './summon';
+import { tickPools } from './pool';
 import { tickSummons } from './summon';
-import type { FloatingText } from './floatingText';
 import { tickFloatingTexts } from './floatingText';
-import type { SpawnEvent } from './spawnSchedule';
-import type { Bench } from './bench';
 import { createBench, addBenchSlot } from './bench';
-import type { Workshop } from './workshop';
 import { createWorkshops } from './workshop';
 import {
   BUILD_AREA,
@@ -41,26 +32,6 @@ import {
   BODY_PART_COST,
 } from './constants';
 import { isVector2InVector4 } from './vector4';
-
-export type GamePhase = 'playing' | 'victory' | 'defeat';
-
-export type GameState = {
-  phase: GamePhase;
-  paused: boolean;
-  elapsedTime: number;
-  barrier: Barrier;
-  monsters: Monster[];
-  bodyParts: BodyPart[];
-  guards: Guard[];
-  projectiles: Projectile[];
-  summons: Summon[];
-  floatingTexts: FloatingText[];
-  spawnEvents: SpawnEvent[];
-  bench: Bench;
-  workshops: Workshop[];
-  gold: number;
-  nextEntityId: number;
-};
 
 const createDefaultSpawnEvents = (): SpawnEvent[] => {
   const spawnEvents: SpawnEvent[] = [];
@@ -95,6 +66,7 @@ export const createGameState = (): GameState => ({
   guards: [],
   projectiles: [],
   summons: [],
+  pools: [],
   floatingTexts: [],
   spawnEvents: createDefaultSpawnEvents(),
   bench: createBench(),
@@ -165,35 +137,12 @@ export const tickGameState = (gameState: GameState, deltaTime: number) => {
   gameState.elapsedTime += deltaTime;
 
   spawnMonsters(gameState);
-  tickMonsters(
-    gameState.monsters,
-    gameState.barrier,
-    gameState.summons,
-    gameState.floatingTexts,
-    deltaTime
-  );
-
-  gameState.nextEntityId = tickGuards(
-    gameState.guards,
-    gameState.monsters,
-    gameState.projectiles,
-    gameState.summons,
-    gameState.nextEntityId,
-    deltaTime
-  );
-  gameState.summons = tickSummons(
-    gameState.summons,
-    gameState.monsters,
-    gameState.floatingTexts,
-    deltaTime
-  );
-  gameState.projectiles = tickProjectiles(
-    gameState.projectiles,
-    gameState.monsters,
-    gameState.floatingTexts,
-    deltaTime
-  );
-  gameState.floatingTexts = tickFloatingTexts(gameState.floatingTexts, deltaTime);
+  tickMonsters(gameState, deltaTime);
+  tickGuards(gameState, deltaTime);
+  tickPools(gameState, deltaTime);
+  tickSummons(gameState, deltaTime);
+  tickProjectiles(gameState, deltaTime);
+  tickFloatingTexts(gameState, deltaTime);
   removeDeadMonsters(gameState);
   checkGamePhase(gameState);
 };
@@ -389,6 +338,7 @@ export const destroyGuard = (gameState: GameState, guardId: number) => {
   );
 
   gameState.summons = gameState.summons.filter(summon => summon.guardId !== guardId);
+  gameState.pools = gameState.pools.filter(pool => pool.guardId !== guardId);
 
   for (const monster of gameState.monsters) {
     if (monster.engagedSummonId !== undefined && destroyedSummonIds.has(monster.engagedSummonId)) {

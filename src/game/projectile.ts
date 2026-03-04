@@ -1,4 +1,4 @@
-import type { Vector2 } from './vector2';
+import type { GameState, Projectile } from './model';
 import {
   subtractVector2,
   normalizeVector2,
@@ -6,30 +6,14 @@ import {
   addVector2,
   getVector2Distance,
 } from './vector2';
-import type { Monster } from './monster';
-import type { FloatingText } from './floatingText';
 import { createFloatingText } from './floatingText';
 import { PROJECTILE_HIT_DISTANCE } from './constants';
 
-export type Projectile = {
-  projectileId: number;
-  position: Vector2;
-  targetMonsterId: number;
-  speed: number;
-  damage: number;
-  scale: number;
-};
-
-export const tickProjectiles = (
-  projectiles: Projectile[],
-  monsters: Monster[],
-  floatingTexts: FloatingText[],
-  deltaTime: number
-): Projectile[] => {
+export const tickProjectiles = (gameState: GameState, deltaTime: number): void => {
   const remainingProjectiles: Projectile[] = [];
 
-  for (const projectile of projectiles) {
-    const targetMonster = monsters.find(
+  for (const projectile of gameState.projectiles) {
+    const targetMonster = gameState.monsters.find(
       monster => monster.monsterId === projectile.targetMonsterId
     );
 
@@ -48,11 +32,13 @@ export const tickProjectiles = (
     ) {
       targetMonster.health -= projectile.damage;
 
-      floatingTexts.push(createFloatingText(targetMonster.position, projectile.damage, '#ffffff'));
+      gameState.floatingTexts.push(
+        createFloatingText(targetMonster.position, projectile.damage, 'damage')
+      );
     } else {
       remainingProjectiles.push(projectile);
     }
   }
 
-  return remainingProjectiles;
+  gameState.projectiles = remainingProjectiles;
 };

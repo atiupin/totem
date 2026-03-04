@@ -1,4 +1,4 @@
-export type Vector2 = [number, number];
+import type { Vector2 } from './model';
 
 export const addVector2 = (vectorA: Vector2, vectorB: Vector2): Vector2 => [
   vectorA[0] + vectorB[0],
