@@ -90,7 +90,7 @@ export const SUMMON_HIT_DISTANCE = 10;
 export const SUMMON_MAX_ENGAGEMENTS = 2;
 export const SUMMON_CAP_PER_HEAD = 2;
 export const SUMMON_COOLDOWN = 5;
-export const SUMMON_HOME_OFFSET_CELLS = 3;
+export const SUMMON_HOME_OFFSET_CELLS = 2;
 export const SUMMON_HOME_RANDOM_VARIATION = 24;
 
 export const WORKSHOP_COUNT = 3;
@@ -105,14 +105,14 @@ export const POOL_DAMAGE_COOLDOWN = 0.5;
 export const POOL_LIFETIME = 10;
 export const POOL_CAP_PER_HEAD = 1;
 export const POOL_COOLDOWN = 8;
-export const POOL_MAX_OFFSET_CELLS = 4;
+export const POOL_MAX_OFFSET_CELLS = 5;
 export const POOL_MIN_DISTANCE = 24;
 
 export const SWIPE_RADIUS = 36;
 export const SWIPE_DAMAGE = 3;
 export const SWIPE_LIFETIME = 0.3;
 export const SWIPE_COOLDOWN = 0.5;
-export const SWIPE_MAX_OFFSET_CELLS = 4;
+export const SWIPE_MAX_OFFSET_CELLS = 5;
 
 export const DAGGER_ORIGIN: Vector2 = [
   WORKSHOP_ORIGIN[0],
