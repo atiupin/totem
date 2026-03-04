@@ -40,9 +40,9 @@ export const LIMB_PROJECTILE_SCALE = 1.3;
 export const PROJECTILE_HIT_DISTANCE = 5;
 
 export const MONSTER_STATS: Record<MonsterKind, MonsterStats> = {
-  eye: { health: 4, speed: 30, attackDamage: 4, attackCooldown: 0.5, goldReward: 1 },
-  yeti: { health: 8, speed: 25, attackDamage: 8, attackCooldown: 0.8, goldReward: 2 },
-  demon: { health: 16, speed: 20, attackDamage: 24, attackCooldown: 1.0, goldReward: 4 },
+  eye: { health: 4, speed: 30, attackDamage: 4, attackCooldown: 2, goldReward: 1 },
+  yeti: { health: 8, speed: 25, attackDamage: 8, attackCooldown: 3, goldReward: 2 },
+  demon: { health: 16, speed: 20, attackDamage: 24, attackCooldown: 5, goldReward: 4 },
 };
 
 export const WAVES: WaveConfig[] = [
@@ -105,8 +105,14 @@ export const POOL_DAMAGE_COOLDOWN = 0.5;
 export const POOL_LIFETIME = 10;
 export const POOL_CAP_PER_HEAD = 1;
 export const POOL_COOLDOWN = 8;
-export const POOL_MAX_OFFSET_CELLS = 3;
+export const POOL_MAX_OFFSET_CELLS = 4;
 export const POOL_MIN_DISTANCE = 24;
+
+export const SWIPE_RADIUS = 36;
+export const SWIPE_DAMAGE = 3;
+export const SWIPE_LIFETIME = 0.3;
+export const SWIPE_COOLDOWN = 0.5;
+export const SWIPE_MAX_OFFSET_CELLS = 4;
 
 export const DAGGER_ORIGIN: Vector2 = [
   WORKSHOP_ORIGIN[0],

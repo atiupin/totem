@@ -40,6 +40,8 @@ import {
   FLOATING_TEXT_LIFETIME,
   POOL_RADIUS,
   POOL_ELLIPSE_RATIO,
+  SWIPE_RADIUS,
+  SWIPE_LIFETIME,
 } from './game';
 import type { GameState, BodyPart, BodyPartName, Guard, Direction, Vector2, Tool } from './game';
 import spritesheetUrl from './sprites.png';
@@ -48,6 +50,7 @@ import {
   MONSTER_SPRITES,
   PROJECTILE_SPRITE,
   SUMMON_SPRITE,
+  SWIPE_SPRITE,
   type BodySpriteKind,
   BODY_SPRITES,
   LOCKED_BODY_SPRITES,
@@ -296,6 +299,27 @@ const renderGameState = (
       Math.PI * 2
     );
     context.fill();
+  }
+
+  for (const swipe of gameState.swipes) {
+    const swipeSize = SWIPE_RADIUS * 2;
+    const drawX = Math.round(swipe.position[0]);
+    const drawY = Math.round(swipe.position[1]);
+    const opacity = swipe.lifetime / SWIPE_LIFETIME;
+
+    context.globalAlpha = opacity;
+    context.drawImage(
+      spritesheet,
+      SWIPE_SPRITE[0] * SPRITE_SIZE,
+      SWIPE_SPRITE[1] * SPRITE_SIZE,
+      SPRITE_SIZE,
+      SPRITE_SIZE,
+      drawX - swipeSize / 2,
+      drawY - swipeSize / 2,
+      swipeSize,
+      swipeSize
+    );
+    context.globalAlpha = 1;
   }
 
   for (const bodyPart of gameState.bodyParts) {

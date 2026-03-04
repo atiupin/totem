@@ -40,7 +40,7 @@ export type LimbBodyPartName = BodyPartNamesBySubtype[LimbBodyPartSubtype];
 
 export type BodyPartType = NonLimbBodyPartSubtype | 'limb';
 
-export type SpellKind = 'projectile' | 'summon' | 'pool';
+export type SpellKind = 'projectile' | 'summon' | 'pool' | 'swipe';
 
 export const GENERIC_BODY_PART_NAMES: Record<BodyPartType, BodyPartName> = {
   head: 'genericHead',
@@ -51,6 +51,7 @@ export const GENERIC_BODY_PART_NAMES: Record<BodyPartType, BodyPartName> = {
 export const HEAD_SPELL_KINDS: Partial<Record<BodyPartName, SpellKind>> = {
   snakeHead: 'pool',
   toadHead: 'summon',
+  jaguarHead: 'swipe',
 };
 
 export type BodyPart = {

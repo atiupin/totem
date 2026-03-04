@@ -8,6 +8,7 @@ export * from './Guard';
 export * from './Projectile';
 export * from './Summon';
 export * from './Pool';
+export * from './Swipe';
 export * from './FloatingText';
 export * from './SpawnSchedule';
 export * from './Bench';

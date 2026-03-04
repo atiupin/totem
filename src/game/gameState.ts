@@ -16,6 +16,7 @@ import {
 import { computeGuards, tickGuards } from './guard';
 import { tickProjectiles } from './projectile';
 import { tickPools } from './pool';
+import { tickSwipes } from './swipe';
 import { tickSummons } from './summon';
 import { tickFloatingTexts } from './floatingText';
 import { createBench, addBenchSlot } from './bench';
@@ -67,6 +68,7 @@ export const createGameState = (): GameState => ({
   projectiles: [],
   summons: [],
   pools: [],
+  swipes: [],
   floatingTexts: [],
   spawnEvents: createDefaultSpawnEvents(),
   bench: createBench(),
@@ -140,6 +142,7 @@ export const tickGameState = (gameState: GameState, deltaTime: number) => {
   tickMonsters(gameState, deltaTime);
   tickGuards(gameState, deltaTime);
   tickPools(gameState, deltaTime);
+  tickSwipes(gameState, deltaTime);
   tickSummons(gameState, deltaTime);
   tickProjectiles(gameState, deltaTime);
   tickFloatingTexts(gameState, deltaTime);
