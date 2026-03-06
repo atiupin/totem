@@ -12,3 +12,4 @@ export * from './floatingText';
 export * from './bench';
 export * from './workshop';
 export * from './gameState';
+export * from './spellAreaOfEffect';

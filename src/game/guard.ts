@@ -13,6 +13,11 @@ import { createGust } from './gust';
 import { getVector2Distance } from './vector2';
 import { OPPOSITE_DIRECTION, getNeighborGridPosition } from './grid';
 import {
+  getSpellAreaOfEffect,
+  buildAreaOfEffectKeys,
+  isMonsterInAreaOfEffect,
+} from './spellAreaOfEffect';
+import {
   BARRIER_PIXEL_X,
   GRID_CELL_SIZE,
   SUMMON_CAP_PER_HEAD,
@@ -21,12 +26,9 @@ import {
   SUMMON_HOME_RANDOM_VARIATION,
   POOL_CAP_PER_HEAD,
   POOL_COOLDOWN,
-  POOL_MAX_OFFSET_CELLS,
   POOL_MIN_DISTANCE,
   SWIPE_COOLDOWN,
-  SWIPE_MAX_OFFSET_CELLS,
   STOMP_COOLDOWN,
-  STOMP_MAX_OFFSET_CELLS,
   GUST_COOLDOWN,
 } from './constants';
 
@@ -122,13 +124,14 @@ export const tickGuards = (gameState: GameState, deltaTime: number): void => {
         const poolCount = gameState.pools.filter(pool => pool.guardId === guard.guardId).length;
 
         if (poolCount < POOL_CAP_PER_HEAD) {
-          const maxPoolX = BARRIER_PIXEL_X + POOL_MAX_OFFSET_CELLS * GRID_CELL_SIZE;
+          const areaOfEffectCells = getSpellAreaOfEffect('pool', headPart.gridPosition);
+          const areaOfEffectKeys = buildAreaOfEffectKeys(areaOfEffectCells);
 
           let targetMonster = undefined;
           let targetDistance = Infinity;
 
           for (const monster of gameState.monsters) {
-            if (monster.health <= 0 || monster.position[0] > maxPoolX) {
+            if (monster.health <= 0 || !isMonsterInAreaOfEffect(monster, areaOfEffectKeys)) {
               continue;
             }
 
@@ -157,14 +160,15 @@ export const tickGuards = (gameState: GameState, deltaTime: number): void => {
           }
         }
       } else if (spellKind === 'swipe') {
-        const maxSwipeX = BARRIER_PIXEL_X + SWIPE_MAX_OFFSET_CELLS * GRID_CELL_SIZE;
+        const areaOfEffectCells = getSpellAreaOfEffect('swipe', headPart.gridPosition);
+        const areaOfEffectKeys = buildAreaOfEffectKeys(areaOfEffectCells);
         const headPosition = getGridCellPosition(headPart.gridPosition);
 
         let nearestMonster = undefined;
         let nearestDistance = Infinity;
 
         for (const monster of gameState.monsters) {
-          if (monster.health <= 0 || monster.position[0] > maxSwipeX) {
+          if (monster.health <= 0 || !isMonsterInAreaOfEffect(monster, areaOfEffectKeys)) {
             continue;
           }
 
@@ -183,14 +187,15 @@ export const tickGuards = (gameState: GameState, deltaTime: number): void => {
           headPart.cooldownTimer = SWIPE_COOLDOWN;
         }
       } else if (spellKind === 'stomp') {
-        const maxStompX = BARRIER_PIXEL_X + STOMP_MAX_OFFSET_CELLS * GRID_CELL_SIZE;
+        const areaOfEffectCells = getSpellAreaOfEffect('stomp', headPart.gridPosition);
+        const areaOfEffectKeys = buildAreaOfEffectKeys(areaOfEffectCells);
         const headPosition = getGridCellPosition(headPart.gridPosition);
 
         let nearestMonster = undefined;
         let nearestDistance = Infinity;
 
         for (const monster of gameState.monsters) {
-          if (monster.health <= 0 || monster.position[0] > maxStompX) {
+          if (monster.health <= 0 || !isMonsterInAreaOfEffect(monster, areaOfEffectKeys)) {
             continue;
           }
 
@@ -209,15 +214,14 @@ export const tickGuards = (gameState: GameState, deltaTime: number): void => {
           headPart.cooldownTimer = STOMP_COOLDOWN;
         }
       } else if (spellKind === 'gust') {
-        const headPosition = getGridCellPosition(headPart.gridPosition);
+        const areaOfEffectCells = getSpellAreaOfEffect('gust', headPart.gridPosition);
+        const areaOfEffectKeys = buildAreaOfEffectKeys(areaOfEffectCells);
         const hasTarget = gameState.monsters.some(
-          monster =>
-            monster.health > 0 &&
-            monster.position[0] >= BARRIER_PIXEL_X &&
-            Math.abs(monster.position[1] - headPosition[1]) <= GRID_CELL_SIZE
+          monster => monster.health > 0 && isMonsterInAreaOfEffect(monster, areaOfEffectKeys)
         );
 
         if (hasTarget) {
+          const headPosition = getGridCellPosition(headPart.gridPosition);
           gameState.gusts.push(
             createGust(gameState.nextEntityId++, [BARRIER_PIXEL_X, headPosition[1]])
           );

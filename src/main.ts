@@ -42,6 +42,8 @@ import {
   STOMP_RADIUS,
   STOMP_LIFETIME,
   GUST_RADIUS,
+  getHeadSpellKind,
+  getSpellAreaOfEffect,
 } from './game';
 import type { GameState, BodyPart, BodyPartName, Guard, Direction, Vector2, Tool } from './game';
 import spritesheetUrl from './sprites.png';
@@ -278,6 +280,28 @@ const renderGameState = (
     const barrierPixelX = GRID_ORIGIN[0] + BARRIER_COLUMN * GRID_CELL_SIZE;
     context.fillStyle = 'rgba(100, 180, 255, 0.3)';
     context.fillRect(barrierPixelX, GRID_ORIGIN[1], GRID_CELL_SIZE, GRID_SIZE[1] * GRID_CELL_SIZE);
+  }
+
+  const hoveredGuard = findGuardAtPosition(gameState.guards, mousePosition);
+
+  if (hoveredGuard) {
+    context.fillStyle = 'rgba(255, 255, 100, 0.15)';
+
+    for (const headPart of hoveredGuard.headParts) {
+      const spellKind = getHeadSpellKind(headPart.bodyPartName);
+
+      if (spellKind === undefined) {
+        continue;
+      }
+
+      const areaOfEffectCells = getSpellAreaOfEffect(spellKind, headPart.gridPosition);
+
+      for (const areaCell of areaOfEffectCells) {
+        const cellPixelX = GRID_ORIGIN[0] + areaCell[0] * GRID_CELL_SIZE;
+        const cellPixelY = GRID_ORIGIN[1] + areaCell[1] * GRID_CELL_SIZE;
+        context.fillRect(cellPixelX, cellPixelY, GRID_CELL_SIZE, GRID_CELL_SIZE);
+      }
+    }
   }
 
   for (const pool of gameState.pools) {
@@ -556,8 +580,6 @@ const renderGameState = (
       drawSprite(spritesheet, previewSprite, mousePosition, 0);
     }
   }
-
-  const hoveredGuard = findGuardAtPosition(gameState.guards, mousePosition);
 
   if (hoveredGuard) {
     const headName = hoveredGuard.headParts[0]?.bodyPartName ?? 'unknown';
