@@ -83,7 +83,7 @@ export const SUMMON_HIT_DISTANCE = 10;
 export const SUMMON_MAX_ENGAGEMENTS = 2;
 export const SUMMON_CAP_PER_HEAD = 2;
 export const SUMMON_COOLDOWN = 5;
-export const SUMMON_HOME_OFFSET_CELLS = 2;
+export const SUMMON_HOME_OFFSET_CELLS = 4;
 export const SUMMON_HOME_RANDOM_VARIATION = 24;
 
 export const WORKSHOP_COUNT = 3;
@@ -122,8 +122,8 @@ export const GUST_COOLDOWN = 6;
 export const GUST_WOBBLE_AMPLITUDE = 8;
 export const GUST_WOBBLE_FREQUENCY = 4;
 
-export const SPAWN_ROW_MIN = 2;
-export const SPAWN_ROW_MAX = 8;
+export const SPAWN_ROW_MIN = 3;
+export const SPAWN_ROW_MAX = 7;
 
 export const DAGGER_ORIGIN: Vector2 = [
   WORKSHOP_ORIGIN[0],

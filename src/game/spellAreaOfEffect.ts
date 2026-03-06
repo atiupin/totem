@@ -1,6 +1,7 @@
 import type { Monster, SpellKind, Vector2 } from './model';
 import {
   BARRIER_COLUMN,
+  BUILD_AREA,
   GRID_SIZE,
   POOL_MAX_OFFSET_CELLS,
   SWIPE_MAX_OFFSET_CELLS,
@@ -24,7 +25,10 @@ const buildDiamondCells = (maxOffsetCells: number, headGridPosition: Vector2): V
   const cells: Vector2[] = [];
   const actualOffset = maxOffsetCells - getBarrierDistance(headGridPosition);
 
-  for (let row = 0; row < GRID_SIZE[1]; row++) {
+  const rowMin = BUILD_AREA[1];
+  const rowMax = BUILD_AREA[1] + BUILD_AREA[3];
+
+  for (let row = rowMin; row < rowMax; row++) {
     const rowDistance = Math.abs(row - headGridPosition[1]);
     const widthAtRow = actualOffset - rowDistance;
 
