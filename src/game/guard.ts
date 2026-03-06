@@ -19,10 +19,8 @@ import {
 } from './spellAreaOfEffect';
 import {
   BARRIER_PIXEL_X,
-  GRID_CELL_SIZE,
   SUMMON_CAP_PER_HEAD,
   SUMMON_COOLDOWN,
-  SUMMON_HOME_OFFSET_CELLS,
   SUMMON_HOME_RANDOM_VARIATION,
   POOL_CAP_PER_HEAD,
   POOL_COOLDOWN,
@@ -109,16 +107,20 @@ export const tickGuards = (gameState: GameState, deltaTime: number): void => {
         ).length;
 
         if (summonCount < SUMMON_CAP_PER_HEAD) {
-          const headPosition = getGridCellPosition(headPart.gridPosition);
-          const homePosition: Vector2 = [
-            BARRIER_PIXEL_X + SUMMON_HOME_OFFSET_CELLS * GRID_CELL_SIZE,
-            headPosition[1] + (Math.random() - 0.5) * SUMMON_HOME_RANDOM_VARIATION * 2,
-          ];
+          const areaOfEffectCells = getSpellAreaOfEffect('summon', headPart.gridPosition);
 
-          gameState.summons.push(
-            createSummon(gameState.nextEntityId++, guard.guardId, homePosition)
-          );
-          headPart.cooldownTimer = SUMMON_COOLDOWN;
+          if (areaOfEffectCells.length > 0) {
+            const summonCellPosition = getGridCellPosition(areaOfEffectCells[0]);
+            const homePosition: Vector2 = [
+              summonCellPosition[0],
+              summonCellPosition[1] + (Math.random() - 0.5) * SUMMON_HOME_RANDOM_VARIATION * 2,
+            ];
+
+            gameState.summons.push(
+              createSummon(gameState.nextEntityId++, guard.guardId, homePosition)
+            );
+            headPart.cooldownTimer = SUMMON_COOLDOWN;
+          }
         }
       } else if (spellKind === 'pool') {
         const poolCount = gameState.pools.filter(pool => pool.guardId === guard.guardId).length;
