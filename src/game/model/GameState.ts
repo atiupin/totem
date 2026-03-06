@@ -2,7 +2,6 @@ import type { Barrier } from './Barrier';
 import type { Monster } from './Monster';
 import type { BodyPart } from './BodyPart';
 import type { Guard } from './Guard';
-import type { Projectile } from './Projectile';
 import type { Summon } from './Summon';
 import type { Pool } from './Pool';
 import type { Swipe } from './Swipe';
@@ -23,7 +22,6 @@ export type GameState = {
   monsters: Monster[];
   bodyParts: BodyPart[];
   guards: Guard[];
-  projectiles: Projectile[];
   summons: Summon[];
   pools: Pool[];
   swipes: Swipe[];

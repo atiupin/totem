@@ -80,8 +80,8 @@ const COMBINED_LIMB_NAMES: Partial<Record<LimbBodyPartSubtype, BodyPartName>> = 
 export const getCombinedLimbName = (limbSubtype: LimbBodyPartSubtype): BodyPartName | undefined =>
   COMBINED_LIMB_NAMES[limbSubtype];
 
-export const getHeadSpellKind = (bodyPartName: BodyPartName): SpellKind =>
-  HEAD_SPELL_KINDS[bodyPartName] ?? 'projectile';
+export const getHeadSpellKind = (bodyPartName: BodyPartName): SpellKind | undefined =>
+  HEAD_SPELL_KINDS[bodyPartName];
 
 export const buildPositionMap = (bodyParts: BodyPart[]): Map<string, BodyPart> => {
   const partsByPosition = new Map<string, BodyPart>();

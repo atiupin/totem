@@ -14,7 +14,6 @@ import {
   getNeighborGridPosition,
 } from './grid';
 import { computeGuards, tickGuards } from './guard';
-import { tickProjectiles } from './projectile';
 import { tickPools } from './pool';
 import { tickSwipes } from './swipe';
 import { tickGusts } from './gust';
@@ -68,7 +67,6 @@ export const createGameState = (): GameState => ({
   monsters: [],
   bodyParts: [],
   guards: [],
-  projectiles: [],
   summons: [],
   pools: [],
   swipes: [],
@@ -153,7 +151,6 @@ export const tickGameState = (gameState: GameState, deltaTime: number) => {
   tickStomps(gameState, deltaTime);
   tickGusts(gameState, deltaTime);
   tickSummons(gameState, deltaTime);
-  tickProjectiles(gameState, deltaTime);
   tickFloatingTexts(gameState, deltaTime);
   removeDeadMonsters(gameState);
   checkGamePhase(gameState);

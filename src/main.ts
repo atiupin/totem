@@ -32,10 +32,7 @@ import {
   DAGGER_ORIGIN,
   OPPOSITE_DIRECTION,
   areOppositeDirections,
-  HEAD_BASE_RANGE,
-  HEAD_BASE_DAMAGE,
   BODY_PART_COST,
-  LIMB_PROJECTILE_SCALE,
   isVector2InVector4,
   FLOATING_TEXT_LIFETIME,
   POOL_RADIUS,
@@ -51,7 +48,6 @@ import spritesheetUrl from './sprites.png';
 import {
   SPRITE_SIZE,
   MONSTER_SPRITES,
-  PROJECTILE_SPRITE,
   SUMMON_SPRITE,
   SWIPE_SPRITE,
   type BodySpriteKind,
@@ -243,11 +239,6 @@ const findGuardAtPosition = (guards: Guard[], position: Vector2): Guard | undefi
   return undefined;
 };
 
-const getEffectiveRange = (guard: Guard): number => HEAD_BASE_RANGE + guard.bonusRange;
-
-const getEffectiveDamage = (guard: Guard): number =>
-  HEAD_BASE_DAMAGE * Math.pow(2, guard.limbCount);
-
 const renderGameState = (
   spritesheet: HTMLImageElement,
   gameState: GameState,
@@ -363,24 +354,6 @@ const renderGameState = (
         rotation
       );
     }
-  }
-
-  for (const projectile of gameState.projectiles) {
-    const drawX = Math.round(projectile.position[0]);
-    const drawY = Math.round(projectile.position[1]);
-    const scaledSize = SPRITE_SIZE * projectile.scale;
-
-    context.drawImage(
-      spritesheet,
-      PROJECTILE_SPRITE[0] * SPRITE_SIZE,
-      PROJECTILE_SPRITE[1] * SPRITE_SIZE,
-      SPRITE_SIZE,
-      SPRITE_SIZE,
-      drawX - scaledSize / 2,
-      drawY - scaledSize / 2,
-      scaledSize,
-      scaledSize
-    );
   }
 
   for (const summon of gameState.summons) {
@@ -587,27 +560,11 @@ const renderGameState = (
   const hoveredGuard = findGuardAtPosition(gameState.guards, mousePosition);
 
   if (hoveredGuard) {
-    const tooltipX = 16;
-    const tooltipY = CANVAS_SIZE[1] - 16;
-    const lineHeight = 16;
-
-    const effectiveRange = getEffectiveRange(hoveredGuard);
-    const effectiveDamage = getEffectiveDamage(hoveredGuard);
-    const effectiveScale = Math.pow(LIMB_PROJECTILE_SCALE, hoveredGuard.limbCount);
-
-    const damageLabel =
-      hoveredGuard.limbCount > 0
-        ? `Damage: ${effectiveDamage} (x${Math.pow(2, hoveredGuard.limbCount)})`
-        : `Damage: ${effectiveDamage}`;
-
-    const lines = [damageLabel, `Range: ${effectiveRange}`, `Scale: ${effectiveScale.toFixed(1)}`];
+    const headName = hoveredGuard.headParts[0]?.bodyPartName ?? 'unknown';
 
     context.font = '12px monospace';
     context.fillStyle = '#e0e0e0';
-
-    for (let i = 0; i < lines.length; i++) {
-      context.fillText(lines[i], tooltipX, tooltipY - (lines.length - 1 - i) * lineHeight);
-    }
+    context.fillText(headName, 16, CANVAS_SIZE[1] - 16);
   }
 };
 

@@ -13,11 +13,6 @@ import { createGust } from './gust';
 import { getVector2Distance } from './vector2';
 import { OPPOSITE_DIRECTION, getNeighborGridPosition } from './grid';
 import {
-  HEAD_BASE_DAMAGE,
-  HEAD_BASE_RANGE,
-  HEAD_BASE_COOLDOWN,
-  HEAD_PROJECTILE_SPEED,
-  LIMB_PROJECTILE_SCALE,
   BARRIER_PIXEL_X,
   GRID_CELL_SIZE,
   SUMMON_CAP_PER_HEAD,
@@ -89,8 +84,6 @@ export const computeGuards = (bodyParts: BodyPart[]): Guard[] => {
       bodyParts: component,
       headParts,
       limbCount,
-      bonusRange: 0,
-      bonusCooldown: 0,
     });
   }
 
@@ -108,37 +101,7 @@ export const tickGuards = (gameState: GameState, deltaTime: number): void => {
 
       const spellKind = getHeadSpellKind(headPart.bodyPartName);
 
-      if (spellKind === 'projectile') {
-        const effectiveRange = HEAD_BASE_RANGE + guard.bonusRange;
-        const effectiveDamage = HEAD_BASE_DAMAGE * Math.pow(2, guard.limbCount);
-        const effectiveCooldown = Math.max(0.1, HEAD_BASE_COOLDOWN - guard.bonusCooldown);
-        const effectiveScale = Math.pow(LIMB_PROJECTILE_SCALE, guard.limbCount);
-        const headPosition = getGridCellPosition(headPart.gridPosition);
-
-        let nearestMonster = undefined;
-        let nearestDistance = Infinity;
-
-        for (const monster of gameState.monsters) {
-          const distance = getVector2Distance(headPosition, monster.position);
-
-          if (distance <= effectiveRange && distance < nearestDistance) {
-            nearestMonster = monster;
-            nearestDistance = distance;
-          }
-        }
-
-        if (nearestMonster) {
-          gameState.projectiles.push({
-            projectileId: gameState.nextEntityId++,
-            position: [...headPosition],
-            targetMonsterId: nearestMonster.monsterId,
-            speed: HEAD_PROJECTILE_SPEED,
-            damage: effectiveDamage,
-            scale: effectiveScale,
-          });
-          headPart.cooldownTimer = effectiveCooldown;
-        }
-      } else if (spellKind === 'summon') {
+      if (spellKind === 'summon') {
         const summonCount = gameState.summons.filter(
           summon => summon.guardId === guard.guardId
         ).length;

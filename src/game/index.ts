@@ -6,7 +6,6 @@ export * from './grid';
 export * from './monster';
 export * from './bodyPart';
 export * from './guard';
-export * from './projectile';
 export * from './summon';
 export * from './pool';
 export * from './floatingText';

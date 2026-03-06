@@ -32,13 +32,6 @@ export const BODY_PART_COST: Record<BodyPartType, number> = {
   limb: 4,
 };
 
-export const HEAD_BASE_RANGE = 500;
-export const HEAD_BASE_COOLDOWN = 1;
-export const HEAD_BASE_DAMAGE = 1;
-export const HEAD_PROJECTILE_SPEED = 200;
-export const LIMB_PROJECTILE_SCALE = 1.3;
-export const PROJECTILE_HIT_DISTANCE = 5;
-
 export const MONSTER_STATS: Record<MonsterKind, MonsterStats> = {
   eye: { health: 4, speed: 30, attackDamage: 4, attackCooldown: 2, goldReward: 1 },
   yeti: { health: 8, speed: 25, attackDamage: 8, attackCooldown: 3, goldReward: 2 },
@@ -119,7 +112,7 @@ export const STOMP_DAMAGE = 1;
 export const STOMP_STUN_DURATION = 1;
 export const STOMP_LIFETIME = 0.4;
 export const STOMP_COOLDOWN = 3;
-export const STOMP_MAX_OFFSET_CELLS = 5;
+export const STOMP_MAX_OFFSET_CELLS = 6;
 
 export const GUST_SPEED = 80;
 export const GUST_RADIUS = 22;

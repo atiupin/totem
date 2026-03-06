@@ -5,6 +5,4 @@ export type Guard = {
   bodyParts: BodyPart[];
   headParts: BodyPart[];
   limbCount: number;
-  bonusRange: number;
-  bonusCooldown: number;
 };
