@@ -11,6 +11,11 @@ import { createFloatingText } from './floatingText';
 
 export const tickMonsters = (gameState: GameState, deltaTime: number): void => {
   for (const monster of gameState.monsters) {
+    if (monster.stunTimer > 0) {
+      monster.stunTimer -= deltaTime;
+      continue;
+    }
+
     if (monster.engagedSummonId !== undefined) {
       const engagedSummon = gameState.summons.find(
         summon => summon.summonId === monster.engagedSummonId

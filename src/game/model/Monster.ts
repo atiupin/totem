@@ -20,4 +20,5 @@ export type Monster = {
   attackingBarrier: boolean;
   attackCooldownTimer: number;
   engagedSummonId?: number;
+  stunTimer: number;
 };

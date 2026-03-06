@@ -8,6 +8,7 @@ import {
 import { createSummon } from './summon';
 import { createPool } from './pool';
 import { createSwipe } from './swipe';
+import { createStomp } from './stomp';
 import { createGust } from './gust';
 import { getVector2Distance } from './vector2';
 import { OPPOSITE_DIRECTION, getNeighborGridPosition } from './grid';
@@ -29,6 +30,8 @@ import {
   POOL_MIN_DISTANCE,
   SWIPE_COOLDOWN,
   SWIPE_MAX_OFFSET_CELLS,
+  STOMP_COOLDOWN,
+  STOMP_MAX_OFFSET_CELLS,
   GUST_COOLDOWN,
 } from './constants';
 
@@ -215,6 +218,32 @@ export const tickGuards = (gameState: GameState, deltaTime: number): void => {
             createSwipe(gameState.nextEntityId++, [...nearestMonster.position], gameState)
           );
           headPart.cooldownTimer = SWIPE_COOLDOWN;
+        }
+      } else if (spellKind === 'stomp') {
+        const maxStompX = BARRIER_PIXEL_X + STOMP_MAX_OFFSET_CELLS * GRID_CELL_SIZE;
+        const headPosition = getGridCellPosition(headPart.gridPosition);
+
+        let nearestMonster = undefined;
+        let nearestDistance = Infinity;
+
+        for (const monster of gameState.monsters) {
+          if (monster.health <= 0 || monster.position[0] > maxStompX) {
+            continue;
+          }
+
+          const distance = getVector2Distance(headPosition, monster.position);
+
+          if (distance < nearestDistance) {
+            nearestMonster = monster;
+            nearestDistance = distance;
+          }
+        }
+
+        if (nearestMonster) {
+          gameState.stomps.push(
+            createStomp(gameState.nextEntityId++, [...nearestMonster.position], gameState)
+          );
+          headPart.cooldownTimer = STOMP_COOLDOWN;
         }
       } else if (spellKind === 'gust') {
         const headPosition = getGridCellPosition(headPart.gridPosition);

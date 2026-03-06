@@ -7,6 +7,7 @@ import type { Summon } from './Summon';
 import type { Pool } from './Pool';
 import type { Swipe } from './Swipe';
 import type { Gust } from './Gust';
+import type { Stomp } from './Stomp';
 import type { FloatingText } from './FloatingText';
 import type { SpawnEvent } from './SpawnSchedule';
 import type { Bench } from './Bench';
@@ -26,6 +27,7 @@ export type GameState = {
   summons: Summon[];
   pools: Pool[];
   swipes: Swipe[];
+  stomps: Stomp[];
   gusts: Gust[];
   floatingTexts: FloatingText[];
   spawnEvents: SpawnEvent[];

@@ -10,6 +10,7 @@ export * from './Summon';
 export * from './Pool';
 export * from './Swipe';
 export * from './Gust';
+export * from './Stomp';
 export * from './FloatingText';
 export * from './SpawnSchedule';
 export * from './Bench';

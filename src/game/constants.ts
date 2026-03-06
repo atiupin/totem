@@ -114,6 +114,13 @@ export const SWIPE_LIFETIME = 0.3;
 export const SWIPE_COOLDOWN = 0.5;
 export const SWIPE_MAX_OFFSET_CELLS = 5;
 
+export const STOMP_RADIUS = 36;
+export const STOMP_DAMAGE = 1;
+export const STOMP_STUN_DURATION = 1;
+export const STOMP_LIFETIME = 0.4;
+export const STOMP_COOLDOWN = 3;
+export const STOMP_MAX_OFFSET_CELLS = 5;
+
 export const GUST_SPEED = 80;
 export const GUST_RADIUS = 22;
 export const GUST_DAMAGE = 2;

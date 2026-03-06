@@ -18,6 +18,7 @@ import { tickProjectiles } from './projectile';
 import { tickPools } from './pool';
 import { tickSwipes } from './swipe';
 import { tickGusts } from './gust';
+import { tickStomps } from './stomp';
 import { tickSummons } from './summon';
 import { tickFloatingTexts } from './floatingText';
 import { createBench, addBenchSlot } from './bench';
@@ -71,6 +72,7 @@ export const createGameState = (): GameState => ({
   summons: [],
   pools: [],
   swipes: [],
+  stomps: [],
   gusts: [],
   floatingTexts: [],
   spawnEvents: createDefaultSpawnEvents(),
@@ -100,6 +102,7 @@ const spawnMonsters = (gameState: GameState) => {
       targetRow,
       attackingBarrier: false,
       attackCooldownTimer: 0,
+      stunTimer: 0,
     });
   }
 
@@ -147,6 +150,7 @@ export const tickGameState = (gameState: GameState, deltaTime: number) => {
   tickGuards(gameState, deltaTime);
   tickPools(gameState, deltaTime);
   tickSwipes(gameState, deltaTime);
+  tickStomps(gameState, deltaTime);
   tickGusts(gameState, deltaTime);
   tickSummons(gameState, deltaTime);
   tickProjectiles(gameState, deltaTime);

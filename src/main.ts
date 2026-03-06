@@ -42,6 +42,8 @@ import {
   POOL_ELLIPSE_RATIO,
   SWIPE_RADIUS,
   SWIPE_LIFETIME,
+  STOMP_RADIUS,
+  STOMP_LIFETIME,
   GUST_RADIUS,
 } from './game';
 import type { GameState, BodyPart, BodyPartName, Guard, Direction, Vector2, Tool } from './game';
@@ -320,6 +322,20 @@ const renderGameState = (
       swipeSize,
       swipeSize
     );
+    context.globalAlpha = 1;
+  }
+
+  for (const stomp of gameState.stomps) {
+    const progress = 1 - stomp.lifetime / STOMP_LIFETIME;
+    const radius = STOMP_RADIUS * progress;
+    const opacity = stomp.lifetime / STOMP_LIFETIME;
+
+    context.globalAlpha = opacity;
+    context.strokeStyle = 'rgba(180, 140, 80, 0.8)';
+    context.lineWidth = 3;
+    context.beginPath();
+    context.arc(stomp.position[0], stomp.position[1], radius, 0, Math.PI * 2);
+    context.stroke();
     context.globalAlpha = 1;
   }
 
