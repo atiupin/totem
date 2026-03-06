@@ -98,21 +98,21 @@ export const POOL_DAMAGE_COOLDOWN = 0.5;
 export const POOL_LIFETIME = 10;
 export const POOL_CAP_PER_HEAD = 1;
 export const POOL_COOLDOWN = 8;
-export const POOL_MAX_OFFSET_CELLS = 5;
+export const POOL_MAX_OFFSET_CELLS = 7;
 export const POOL_MIN_DISTANCE = 24;
 
 export const SWIPE_RADIUS = 36;
 export const SWIPE_DAMAGE = 3;
 export const SWIPE_LIFETIME = 0.3;
 export const SWIPE_COOLDOWN = 0.5;
-export const SWIPE_MAX_OFFSET_CELLS = 5;
+export const SWIPE_MAX_OFFSET_CELLS = 7;
 
 export const STOMP_RADIUS = 36;
 export const STOMP_DAMAGE = 1;
 export const STOMP_STUN_DURATION = 1;
 export const STOMP_LIFETIME = 0.4;
 export const STOMP_COOLDOWN = 3;
-export const STOMP_MAX_OFFSET_CELLS = 6;
+export const STOMP_MAX_OFFSET_CELLS = 7;
 
 export const GUST_SPEED = 80;
 export const GUST_RADIUS = 22;
