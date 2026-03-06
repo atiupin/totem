@@ -8,6 +8,7 @@ import {
 import { createSummon } from './summon';
 import { createPool } from './pool';
 import { createSwipe } from './swipe';
+import { createGust } from './gust';
 import { getVector2Distance } from './vector2';
 import { OPPOSITE_DIRECTION, getNeighborGridPosition } from './grid';
 import {
@@ -28,6 +29,7 @@ import {
   POOL_MIN_DISTANCE,
   SWIPE_COOLDOWN,
   SWIPE_MAX_OFFSET_CELLS,
+  GUST_COOLDOWN,
 } from './constants';
 
 export const computeGuards = (bodyParts: BodyPart[]): Guard[] => {
@@ -213,6 +215,21 @@ export const tickGuards = (gameState: GameState, deltaTime: number): void => {
             createSwipe(gameState.nextEntityId++, [...nearestMonster.position], gameState)
           );
           headPart.cooldownTimer = SWIPE_COOLDOWN;
+        }
+      } else if (spellKind === 'gust') {
+        const headPosition = getGridCellPosition(headPart.gridPosition);
+        const hasTarget = gameState.monsters.some(
+          monster =>
+            monster.health > 0 &&
+            monster.position[0] >= BARRIER_PIXEL_X &&
+            Math.abs(monster.position[1] - headPosition[1]) <= GRID_CELL_SIZE
+        );
+
+        if (hasTarget) {
+          gameState.gusts.push(
+            createGust(gameState.nextEntityId++, [BARRIER_PIXEL_X, headPosition[1]])
+          );
+          headPart.cooldownTimer = GUST_COOLDOWN;
         }
       }
     }

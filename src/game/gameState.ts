@@ -17,6 +17,7 @@ import { computeGuards, tickGuards } from './guard';
 import { tickProjectiles } from './projectile';
 import { tickPools } from './pool';
 import { tickSwipes } from './swipe';
+import { tickGusts } from './gust';
 import { tickSummons } from './summon';
 import { tickFloatingTexts } from './floatingText';
 import { createBench, addBenchSlot } from './bench';
@@ -26,7 +27,8 @@ import {
   CANVAS_SIZE,
   BARRIER_COLUMN,
   BARRIER_HEALTH,
-  GRID_SIZE,
+  SPAWN_ROW_MIN,
+  SPAWN_ROW_MAX,
   WAVES,
   MONSTER_STATS,
   STARTING_GOLD,
@@ -69,6 +71,7 @@ export const createGameState = (): GameState => ({
   summons: [],
   pools: [],
   swipes: [],
+  gusts: [],
   floatingTexts: [],
   spawnEvents: createDefaultSpawnEvents(),
   bench: createBench(),
@@ -83,7 +86,8 @@ const spawnMonsters = (gameState: GameState) => {
   );
 
   for (const spawnEvent of pendingEvents) {
-    const targetRow = Math.floor(Math.random() * GRID_SIZE[1]);
+    const spawnRowCount = SPAWN_ROW_MAX - SPAWN_ROW_MIN + 1;
+    const targetRow = SPAWN_ROW_MIN + Math.floor(Math.random() * spawnRowCount);
     const monsterStats = MONSTER_STATS[spawnEvent.monsterKind];
     const spawnY = getGridCellPosition([0, targetRow])[1];
 
@@ -143,6 +147,7 @@ export const tickGameState = (gameState: GameState, deltaTime: number) => {
   tickGuards(gameState, deltaTime);
   tickPools(gameState, deltaTime);
   tickSwipes(gameState, deltaTime);
+  tickGusts(gameState, deltaTime);
   tickSummons(gameState, deltaTime);
   tickProjectiles(gameState, deltaTime);
   tickFloatingTexts(gameState, deltaTime);

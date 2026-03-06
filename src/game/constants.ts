@@ -114,6 +114,17 @@ export const SWIPE_LIFETIME = 0.3;
 export const SWIPE_COOLDOWN = 0.5;
 export const SWIPE_MAX_OFFSET_CELLS = 5;
 
+export const GUST_SPEED = 80;
+export const GUST_RADIUS = 22;
+export const GUST_DAMAGE = 2;
+export const GUST_PUSHBACK = 20;
+export const GUST_COOLDOWN = 6;
+export const GUST_WOBBLE_AMPLITUDE = 8;
+export const GUST_WOBBLE_FREQUENCY = 4;
+
+export const SPAWN_ROW_MIN = 2;
+export const SPAWN_ROW_MAX = 8;
+
 export const DAGGER_ORIGIN: Vector2 = [
   WORKSHOP_ORIGIN[0],
   WORKSHOP_ORIGIN[1] + WORKSHOP_COUNT * (WORKSHOP_SIZE + WORKSHOP_GAP),

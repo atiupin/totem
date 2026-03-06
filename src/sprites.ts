@@ -10,9 +10,9 @@ export const WORKSHOP_SPRITES: Record<number, Vector2> = {
 
 export const DAGGER_SPRITE: Vector2 = [3, 0];
 
-export const PROJECTILE_SPRITE: Vector2 = [7, 0];
-export const SUMMON_SPRITE: Vector2 = [8, 0];
-export const SWIPE_SPRITE: Vector2 = [9, 0];
+export const PROJECTILE_SPRITE: Vector2 = [0, 7];
+export const SUMMON_SPRITE: Vector2 = [1, 7];
+export const SWIPE_SPRITE: Vector2 = [2, 7];
 
 export const MONSTER_SPRITES: Record<MonsterKind, Vector2> = {
   eye: [4, 0],

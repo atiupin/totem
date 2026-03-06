@@ -42,6 +42,7 @@ import {
   POOL_ELLIPSE_RATIO,
   SWIPE_RADIUS,
   SWIPE_LIFETIME,
+  GUST_RADIUS,
 } from './game';
 import type { GameState, BodyPart, BodyPartName, Guard, Direction, Vector2, Tool } from './game';
 import spritesheetUrl from './sprites.png';
@@ -320,6 +321,13 @@ const renderGameState = (
       swipeSize
     );
     context.globalAlpha = 1;
+  }
+
+  for (const gust of gameState.gusts) {
+    context.fillStyle = 'rgba(180, 220, 255, 0.5)';
+    context.beginPath();
+    context.arc(gust.position[0], gust.position[1], GUST_RADIUS, 0, Math.PI * 2);
+    context.fill();
   }
 
   for (const bodyPart of gameState.bodyParts) {
