@@ -7,8 +7,20 @@ import type {
   SpellKind,
   Vector2,
 } from './model';
-import { BODY_PART_REFS, GENERIC_BODY_PART_NAMES, HEAD_SPELL_KINDS } from './model';
+import { BODY_PART_REFS, HEAD_SPELL_KINDS } from './model';
 import { GRID_ORIGIN, GRID_CELL_SIZE, GRID_SIZE } from './constants';
+
+const GENERIC_LIMB_NAMES: Record<LimbBodyPartSubtype, LimbBodyPartName> = {
+  foot: 'genericFoot',
+  tail: 'genericTail',
+  wing: 'genericWing',
+};
+
+const LOCKED_LIMB_NAMES: Record<LimbBodyPartSubtype, BodyPartName[]> = {
+  foot: ['heronFoot', 'toadFoot', 'llamaFoot', 'jaguarFoot'],
+  tail: ['jaguarTail'],
+  wing: ['heronWing'],
+};
 
 export const getBodyPartType = (bodyPartName: BodyPartName): BodyPartType => {
   const { subtype } = BODY_PART_REFS[bodyPartName];
@@ -42,39 +54,36 @@ const HEAD_NAMES_BY_LIMB_COUNT: BodyPartName[] = [
   'jaguarHead',
 ];
 
-const FOOT_NAMES_BY_LIMB_COUNT: BodyPartName[] = [
-  'heronFoot',
-  'toadFoot',
-  'llamaFoot',
-  'jaguarFoot',
-];
-
 export const getLockedBodyPartName = (
   bodyPartName: BodyPartName,
   limbCount: number
 ): BodyPartName => {
   const bodyPartType = getBodyPartType(bodyPartName);
 
-  if (bodyPartName !== GENERIC_BODY_PART_NAMES[bodyPartType]) {
-    return bodyPartName;
-  }
-
   if (bodyPartType === 'body') {
     return 'genericBody';
   }
 
   if (bodyPartType === 'head') {
+    if (bodyPartName !== 'genericHead') return bodyPartName;
     const index = Math.min(limbCount, HEAD_NAMES_BY_LIMB_COUNT.length - 1);
     return HEAD_NAMES_BY_LIMB_COUNT[index];
   }
 
-  const index = Math.min(limbCount - 1, FOOT_NAMES_BY_LIMB_COUNT.length - 1);
-  return FOOT_NAMES_BY_LIMB_COUNT[index];
+  const limbSubtype = getLimbSubtype(bodyPartName as LimbBodyPartName);
+
+  if (bodyPartName !== GENERIC_LIMB_NAMES[limbSubtype]) {
+    return bodyPartName;
+  }
+
+  const lockedNames = LOCKED_LIMB_NAMES[limbSubtype];
+  const index = Math.min(limbCount - 1, lockedNames.length - 1);
+  return lockedNames[index];
 };
 
 const COMBINED_LIMB_NAMES: Partial<Record<LimbBodyPartSubtype, BodyPartName>> = {
-  foot: 'jaguarTail',
-  tail: 'heronWing',
+  foot: 'genericTail',
+  tail: 'genericWing',
 };
 
 export const getCombinedLimbName = (limbSubtype: LimbBodyPartSubtype): BodyPartName | undefined =>

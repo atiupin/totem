@@ -16,13 +16,19 @@ export const BODY_PART_REFS = {
   toadHead: { subtype: 'head' },
   llamaHead: { subtype: 'head' },
   jaguarHead: { subtype: 'head' },
+
   genericBody: { subtype: 'body' },
+
   genericFoot: { subtype: 'foot' },
   heronFoot: { subtype: 'foot' },
   toadFoot: { subtype: 'foot' },
   llamaFoot: { subtype: 'foot' },
   jaguarFoot: { subtype: 'foot' },
+
+  genericTail: { subtype: 'tail' },
   jaguarTail: { subtype: 'tail' },
+
+  genericWing: { subtype: 'wing' },
   heronWing: { subtype: 'wing' },
 } as const satisfies Record<string, BodyPartRef>;
 

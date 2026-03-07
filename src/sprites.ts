@@ -53,9 +53,11 @@ export const BODY_PART_NAME_SPRITES: Record<Exclude<BodyPartName, 'genericBody'>
   llamaFoot: [3, 4],
   jaguarFoot: [4, 4],
 
-  jaguarTail: [0, 5],
+  genericTail: [0, 5],
+  jaguarTail: [1, 5],
 
-  heronWing: [0, 6],
+  genericWing: [0, 6],
+  heronWing: [1, 6],
 };
 
 export const getBodyPartPreviewSprite = (
