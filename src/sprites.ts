@@ -22,42 +22,33 @@ export const MONSTER_SPRITES: Record<MonsterKind, Vector2> = {
 export type BodySpriteKind = 'disconnected' | 'endcap' | 'pipe' | 'lShape' | 'tShape' | 'xShape';
 
 export const BODY_SPRITES: Record<BodySpriteKind, Vector2> = {
-  disconnected: [0, 1],
-  endcap: [1, 1],
-  pipe: [2, 1],
-  lShape: [3, 1],
-  tShape: [4, 1],
-  xShape: [5, 1],
-};
-
-export const LOCKED_BODY_SPRITES: Record<BodySpriteKind, Vector2> = {
-  disconnected: [0, 2],
-  endcap: [1, 2],
-  pipe: [2, 2],
-  lShape: [3, 2],
-  tShape: [4, 2],
-  xShape: [5, 2],
+  disconnected: [0, 0],
+  endcap: [1, 0],
+  pipe: [2, 0],
+  lShape: [3, 0],
+  tShape: [4, 0],
+  xShape: [5, 0],
 };
 
 export const BODY_PART_NAME_SPRITES: Record<Exclude<BodyPartName, 'genericBody'>, Vector2> = {
-  genericHead: [0, 3],
-  snakeHead: [1, 3],
-  heronHead: [2, 3],
-  toadHead: [3, 3],
-  llamaHead: [4, 3],
-  jaguarHead: [5, 3],
+  genericHead: [0, 1],
+  snakeHead: [1, 1],
+  heronHead: [2, 1],
+  toadHead: [3, 1],
+  llamaHead: [4, 1],
+  jaguarHead: [5, 1],
 
-  genericFoot: [0, 4],
-  heronFoot: [1, 4],
-  toadFoot: [2, 4],
-  llamaFoot: [3, 4],
-  jaguarFoot: [4, 4],
+  genericFoot: [0, 2],
+  heronFoot: [1, 2],
+  toadFoot: [2, 2],
+  llamaFoot: [3, 2],
+  jaguarFoot: [4, 2],
 
-  genericTail: [0, 5],
-  jaguarTail: [1, 5],
+  genericTail: [0, 3],
+  jaguarTail: [1, 3],
 
-  genericWing: [0, 6],
-  heronWing: [1, 6],
+  genericWing: [0, 4],
+  heronWing: [1, 4],
 };
 
 export const getBodyPartPreviewSprite = (

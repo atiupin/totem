@@ -1,4 +1,12 @@
-import type { BodyPart, BodyPartName, BodyPartType, GameState, SpawnEvent, Vector2 } from './model';
+import type {
+  BodyPart,
+  BodyPartColorIndex,
+  BodyPartName,
+  BodyPartType,
+  GameState,
+  SpawnEvent,
+  Vector2,
+} from './model';
 import { tickMonsters } from './monster';
 import {
   createBodyPart,
@@ -295,9 +303,15 @@ export const canPlaceBodyPart = (
 export const placeBodyPart = (
   gameState: GameState,
   gridPosition: Vector2,
-  bodyPartName: BodyPartName
+  bodyPartName: BodyPartName,
+  bodyPartColorIndex: BodyPartColorIndex
 ) => {
-  const bodyPart = createBodyPart(gameState.nextEntityId++, bodyPartName, gridPosition);
+  const bodyPart = createBodyPart(
+    gameState.nextEntityId++,
+    bodyPartName,
+    bodyPartColorIndex,
+    gridPosition
+  );
   gameState.bodyParts.push(bodyPart);
 
   recomputeConnections(gameState.bodyParts);

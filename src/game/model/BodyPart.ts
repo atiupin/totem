@@ -1,4 +1,5 @@
 import type { Direction } from './Direction';
+import type { BodyPartColorIndex } from './BodyPartColor';
 import type { Vector2 } from './Vector2';
 
 export type LimbBodyPartSubtype = 'foot' | 'tail' | 'wing';
@@ -65,6 +66,7 @@ export const HEAD_SPELL_KINDS: Partial<Record<BodyPartName, SpellKind>> = {
 export type BodyPart = {
   bodyPartId: number;
   bodyPartName: BodyPartName;
+  bodyPartColorIndex: BodyPartColorIndex;
   gridPosition: Vector2;
   connectionDirections: Direction[];
   locked: boolean;

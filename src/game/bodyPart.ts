@@ -1,5 +1,6 @@
 import type {
   BodyPart,
+  BodyPartColorIndex,
   BodyPartName,
   BodyPartType,
   LimbBodyPartName,
@@ -36,10 +37,12 @@ export const getLimbSubtype = (bodyPartName: LimbBodyPartName): LimbBodyPartSubt
 export const createBodyPart = (
   bodyPartId: number,
   bodyPartName: BodyPartName,
+  bodyPartColorIndex: BodyPartColorIndex,
   gridPosition: Vector2
 ): BodyPart => ({
   bodyPartId,
   bodyPartName,
+  bodyPartColorIndex,
   gridPosition,
   connectionDirections: [],
   locked: false,

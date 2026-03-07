@@ -47,6 +47,8 @@ import {
 } from './game';
 import type { GameState, BodyPart, BodyPartName, Guard, Direction, Vector2, Tool } from './game';
 import spritesheetUrl from './sprites.png';
+import bodyPartsSpritesheetUrl from './bodyParts.png';
+import { createColoredSpritesheets } from './render';
 import {
   SPRITE_SIZE,
   MONSTER_SPRITES,
@@ -54,7 +56,6 @@ import {
   SWIPE_SPRITE,
   type BodySpriteKind,
   BODY_SPRITES,
-  LOCKED_BODY_SPRITES,
   BODY_PART_NAME_SPRITES,
   WORKSHOP_SPRITES,
   DAGGER_SPRITE,
@@ -81,7 +82,7 @@ const loadImage = (url: string): Promise<HTMLImageElement> =>
   });
 
 const drawSprite = (
-  spritesheet: HTMLImageElement,
+  spritesheet: CanvasImageSource,
   sprite: Vector2,
   position: Vector2,
   rotation: number
@@ -243,6 +244,7 @@ const findGuardAtPosition = (guards: Guard[], position: Vector2): Guard | undefi
 
 const renderGameState = (
   spritesheet: HTMLImageElement,
+  coloredSpritesheets: HTMLCanvasElement[],
   gameState: GameState,
   selectedTool: Tool | undefined,
   mousePosition: Vector2
@@ -370,14 +372,18 @@ const renderGameState = (
     const bodyPartPosition = getGridCellPosition(bodyPart.gridPosition);
     const bodyPartType = getBodyPartType(bodyPart.bodyPartName);
     const rotation = getBodyPartRotation(bodyPart);
+    const bodyPartColorIndex =
+      (bodyPartType === 'body' && bodyPart.locked) || !bodyPart.bodyPartName.startsWith('generic')
+        ? 3
+        : 0;
+    const bodyPartSpritesheet = coloredSpritesheets[bodyPartColorIndex];
 
     if (bodyPartType === 'body') {
       const bodySpriteKind = getBodySpriteKind(bodyPart);
-      const bodySpriteSet = bodyPart.locked ? LOCKED_BODY_SPRITES : BODY_SPRITES;
-      drawSprite(spritesheet, bodySpriteSet[bodySpriteKind], bodyPartPosition, rotation);
+      drawSprite(bodyPartSpritesheet, BODY_SPRITES[bodySpriteKind], bodyPartPosition, rotation);
     } else {
       drawSprite(
-        spritesheet,
+        bodyPartSpritesheet,
         BODY_PART_NAME_SPRITES[bodyPart.bodyPartName as Exclude<BodyPartName, 'genericBody'>],
         bodyPartPosition,
         rotation
@@ -545,7 +551,7 @@ const renderGameState = (
       benchSlot.bodyPartName,
       getBodyPartType(benchSlot.bodyPartName)
     );
-    drawSprite(spritesheet, sprite, slotPosition, 0);
+    drawSprite(coloredSpritesheets[0], sprite, slotPosition, 0);
   }
 
   if (selectedTool !== undefined) {
@@ -582,7 +588,7 @@ const renderGameState = (
     }
 
     if (previewSprite !== undefined) {
-      drawSprite(spritesheet, previewSprite, mousePosition, 0);
+      drawSprite(coloredSpritesheets[0], previewSprite, mousePosition, 0);
     }
   }
 
@@ -597,6 +603,8 @@ const renderGameState = (
 
 const start = async () => {
   const spritesheet = await loadImage(spritesheetUrl);
+  const bodyPartsSpritesheet = await loadImage(bodyPartsSpritesheetUrl);
+  const coloredSpritesheets = createColoredSpritesheets(bodyPartsSpritesheet);
   const gameState = createGameState();
 
   let selectedTool: Tool | undefined;
@@ -750,7 +758,7 @@ const start = async () => {
 
           if (gameState.gold >= cost && canPlaceBodyPart(gameState, gridPosition, bodyPartType)) {
             gameState.gold -= cost;
-            placeBodyPart(gameState, gridPosition, GENERIC_BODY_PART_NAMES[bodyPartType]);
+            placeBodyPart(gameState, gridPosition, GENERIC_BODY_PART_NAMES[bodyPartType], 0);
             selectedTool = undefined;
           }
         } else if (selectedTool.toolKind === 'bench') {
@@ -760,7 +768,7 @@ const start = async () => {
             benchSlot !== undefined &&
             canPlaceBodyPart(gameState, gridPosition, getBodyPartType(benchSlot.bodyPartName))
           ) {
-            placeBodyPart(gameState, gridPosition, benchSlot.bodyPartName);
+            placeBodyPart(gameState, gridPosition, benchSlot.bodyPartName, 0);
             removeBenchSlot(gameState.bench, selectedTool.slotIndex);
             selectedTool = undefined;
           }
@@ -813,7 +821,7 @@ const start = async () => {
     previousTime = currentTime;
 
     tickGameState(gameState, deltaTime);
-    renderGameState(spritesheet, gameState, selectedTool, mousePosition);
+    renderGameState(spritesheet, coloredSpritesheets, gameState, selectedTool, mousePosition);
 
     requestAnimationFrame(loop);
   };

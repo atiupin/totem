@@ -3,6 +3,7 @@ export * from './Vector4';
 export * from './Direction';
 export * from './Barrier';
 export * from './BodyPart';
+export * from './BodyPartColor';
 export * from './Monster';
 export * from './Guard';
 export * from './Summon';
