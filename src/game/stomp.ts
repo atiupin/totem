@@ -11,7 +11,7 @@ export const createStomp = (
   guardLevel: number
 ): Stomp => {
   const damage = scaleByLevel(STOMP_DAMAGE, guardLevel);
-  const stunDuration = STOMP_STUN_DURATION * (1 + (guardLevel - 1) * 0.5);
+  const stunDuration = STOMP_STUN_DURATION;
 
   for (const monster of gameState.monsters) {
     if (monster.health <= 0) {

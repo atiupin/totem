@@ -276,13 +276,11 @@ export const getSpellTooltip = (spellKind: SpellKind, guardLevel: number): strin
     case 'swipe':
       return `Damage ${scaleByLevel(SWIPE_DAMAGE, guardLevel)}`;
 
-    case 'stomp': {
-      const stunDuration = STOMP_STUN_DURATION * (1 + (guardLevel - 1) * 0.5);
-      return `Damage ${scaleByLevel(STOMP_DAMAGE, guardLevel)}, Stun ${stunDuration}s`;
-    }
+    case 'stomp':
+      return `Damage ${scaleByLevel(STOMP_DAMAGE, guardLevel)}, Stun ${STOMP_STUN_DURATION}s`;
 
     case 'gust':
-      return `Damage ${scaleByLevel(GUST_DAMAGE, guardLevel)}, Pushback ${scaleByLevel(GUST_PUSHBACK, guardLevel)}`;
+      return `Damage ${scaleByLevel(GUST_DAMAGE, guardLevel)}, Pushback ${GUST_PUSHBACK}`;
 
     case 'pool':
       return `Damage ${scaleByLevel(POOL_DAMAGE, guardLevel)}, Duration ${scaleByLevel(POOL_LIFETIME, guardLevel)}s`;

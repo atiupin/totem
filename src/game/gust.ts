@@ -18,7 +18,7 @@ export const createGust = (gustId: number, position: Vector2, guardLevel: number
   originY: position[1],
   elapsedTime: 0,
   damage: scaleByLevel(GUST_DAMAGE, guardLevel),
-  pushback: scaleByLevel(GUST_PUSHBACK, guardLevel),
+  pushback: GUST_PUSHBACK,
   hitMonsterIds: [],
 });
 
