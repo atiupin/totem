@@ -1,4 +1,4 @@
-import type { BodyPart, Guard, Vector2, GameState } from './model';
+import type { BodyPart, Guard, Vector2, GameState, SpellKind } from './model';
 import {
   getBodyPartType,
   getGridCellPosition,
@@ -32,6 +32,15 @@ import {
   GUARD_XP_PER_LEVEL,
   GUARD_BASE_XP_RATE,
   GUARD_SEGMENT_XP_BONUS,
+  SWIPE_DAMAGE,
+  STOMP_DAMAGE,
+  STOMP_STUN_DURATION,
+  GUST_DAMAGE,
+  GUST_PUSHBACK,
+  POOL_DAMAGE,
+  POOL_LIFETIME,
+  SUMMON_MAX_HEALTH,
+  SUMMON_ATTACK_DAMAGE,
 } from './constants';
 
 export const computeGuards = (bodyParts: BodyPart[]): Guard[] => {
@@ -127,7 +136,7 @@ export const tickGuards = (gameState: GameState, deltaTime: number): void => {
             ];
 
             gameState.summons.push(
-              createSummon(gameState.nextEntityId++, guard.guardId, homePosition)
+              createSummon(gameState.nextEntityId++, guard.guardId, homePosition, guard.level)
             );
             headPart.cooldownTimer = SUMMON_COOLDOWN;
           }
@@ -166,7 +175,12 @@ export const tickGuards = (gameState: GameState, deltaTime: number): void => {
 
           if (targetMonster) {
             gameState.pools.push(
-              createPool(gameState.nextEntityId++, guard.guardId, [...targetMonster.position])
+              createPool(
+                gameState.nextEntityId++,
+                guard.guardId,
+                [...targetMonster.position],
+                guard.level
+              )
             );
             headPart.cooldownTimer = POOL_COOLDOWN;
           }
@@ -194,7 +208,12 @@ export const tickGuards = (gameState: GameState, deltaTime: number): void => {
 
         if (nearestMonster) {
           gameState.swipes.push(
-            createSwipe(gameState.nextEntityId++, [...nearestMonster.position], gameState)
+            createSwipe(
+              gameState.nextEntityId++,
+              [...nearestMonster.position],
+              gameState,
+              guard.level
+            )
           );
           headPart.cooldownTimer = SWIPE_COOLDOWN;
         }
@@ -221,7 +240,12 @@ export const tickGuards = (gameState: GameState, deltaTime: number): void => {
 
         if (nearestMonster) {
           gameState.stomps.push(
-            createStomp(gameState.nextEntityId++, [...nearestMonster.position], gameState)
+            createStomp(
+              gameState.nextEntityId++,
+              [...nearestMonster.position],
+              gameState,
+              guard.level
+            )
           );
           headPart.cooldownTimer = STOMP_COOLDOWN;
         }
@@ -235,12 +259,36 @@ export const tickGuards = (gameState: GameState, deltaTime: number): void => {
         if (hasTarget) {
           const headPosition = getGridCellPosition(headPart.gridPosition);
           gameState.gusts.push(
-            createGust(gameState.nextEntityId++, [BARRIER_PIXEL_X, headPosition[1]])
+            createGust(gameState.nextEntityId++, [BARRIER_PIXEL_X, headPosition[1]], guard.level)
           );
           headPart.cooldownTimer = GUST_COOLDOWN;
         }
       }
     }
+  }
+};
+
+export const scaleByLevel = (baseValue: number, guardLevel: number): number =>
+  Math.floor(baseValue * (1 + (guardLevel - 1) * 0.5));
+
+export const getSpellTooltip = (spellKind: SpellKind, guardLevel: number): string => {
+  switch (spellKind) {
+    case 'swipe':
+      return `Damage ${scaleByLevel(SWIPE_DAMAGE, guardLevel)}`;
+
+    case 'stomp': {
+      const stunDuration = STOMP_STUN_DURATION * (1 + (guardLevel - 1) * 0.5);
+      return `Damage ${scaleByLevel(STOMP_DAMAGE, guardLevel)}, Stun ${stunDuration}s`;
+    }
+
+    case 'gust':
+      return `Damage ${scaleByLevel(GUST_DAMAGE, guardLevel)}, Pushback ${scaleByLevel(GUST_PUSHBACK, guardLevel)}`;
+
+    case 'pool':
+      return `Damage ${scaleByLevel(POOL_DAMAGE, guardLevel)}, Duration ${scaleByLevel(POOL_LIFETIME, guardLevel)}s`;
+
+    case 'summon':
+      return `Health ${scaleByLevel(SUMMON_MAX_HEALTH, guardLevel)}, Attack ${scaleByLevel(SUMMON_ATTACK_DAMAGE, guardLevel)}`;
   }
 };
 

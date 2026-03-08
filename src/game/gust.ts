@@ -10,14 +10,15 @@ import {
   GUST_WOBBLE_AMPLITUDE,
   GUST_WOBBLE_FREQUENCY,
 } from './constants';
+import { scaleByLevel } from './guard';
 
-export const createGust = (gustId: number, position: Vector2): Gust => ({
+export const createGust = (gustId: number, position: Vector2, guardLevel: number): Gust => ({
   gustId,
   position: [...position],
   originY: position[1],
   elapsedTime: 0,
-  damage: GUST_DAMAGE,
-  pushback: GUST_PUSHBACK,
+  damage: scaleByLevel(GUST_DAMAGE, guardLevel),
+  pushback: scaleByLevel(GUST_PUSHBACK, guardLevel),
   hitMonsterIds: [],
 });
 

@@ -7,13 +7,20 @@ import {
   POOL_DAMAGE_COOLDOWN,
   POOL_LIFETIME,
 } from './constants';
+import { scaleByLevel } from './guard';
 
-export const createPool = (poolId: number, guardId: number, position: Vector2): Pool => ({
+export const createPool = (
+  poolId: number,
+  guardId: number,
+  position: Vector2,
+  guardLevel: number
+): Pool => ({
   poolId,
   guardId,
   position,
+  damage: scaleByLevel(POOL_DAMAGE, guardLevel),
   damageCooldownTimer: 0,
-  lifetime: POOL_LIFETIME,
+  lifetime: scaleByLevel(POOL_LIFETIME, guardLevel),
 });
 
 const isMonsterInPool = (monsterPosition: Vector2, poolPosition: Vector2): boolean => {
@@ -39,8 +46,8 @@ export const tickPools = (gameState: GameState, deltaTime: number): void => {
         }
 
         if (isMonsterInPool(monster.position, pool.position)) {
-          monster.health -= POOL_DAMAGE;
-          gameState.floatingTexts.push(createFloatingText(monster.position, POOL_DAMAGE, 'damage'));
+          monster.health -= pool.damage;
+          gameState.floatingTexts.push(createFloatingText(monster.position, pool.damage, 'damage'));
           damaged = true;
         }
       }

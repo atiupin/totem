@@ -7,6 +7,7 @@ export type Summon = {
   position: Vector2;
   health: number;
   maxHealth: number;
+  attackDamage: number;
   engagedMonsterIds: number[];
   attackCooldownTimer: number;
 };

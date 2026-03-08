@@ -2,17 +2,26 @@ import type { Vector2, Stomp, GameState } from './model';
 import { createFloatingText } from './floatingText';
 import { getVector2Distance } from './vector2';
 import { STOMP_RADIUS, STOMP_DAMAGE, STOMP_STUN_DURATION, STOMP_LIFETIME } from './constants';
+import { scaleByLevel } from './guard';
 
-export const createStomp = (stompId: number, position: Vector2, gameState: GameState): Stomp => {
+export const createStomp = (
+  stompId: number,
+  position: Vector2,
+  gameState: GameState,
+  guardLevel: number
+): Stomp => {
+  const damage = scaleByLevel(STOMP_DAMAGE, guardLevel);
+  const stunDuration = STOMP_STUN_DURATION * (1 + (guardLevel - 1) * 0.5);
+
   for (const monster of gameState.monsters) {
     if (monster.health <= 0) {
       continue;
     }
 
     if (getVector2Distance(monster.position, position) <= STOMP_RADIUS) {
-      monster.health -= STOMP_DAMAGE;
-      monster.stunTimer = STOMP_STUN_DURATION;
-      gameState.floatingTexts.push(createFloatingText(monster.position, STOMP_DAMAGE, 'damage'));
+      monster.health -= damage;
+      monster.stunTimer = stunDuration;
+      gameState.floatingTexts.push(createFloatingText(monster.position, damage, 'damage'));
     }
   }
 

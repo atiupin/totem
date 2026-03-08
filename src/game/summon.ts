@@ -17,17 +17,28 @@ import {
   SUMMON_MAX_ENGAGEMENTS,
   MONSTER_STATS,
 } from './constants';
+import { scaleByLevel } from './guard';
 
-export const createSummon = (summonId: number, guardId: number, homePosition: Vector2): Summon => ({
-  summonId,
-  guardId,
-  homePosition,
-  position: [...homePosition],
-  health: SUMMON_MAX_HEALTH,
-  maxHealth: SUMMON_MAX_HEALTH,
-  engagedMonsterIds: [],
-  attackCooldownTimer: 0,
-});
+export const createSummon = (
+  summonId: number,
+  guardId: number,
+  homePosition: Vector2,
+  guardLevel: number
+): Summon => {
+  const maxHealth = scaleByLevel(SUMMON_MAX_HEALTH, guardLevel);
+
+  return {
+    summonId,
+    guardId,
+    homePosition,
+    position: [...homePosition],
+    health: maxHealth,
+    maxHealth,
+    attackDamage: scaleByLevel(SUMMON_ATTACK_DAMAGE, guardLevel),
+    engagedMonsterIds: [],
+    attackCooldownTimer: 0,
+  };
+};
 
 export const tickSummons = (gameState: GameState, deltaTime: number): void => {
   for (const summon of gameState.summons) {
@@ -109,9 +120,9 @@ export const tickSummons = (gameState: GameState, deltaTime: number): void => {
         const combatDistance = getVector2Distance(summon.position, engagedMonster.position);
 
         if (combatDistance <= SUMMON_HIT_DISTANCE) {
-          engagedMonster.health -= SUMMON_ATTACK_DAMAGE;
+          engagedMonster.health -= summon.attackDamage;
           gameState.floatingTexts.push(
-            createFloatingText(engagedMonster.position, SUMMON_ATTACK_DAMAGE, 'damage')
+            createFloatingText(engagedMonster.position, summon.attackDamage, 'damage')
           );
 
           const monsterStats = MONSTER_STATS[engagedMonster.monsterKind];

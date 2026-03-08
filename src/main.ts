@@ -46,6 +46,7 @@ import {
   getSpellAreaOfEffect,
   getGuardXpMultiplier,
   getGuardXpThreshold,
+  getSpellTooltip,
 } from './game';
 import type {
   GameState,
@@ -232,8 +233,7 @@ const getBodyPartRotation = (bodyPart: BodyPart): number => {
   return (3 * Math.PI) / 2;
 };
 
-const getGuardColorIndex = (guard: Guard): BodyPartColorIndex =>
-  guard.level as BodyPartColorIndex;
+const getGuardColorIndex = (guard: Guard): BodyPartColorIndex => guard.level as BodyPartColorIndex;
 
 const buildBodyPartGuardMap = (guards: Guard[]): Map<number, Guard> => {
   const bodyPartGuardMap = new Map<number, Guard>();
@@ -629,6 +629,13 @@ const renderGameState = (
     context.font = '12px monospace';
     context.fillStyle = '#e0e0e0';
     context.fillText(tooltipText, 16, CANVAS_SIZE[1] - 16);
+
+    const spellKind = getHeadSpellKind(headName);
+
+    if (spellKind !== undefined) {
+      const spellText = getSpellTooltip(spellKind, hoveredGuard.level);
+      context.fillText(spellText, 16, CANVAS_SIZE[1] - 4);
+    }
   }
 };
 
