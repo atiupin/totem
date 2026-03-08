@@ -39,16 +39,16 @@ export const BODY_PART_NAME_SPRITES: Record<Exclude<BodyPartName, 'genericBody'>
   jaguarHead: [5, 1],
 
   genericFoot: [0, 2],
-  heronFoot: [1, 2],
-  toadFoot: [2, 2],
-  llamaFoot: [3, 2],
-  jaguarFoot: [4, 2],
+  birdFoot: [1, 2],
+  amphibianFoot: [2, 2],
+  hoovedFoot: [3, 2],
+  beastFoot: [4, 2],
 
   genericTail: [0, 3],
-  jaguarTail: [1, 3],
+  beastTail: [4, 3],
 
   genericWing: [0, 4],
-  heronWing: [1, 4],
+  birdWing: [1, 4],
 };
 
 export const getBodyPartPreviewSprite = (

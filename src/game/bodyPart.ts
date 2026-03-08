@@ -18,9 +18,9 @@ const GENERIC_LIMB_NAMES: Record<LimbBodyPartSubtype, LimbBodyPartName> = {
 };
 
 const LOCKED_LIMB_NAMES: Record<LimbBodyPartSubtype, BodyPartName[]> = {
-  foot: ['heronFoot', 'toadFoot', 'llamaFoot', 'jaguarFoot'],
-  tail: ['jaguarTail'],
-  wing: ['heronWing'],
+  foot: ['birdFoot', 'amphibianFoot', 'hoovedFoot', 'beastFoot'],
+  tail: ['beastTail'],
+  wing: ['birdWing'],
 };
 
 export const getBodyPartType = (bodyPartName: BodyPartName): BodyPartType => {

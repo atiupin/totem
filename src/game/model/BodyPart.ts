@@ -21,16 +21,16 @@ export const BODY_PART_REFS = {
   genericBody: { subtype: 'body' },
 
   genericFoot: { subtype: 'foot' },
-  heronFoot: { subtype: 'foot' },
-  toadFoot: { subtype: 'foot' },
-  llamaFoot: { subtype: 'foot' },
-  jaguarFoot: { subtype: 'foot' },
+  birdFoot: { subtype: 'foot' },
+  amphibianFoot: { subtype: 'foot' },
+  hoovedFoot: { subtype: 'foot' },
+  beastFoot: { subtype: 'foot' },
 
   genericTail: { subtype: 'tail' },
-  jaguarTail: { subtype: 'tail' },
+  beastTail: { subtype: 'tail' },
 
   genericWing: { subtype: 'wing' },
-  heronWing: { subtype: 'wing' },
+  birdWing: { subtype: 'wing' },
 } as const satisfies Record<string, BodyPartRef>;
 
 export type BodyPartName = keyof typeof BODY_PART_REFS;
