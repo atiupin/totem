@@ -305,12 +305,15 @@ const renderGameState = (
   }
 
   if (gameState.barrier.health > 0) {
-    const barrierPixelX = GRID_ORIGIN[0] + BARRIER_COLUMN * GRID_CELL_SIZE;
+    const barrierHealthRatio = gameState.barrier.health / gameState.barrier.maxHealth;
+    const barrierWidth = GRID_CELL_SIZE * barrierHealthRatio;
+    const barrierPixelX =
+      GRID_ORIGIN[0] + BARRIER_COLUMN * GRID_CELL_SIZE + (GRID_CELL_SIZE - barrierWidth) / 2;
     context.fillStyle = 'rgba(100, 180, 255, 0.3)';
     context.fillRect(
       barrierPixelX,
       GRID_ORIGIN[1] + GRID_CELL_SIZE,
-      GRID_CELL_SIZE,
+      barrierWidth,
       (GRID_SIZE[1] - 2) * GRID_CELL_SIZE
     );
   }

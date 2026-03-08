@@ -33,9 +33,9 @@ export const BODY_PART_COST: Record<BodyPartType, number> = {
 };
 
 export const MONSTER_STATS: Record<MonsterKind, MonsterStats> = {
-  eye: { health: 8, speed: 30, attackDamage: 4, attackCooldown: 2, goldReward: 1 },
-  yeti: { health: 16, speed: 25, attackDamage: 8, attackCooldown: 3, goldReward: 2 },
-  demon: { health: 32, speed: 20, attackDamage: 24, attackCooldown: 5, goldReward: 4 },
+  eye: { health: 16, speed: 30, attackDamage: 4, attackCooldown: 2, goldReward: 1 },
+  yeti: { health: 32, speed: 25, attackDamage: 8, attackCooldown: 3, goldReward: 2 },
+  demon: { health: 64, speed: 20, attackDamage: 24, attackCooldown: 5, goldReward: 4 },
 };
 
 export const WAVES: WaveConfig[] = [
