@@ -44,8 +44,19 @@ import {
   GUST_RADIUS,
   getHeadSpellKind,
   getSpellAreaOfEffect,
+  getGuardXpMultiplier,
+  getGuardXpThreshold,
 } from './game';
-import type { GameState, BodyPart, BodyPartName, Guard, Direction, Vector2, Tool } from './game';
+import type {
+  GameState,
+  BodyPart,
+  BodyPartName,
+  BodyPartColorIndex,
+  Guard,
+  Direction,
+  Vector2,
+  Tool,
+} from './game';
 import spritesheetUrl from './sprites.png';
 import bodyPartsSpritesheetUrl from './bodyParts.png';
 import { createColoredSpritesheets } from './render';
@@ -221,6 +232,21 @@ const getBodyPartRotation = (bodyPart: BodyPart): number => {
   return (3 * Math.PI) / 2;
 };
 
+const getGuardColorIndex = (guard: Guard): BodyPartColorIndex =>
+  guard.level as BodyPartColorIndex;
+
+const buildBodyPartGuardMap = (guards: Guard[]): Map<number, Guard> => {
+  const bodyPartGuardMap = new Map<number, Guard>();
+
+  for (const guard of guards) {
+    for (const bodyPart of guard.bodyParts) {
+      bodyPartGuardMap.set(bodyPart.bodyPartId, guard);
+    }
+  }
+
+  return bodyPartGuardMap;
+};
+
 const findGuardAtPosition = (guards: Guard[], position: Vector2): Guard | undefined => {
   const gridPosition = getGridCellAtPosition(position);
 
@@ -368,14 +394,14 @@ const renderGameState = (
     context.fill();
   }
 
+  const bodyPartGuardMap = buildBodyPartGuardMap(gameState.guards);
+
   for (const bodyPart of gameState.bodyParts) {
     const bodyPartPosition = getGridCellPosition(bodyPart.gridPosition);
     const bodyPartType = getBodyPartType(bodyPart.bodyPartName);
     const rotation = getBodyPartRotation(bodyPart);
-    const bodyPartColorIndex =
-      (bodyPartType === 'body' && bodyPart.locked) || !bodyPart.bodyPartName.startsWith('generic')
-        ? 3
-        : 0;
+    const guard = bodyPartGuardMap.get(bodyPart.bodyPartId);
+    const bodyPartColorIndex = guard !== undefined ? getGuardColorIndex(guard) : 0;
     const bodyPartSpritesheet = coloredSpritesheets[bodyPartColorIndex];
 
     if (bodyPartType === 'body') {
@@ -594,10 +620,15 @@ const renderGameState = (
 
   if (hoveredGuard) {
     const headName = hoveredGuard.headParts[0]?.bodyPartName ?? 'unknown';
+    const xpThreshold = getGuardXpThreshold(hoveredGuard);
+    const xpPercent =
+      xpThreshold !== undefined ? Math.floor((hoveredGuard.xp / xpThreshold) * 100) : 100;
+    const xpMultiplier = getGuardXpMultiplier(hoveredGuard).toFixed(2);
+    const tooltipText = `Lv${hoveredGuard.level} ${headName} ${xpPercent}% (x${xpMultiplier})`;
 
     context.font = '12px monospace';
     context.fillStyle = '#e0e0e0';
-    context.fillText(headName, 16, CANVAS_SIZE[1] - 16);
+    context.fillText(tooltipText, 16, CANVAS_SIZE[1] - 16);
   }
 };
 

@@ -21,7 +21,7 @@ import {
   OPPOSITE_DIRECTION,
   getNeighborGridPosition,
 } from './grid';
-import { computeGuards, tickGuards } from './guard';
+import { computeGuards, tickGuards, tickGuardXp, preserveGuardProgress } from './guard';
 import { tickPools } from './pool';
 import { tickSwipes } from './swipe';
 import { tickGusts } from './gust';
@@ -154,6 +154,7 @@ export const tickGameState = (gameState: GameState, deltaTime: number) => {
   spawnMonsters(gameState);
   tickMonsters(gameState, deltaTime);
   tickGuards(gameState, deltaTime);
+  tickGuardXp(gameState, deltaTime);
   tickPools(gameState, deltaTime);
   tickSwipes(gameState, deltaTime);
   tickStomps(gameState, deltaTime);
@@ -321,7 +322,9 @@ export const placeBodyPart = (
     recomputeConnections(gameState.bodyParts);
   }
 
+  const previousGuards = gameState.guards;
   gameState.guards = computeGuards(gameState.bodyParts);
+  preserveGuardProgress(gameState.guards, previousGuards);
 };
 
 export const removeBodyPartWithRefund = (gameState: GameState, bodyPartId: number) => {
@@ -340,7 +343,10 @@ export const removeBodyPartWithRefund = (gameState: GameState, bodyPartId: numbe
   gameState.gold += BODY_PART_COST[getBodyPartType(bodyPart.bodyPartName)];
   gameState.bodyParts.splice(index, 1);
   recomputeConnections(gameState.bodyParts);
+
+  const previousGuards = gameState.guards;
   gameState.guards = computeGuards(gameState.bodyParts);
+  preserveGuardProgress(gameState.guards, previousGuards);
 };
 
 export const destroyGuard = (gameState: GameState, guardId: number) => {
@@ -376,5 +382,8 @@ export const destroyGuard = (gameState: GameState, guardId: number) => {
   );
 
   recomputeConnections(gameState.bodyParts);
+
+  const previousGuards = gameState.guards;
   gameState.guards = computeGuards(gameState.bodyParts);
+  preserveGuardProgress(gameState.guards, previousGuards);
 };

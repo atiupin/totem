@@ -5,4 +5,7 @@ export type Guard = {
   bodyParts: BodyPart[];
   headParts: BodyPart[];
   limbCount: number;
+  bodyCount: number;
+  level: number;
+  xp: number;
 };

@@ -122,6 +122,11 @@ export const GUST_COOLDOWN = 6;
 export const GUST_WOBBLE_AMPLITUDE = 8;
 export const GUST_WOBBLE_FREQUENCY = 4;
 
+export const GUARD_MAX_LEVEL = 3;
+export const GUARD_XP_PER_LEVEL: number[] = [100, 200];
+export const GUARD_BASE_XP_RATE = 10;
+export const GUARD_SEGMENT_XP_BONUS = 0.15;
+
 export const SPAWN_ROW_MIN = 3;
 export const SPAWN_ROW_MAX = 7;
 

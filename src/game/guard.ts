@@ -28,6 +28,10 @@ import {
   SWIPE_COOLDOWN,
   STOMP_COOLDOWN,
   GUST_COOLDOWN,
+  GUARD_MAX_LEVEL,
+  GUARD_XP_PER_LEVEL,
+  GUARD_BASE_XP_RATE,
+  GUARD_SEGMENT_XP_BONUS,
 } from './constants';
 
 export const computeGuards = (bodyParts: BodyPart[]): Guard[] => {
@@ -77,6 +81,9 @@ export const computeGuards = (bodyParts: BodyPart[]): Guard[] => {
     const limbCount = component.filter(
       part => getBodyPartType(part.bodyPartName) === 'limb'
     ).length;
+    const bodyCount = component.filter(
+      part => getBodyPartType(part.bodyPartName) === 'body'
+    ).length;
     const minBodyPartId = Math.min(...component.map(part => part.bodyPartId));
 
     guards.push({
@@ -84,6 +91,9 @@ export const computeGuards = (bodyParts: BodyPart[]): Guard[] => {
       bodyParts: component,
       headParts,
       limbCount,
+      bodyCount,
+      level: 1,
+      xp: 0,
     });
   }
 
@@ -230,6 +240,45 @@ export const tickGuards = (gameState: GameState, deltaTime: number): void => {
           headPart.cooldownTimer = GUST_COOLDOWN;
         }
       }
+    }
+  }
+};
+
+export const getGuardXpMultiplier = (guard: Guard): number => {
+  const limbModifier = guard.limbCount === 0 ? 2 : 1 / guard.limbCount;
+  const segmentModifier = 1 + guard.bodyCount * GUARD_SEGMENT_XP_BONUS;
+  return limbModifier * segmentModifier;
+};
+
+export const getGuardXpThreshold = (guard: Guard): number | undefined =>
+  GUARD_XP_PER_LEVEL[guard.level - 1];
+
+export const tickGuardXp = (gameState: GameState, deltaTime: number): void => {
+  for (const guard of gameState.guards) {
+    if (guard.level >= GUARD_MAX_LEVEL) {
+      continue;
+    }
+
+    const xpThreshold = GUARD_XP_PER_LEVEL[guard.level - 1];
+    const xpGain = GUARD_BASE_XP_RATE * deltaTime * getGuardXpMultiplier(guard);
+    guard.xp += xpGain;
+
+    if (guard.xp >= xpThreshold) {
+      guard.xp -= xpThreshold;
+      guard.level++;
+    }
+  }
+};
+
+export const preserveGuardProgress = (guards: Guard[], previousGuards: Guard[]): void => {
+  for (const guard of guards) {
+    const previousGuard = previousGuards.find(
+      previousGuard => previousGuard.guardId === guard.guardId
+    );
+
+    if (previousGuard) {
+      guard.level = previousGuard.level;
+      guard.xp = previousGuard.xp;
     }
   }
 };
