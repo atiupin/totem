@@ -8,12 +8,15 @@ import type {
   Vector2,
 } from './model';
 import { tickMonsters } from './monster';
+import type { LimbBodyPartName } from './model';
 import {
   createBodyPart,
   getBodyPartType,
+  getLimbSubtype,
   getLockedBodyPartName,
   getGridCellPosition,
   buildPositionMap,
+  MAX_COUNTED_LIMBS,
 } from './bodyPart';
 import {
   ALL_DIRECTIONS,
@@ -225,7 +228,7 @@ const lockConnectedGroup = (bodyParts: BodyPart[], headPart: BodyPart) => {
   const groupParts: BodyPart[] = [];
 
   while (queue.length > 0) {
-    const current = queue.pop()!;
+    const current = queue.shift()!;
     const currentKey = current.gridPosition.toString();
 
     if (visited.has(currentKey)) {
@@ -251,11 +254,20 @@ const lockConnectedGroup = (bodyParts: BodyPart[], headPart: BodyPart) => {
     }
   }
 
-  const limbCount = groupParts.filter(part => getBodyPartType(part.bodyPartName) === 'limb').length;
+  const limbParts = groupParts.filter(part => getBodyPartType(part.bodyPartName) === 'limb');
+  const countedLimbParts = limbParts.slice(0, MAX_COUNTED_LIMBS);
+
+  const footCount = countedLimbParts.filter(
+    part => getLimbSubtype(part.bodyPartName as LimbBodyPartName) === 'foot'
+  ).length;
+
+  const tailCount = countedLimbParts.filter(
+    part => getLimbSubtype(part.bodyPartName as LimbBodyPartName) === 'tail'
+  ).length;
 
   for (const part of groupParts) {
     part.locked = true;
-    part.bodyPartName = getLockedBodyPartName(part.bodyPartName, limbCount);
+    part.bodyPartName = getLockedBodyPartName(part.bodyPartName, footCount, tailCount);
   }
 };
 

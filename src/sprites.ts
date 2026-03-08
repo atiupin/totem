@@ -31,24 +31,30 @@ export const BODY_SPRITES: Record<BodySpriteKind, Vector2> = {
 };
 
 export const BODY_PART_NAME_SPRITES: Record<Exclude<BodyPartName, 'genericBody'>, Vector2> = {
-  genericHead: [0, 1],
-  snakeHead: [1, 1],
-  heronHead: [2, 1],
-  toadHead: [3, 1],
-  llamaHead: [4, 1],
-  jaguarHead: [5, 1],
+  genericFoot: [0, 1],
+  birdFoot: [1, 1],
+  amphibianFoot: [2, 1],
+  hoovedFoot: [3, 1],
+  beastFoot: [4, 1],
 
-  genericFoot: [0, 2],
-  birdFoot: [1, 2],
-  amphibianFoot: [2, 2],
-  hoovedFoot: [3, 2],
-  beastFoot: [4, 2],
+  genericTail: [0, 2],
+  birdTail: [1, 2],
+  amphibianTail: [2, 2],
+  hoovedTail: [3, 2],
+  beastTail: [4, 2],
 
-  genericTail: [0, 3],
-  beastTail: [4, 3],
+  genericWing: [0, 3],
+  birdWing: [1, 3],
+  amphibianWing: [2, 3],
+  hoovedWing: [3, 3],
+  beastWing: [4, 3],
 
-  genericWing: [0, 4],
-  birdWing: [1, 4],
+  genericHead: [0, 4],
+  snakeHead: [1, 4],
+  heronHead: [2, 4],
+  toadHead: [3, 4],
+  llamaHead: [4, 4],
+  jaguarHead: [5, 4],
 };
 
 export const getBodyPartPreviewSprite = (

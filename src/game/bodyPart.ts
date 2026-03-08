@@ -17,11 +17,67 @@ const GENERIC_LIMB_NAMES: Record<LimbBodyPartSubtype, LimbBodyPartName> = {
   wing: 'genericWing',
 };
 
-const LOCKED_LIMB_NAMES: Record<LimbBodyPartSubtype, BodyPartName[]> = {
-  foot: ['birdFoot', 'amphibianFoot', 'hoovedFoot', 'beastFoot'],
-  tail: ['beastTail'],
-  wing: ['birdWing'],
+type CreatureType = {
+  headName: BodyPartName;
+  footName: BodyPartName;
+  tailName: BodyPartName;
+  wingName: BodyPartName;
 };
+
+const STUB_CREATURE_TYPE: CreatureType = {
+  headName: 'snakeHead',
+  footName: 'birdFoot',
+  tailName: 'birdTail',
+  wingName: 'birdWing',
+};
+
+const CREATURE_TYPES: Record<string, CreatureType> = {
+  '0,0': {
+    headName: 'snakeHead',
+    footName: 'birdFoot',
+    tailName: 'birdTail',
+    wingName: 'birdWing',
+  },
+  '1,0': {
+    headName: 'heronHead',
+    footName: 'birdFoot',
+    tailName: 'birdTail',
+    wingName: 'birdWing',
+  },
+  '2,0': {
+    headName: 'toadHead',
+    footName: 'amphibianFoot',
+    tailName: 'amphibianTail',
+    wingName: 'amphibianWing',
+  },
+  '3,0': {
+    headName: 'llamaHead',
+    footName: 'hoovedFoot',
+    tailName: 'hoovedTail',
+    wingName: 'hoovedWing',
+  },
+  '4,0': {
+    headName: 'jaguarHead',
+    footName: 'beastFoot',
+    tailName: 'beastTail',
+    wingName: 'beastWing',
+  },
+  '0,1': STUB_CREATURE_TYPE,
+  '1,1': STUB_CREATURE_TYPE,
+  '2,1': STUB_CREATURE_TYPE,
+  '3,1': STUB_CREATURE_TYPE,
+  '0,2': STUB_CREATURE_TYPE,
+  '1,2': STUB_CREATURE_TYPE,
+  '2,2': STUB_CREATURE_TYPE,
+  '0,3': STUB_CREATURE_TYPE,
+  '1,3': STUB_CREATURE_TYPE,
+  '0,4': STUB_CREATURE_TYPE,
+};
+
+const getCreatureType = (footCount: number, tailCount: number): CreatureType =>
+  CREATURE_TYPES[`${footCount},${tailCount}`] ?? STUB_CREATURE_TYPE;
+
+export const MAX_COUNTED_LIMBS = 4;
 
 export const getBodyPartType = (bodyPartName: BodyPartName): BodyPartType => {
   const { subtype } = BODY_PART_REFS[bodyPartName];
@@ -49,17 +105,16 @@ export const createBodyPart = (
   cooldownTimer: 0,
 });
 
-const HEAD_NAMES_BY_LIMB_COUNT: BodyPartName[] = [
-  'snakeHead',
-  'heronHead',
-  'toadHead',
-  'llamaHead',
-  'jaguarHead',
-];
+const CREATURE_TYPE_LIMB_NAMES: Record<LimbBodyPartSubtype, keyof CreatureType> = {
+  foot: 'footName',
+  tail: 'tailName',
+  wing: 'wingName',
+};
 
 export const getLockedBodyPartName = (
   bodyPartName: BodyPartName,
-  limbCount: number
+  footCount: number,
+  tailCount: number
 ): BodyPartName => {
   const bodyPartType = getBodyPartType(bodyPartName);
 
@@ -67,10 +122,11 @@ export const getLockedBodyPartName = (
     return 'genericBody';
   }
 
+  const creatureType = getCreatureType(footCount, tailCount);
+
   if (bodyPartType === 'head') {
     if (bodyPartName !== 'genericHead') return bodyPartName;
-    const index = Math.min(limbCount, HEAD_NAMES_BY_LIMB_COUNT.length - 1);
-    return HEAD_NAMES_BY_LIMB_COUNT[index];
+    return creatureType.headName;
   }
 
   const limbSubtype = getLimbSubtype(bodyPartName as LimbBodyPartName);
@@ -79,9 +135,7 @@ export const getLockedBodyPartName = (
     return bodyPartName;
   }
 
-  const lockedNames = LOCKED_LIMB_NAMES[limbSubtype];
-  const index = Math.min(limbCount - 1, lockedNames.length - 1);
-  return lockedNames[index];
+  return creatureType[CREATURE_TYPE_LIMB_NAMES[limbSubtype]];
 };
 
 const COMBINED_LIMB_NAMES: Partial<Record<LimbBodyPartSubtype, BodyPartName>> = {

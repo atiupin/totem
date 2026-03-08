@@ -27,10 +27,16 @@ export const BODY_PART_REFS = {
   beastFoot: { subtype: 'foot' },
 
   genericTail: { subtype: 'tail' },
+  birdTail: { subtype: 'tail' },
+  amphibianTail: { subtype: 'tail' },
+  hoovedTail: { subtype: 'tail' },
   beastTail: { subtype: 'tail' },
 
   genericWing: { subtype: 'wing' },
   birdWing: { subtype: 'wing' },
+  amphibianWing: { subtype: 'wing' },
+  hoovedWing: { subtype: 'wing' },
+  beastWing: { subtype: 'wing' },
 } as const satisfies Record<string, BodyPartRef>;
 
 export type BodyPartName = keyof typeof BODY_PART_REFS;
